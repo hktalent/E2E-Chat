@@ -11,9 +11,17 @@ export rport=26188
 
 ssh -i ~/.ssh/id_rsa -C -p ${rport} root@${rip}
 tmux ls
+docker run -d -p 3478:3478 -p 3478:3478/udp -p 5349:5349 -p 5349:5349/udp -p 49152-65535:49152-65535/udp coturn/coturn
 
 
 brew services start redis
 NODE_DEBUG=true node --trace-deprecation server.js
 
+```
+
+# TURN and STUN Server
+https://github.com/coturn/coturn
+
+```
+docker run -d -p 3478:3478 -p 3478:3478/udp -p 5349:5349 -p 5349:5349/udp -p 49152-65535:49152-65535/udp coturn/coturn
 ```
