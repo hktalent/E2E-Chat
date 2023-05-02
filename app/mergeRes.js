@@ -2,7 +2,8 @@ var fs = require('fs'),
     szPath = __dirname + "/static/js/", 
     szPathC = __dirname + "/static/css/", 
     aFCache = {},
-    JavaScriptObfuscator = require('javascript-obfuscator');
+    JavaScriptObfuscator = require('javascript-obfuscator'),
+    enableJm = true;
 
 function fnWc()
 {
@@ -23,9 +24,9 @@ function fnWc()
 }
 
 var g_cache = {};
-function fnMerg(s,t)
+function fnMerg(s,t,bDebug)
 {
-    if(g_cache[s]){
+    if((bDebug || enableJm) && g_cache[s]){
         return g_cache[s];
     }
     var a = s.split(/[,;\| ]/),i = 0,b = [],sF,szPathT = (t && "css" == t) ? szPathC : szPath, szHz;
@@ -99,17 +100,19 @@ function fnMerg(s,t)
     unicodeEscapeSequence: false
 }
         */
-        g_cache[s] = JavaScriptObfuscator.obfuscate(g_cache[s],{
-            compact: true,
-            controlFlowFlattening: true,
-            controlFlowFlatteningThreshold: 1,
-            numbersToExpressions: true,
-            simplify: true,
-            identifierNamesGenerator: 'hexadecimal',
-            stringArrayShuffle: true,
-            splitStrings: true,
-            stringArrayThreshold: 1
-        })
+       if(!bDebug && enableJm){
+            g_cache[s] = JavaScriptObfuscator.obfuscate(g_cache[s],{
+                compact: true,
+                controlFlowFlattening: true,
+                controlFlowFlatteningThreshold: 1,
+                numbersToExpressions: true,
+                simplify: true,
+                identifierNamesGenerator: 'hexadecimal',
+                stringArrayShuffle: true,
+                splitStrings: true,
+                stringArrayThreshold: 1
+            })
+        }
     }
     return g_cache[s];
 }
@@ -120,8 +123,11 @@ function fnDoMg(req,res,next,reRes)
     var a = reRes.exec(req.url),t = a[1],tp = "js" == t? "javascript":"css";
     if(!(/[,;\|]/g.test(req.url)))return next();
     
+    s1 = String(req.connection.remoteAddress)
+    var bDebug = -1 < s1.indexOf('::ffff:127.0.0.1') || -1 < s1.indexOf('::ffff:192.168.')
     res.setHeader('content-type', 'text/' + tp);
-    xx = fnMerg(a[2],t)
+    
+    xx = fnMerg(a[2],t,bDebug)
     res.end(String(xx));
 }
 function fnSetPath(s)
