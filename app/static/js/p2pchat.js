@@ -215,13 +215,13 @@ function initQrcode(){
 	}
 }
 
-function StartVideo(bN) {
+function StartVideo() {
 	setup_local_media(function () {
 		x101 = setInterval(function () {
 			if(null !=local_media_stream){
 				clearInterval(x101)
 				join_chat_channel(getRoomName(), {});
-				if(bN)initVideoChat()
+				initVideoChat();
 			}
 		},33)
 	});
@@ -655,30 +655,39 @@ function fnDoImgStream (socket, vId) {
 
 $(document).ready(function () {
 	// navigator.mediaDevices.enumerateDevices().then(function(a){console.log(a[0])})
-	szHs = document.location.hash
-	oCnId = $("#cnId")
+	var szHs = document.location.hash,
+		oCnId = $("#cnId"),
+		oStartChat = $("#startChat"),
+		oStChat = $("#stChat"),
+		osdMsg = $("#sdMsg"),
+		oTxtChat = $(".txtChat")
+		oMyCtn = $("#myCtn");
 	if(szHs) {
-		$("#cnId").val(szHs.substr(1))
-		StartVideo(false)
+		oCnId.val(szHs.substr(1))
+		StartVideo()
 	}
-	$("#stChat").click(function () {
+	// text chat
+	oStChat.click(function () {
 		g_bTxtChat = true;
-		$(".txtChat").show();
-		o1=$("#myCtn");
-		o1.hide();
-		o1.html("");
+		oTxtChat.show();
+		oMyCtn.hide();
+		oMyCtn.html("");
 		// https://9to5answer.com/stop-close-webcam-stream-which-is-opened-by-navigator-mediadevices-getusermedia
 		StopStream();
 		g_bSetup=!g_bTxtChat;
 		join_chat_channel(oCnId.val(), {})
+		$(this).attr("disabled", "disabled")
+		oStartChat.removeAttr("disabled")
+		osdMsg.focus()
 	})
-	
-	$("#startChat").click(function () {
-		bN = g_bTxtChat
+	// video chat
+	oStartChat.click(function () {
 		g_bTxtChat = false
-		$(".txtChat").hide()
-		$("#myCtn").show()
-		StartVideo(bN)
+		oTxtChat.hide()
+		oMyCtn.show()
+		StartVideo()
+		$(this).attr("disabled", "disabled")
+		oStChat.removeAttr("disabled")
 	})
 	$("#dspWr").click(function () {
 		oL = $('#logId')
@@ -695,11 +704,16 @@ $(document).ready(function () {
 		if(signaling_socket)signaling_socket.emit("getNick",szCltFg,$(this).val())
 	});
 	oCnId.change(function(){
-		join_chat_channel(this.value, {})
+		join_chat_channel(oCnId.val(), {})
 		MkQrcd()
 	})
 	initQrcode()
-	$("#sdBt").click(function(){
-		SendMsg($("#sdMsg").val())
+	
+	$("#sdBt").click(fnXx = function(){
+		SendMsg(osdMsg.val())
+		osdMsg.val("")
+	})
+	osdMsg.keydown(function(e){
+		if(e.keyCode == 13)fnXx()
 	})
 })
