@@ -20,10 +20,10 @@ var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	signaling_socket = null, /* our socket.io connection to our webserver */
 	local_media_stream = null, /* our own microphone / webcam */
 	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
-	peer_media_elements = {}, attachMediaStream = null, /* keep track of our <video>/<audio> tags, indexed by peer_id */
+	peer_media_elements = {}, /* keep track of our <video>/<audio> tags, indexed by peer_id */
 	g_oYourInfo = {},
 	g_bTxtChat = false,
-	g_peer_connection =	null,
+	g_peer_id = "",
 	nLogs = 0, bNbg = false,
 	szLstChannel = '',
 	nId = 0, bCloseQrcode = true, 
@@ -62,10 +62,6 @@ function getYourInfo (s) {
 	}
 	if (signaling_socket && g_oYourInfo['ip'] && 1 < g_oYourInfo['ip'].length) {
 		var a1 = g_oYourInfo['ip'], xa = [];
-		for (var i in a1) {
-			if (/^(192\.168\.)|(172\.1\d\.)/gmi.test(a1[i]));
-			else xa.push(a1[i])
-		}
 		g_oYourInfo['ip'] = xa;
 		[].push.apply(g_LbsIps, xa);
 		s1 = JSON.stringify(g_oYourInfo);
@@ -101,36 +97,46 @@ function RevMsg(e){
 	var o = JSON.parse(e.data)
 	CreateMsgDiv(o.nick,o.data)
 }
-var g_sendChannel = null
+var g_sendChannels = []
 function fnTxtChat() {
 	log("fnTxtChat")
-	if(!g_peer_connection){
+	if(!peers){
 		setTimeout(function(){fnTxtChat()},333)
 		return
 	}
-	pc = g_peer_connection
-	pc.ondatachannel = function(e){
-		log(e)
+	for(peer_id in peers){
+		pc = peers[peer_id]
+		
+		pc.onaddstream = pc.onaddstream = function(){}
+		pc.ondatachannel = function(e){
+			log(e)
+		}
+		sendChannel = pc.createDataChannel(getRoomName(),{'ordered':true})
+		
+		g_sendChannels.push(sendChannel)
+
+		sendChannel.onclose = function(){
+			log("sendChannel.onclose")
+		}
+		sendChannel.onopen = function(){
+			$("#sdMsg,#sdBt").removeAttr("disabled")
+			o1 = $("#sdMsg")
+			o1.val("")
+			o1.focus()
+			log('准备就绪，你可以发送消息了')
+		}
+		sendChannel.onmessage = RevMsg
 	}
-	sendChannel = pc.createDataChannel(getRoomName(),{'ordered':true})
-	sendChannel.onclose = function(){
-		log("sendChannel.onclose")
-	}
-	sendChannel.onopen = function(){
-		$("#sdMsg,#sdBt").removeAttr("disabled")
-		o1 = $("#sdMsg")
-		o1.val("")
-		o1.focus()
-		log('准备就绪，你可以发送消息了')
-	}
-	sendChannel.onmessage = RevMsg
 }
 function SendMsg(s){
 	if(s){
-		if(!sendChannel){
+		if(0 == g_sendChannels.length){
 			setTimeout(function(){SendMsg(s)},333)
 		}
-		sendChannel.send({"nick":$("nick").val(),"msg":s})
+		for(var i = 0; i < g_sendChannels.length;i++)
+		{
+			g_sendChannels[i].send({"nick":$("nick").val(),"msg":s})
+		}
 		log("send msg:"+ s)
 	}
 }
@@ -138,6 +144,7 @@ function SendMsg(s){
 // 日志的输出
 function fnMyLogs (e) {
 	if (!e) return;
+	// log(e)/*
 	var s = JSON.stringify(e), oLog = $("#logId");
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
 	getYourInfo(s);
@@ -147,6 +154,7 @@ function fnMyLogs (e) {
 	}
 	else oLog.append(szHtml);
 	$("#warnId").text("Warning(" + (++nLogs) + ")");
+	////////*/
 }
 // N 个参数日志输出
 function fnMyLogs2 () {
@@ -207,10 +215,75 @@ function initQrcode(){
 	}
 }
 
-function StartVideo() {
+function StartVideo(bN) {
 	setup_local_media(function () {
-		join_chat_channel(getRoomName(), {});
+		x101 = setInterval(function () {
+			if(null !=local_media_stream){
+				clearInterval(x101)
+				join_chat_channel(getRoomName(), {});
+				if(bN)initVideoChat()
+			}
+		},33)
 	});
+}
+
+function attachMediaStream(element, stream) {
+	// fnMyLogs2('DEPRECATED, attachMediaStream will soon be removed.');
+	// Uncaught (in promise) DOMException
+	// https://github.com/sampotts/plyr/issues/331
+	// https://github.com/addyosmani/getUserMedia.js/issues/64#issuecomment-270668091
+	// try{
+	if (element.srcObject !== undefined) {
+		element.srcObject = stream;
+	}
+	else if (element.mozSrcObject !== undefined) { // FF18a
+		element.mozSrcObject = stream;
+	} else { // FF16a, 17a
+		element.src = stream;
+	}
+	// fix: Uncaught (in promise) DOMException,Unhandled Promise Rejection: AbortError: The operation was aborted.
+	// https://developers.google.com/web/updates/2017/06/play-request-was-interrupted
+	// if(element.play)element.play();
+	// }catch(e){fnMyLogs(e);
+	// 	try{element.src = (window['URL'] || window['webkitURL']).createObjectURL(stream);}catch(e1){fnMyLogs(e1);}
+	// }
+};
+
+function initOnePeer(pp,peer_id){
+	peer_connection = pp
+	if(!peer_connection){
+		log("initOnePeer why ? peer_connection is null")
+		return;
+	}
+	log("initOnePeer start peer_id = " + peer_id)
+	peer_connection.onaddstream = function (event) {
+		var remote_media = fnCreateVid(0);
+		remote_media.autoplay = true;
+		remote_media.controls = false;
+		if(peer_id)peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
+		attachMediaStream(remote_media, event.stream);
+		log("peer_connection.onaddstream");
+		log(event);
+	}
+
+	/* Add our local stream */
+	peer_connection.addStream(local_media_stream);
+	log("initOnePeer end peer_id = " + peer_id)
+}
+
+function initVideoChat(){
+	log("initVideoChat")
+	if (null == local_media_stream){
+		setTimeout(function(){
+			initVideoChat()
+		},333)
+		return;
+	}
+	log(peers)
+	for(peer_id in peers) {
+		initOnePeer(peers[peer_id], peer_id)
+	}
+	// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
 }
 
 function init () {
@@ -254,28 +327,6 @@ function init () {
 		};
 	}
 
-	attachMediaStream = function (element, stream) {
-		// fnMyLogs2('DEPRECATED, attachMediaStream will soon be removed.');
-		// Uncaught (in promise) DOMException
-		// https://github.com/sampotts/plyr/issues/331
-		// https://github.com/addyosmani/getUserMedia.js/issues/64#issuecomment-270668091
-		// try{
-		if (element.srcObject !== undefined) {
-			element.srcObject = stream;
-		}
-		else if (element.mozSrcObject !== undefined) { // FF18a
-			element.mozSrcObject = stream;
-		} else { // FF16a, 17a
-			element.src = stream;
-		}
-		// fix: Uncaught (in promise) DOMException,Unhandled Promise Rejection: AbortError: The operation was aborted.
-		// https://developers.google.com/web/updates/2017/06/play-request-was-interrupted
-		// if(element.play)element.play();
-		// }catch(e){fnMyLogs(e);
-		// 	try{element.src = (window['URL'] || window['webkitURL']).createObjectURL(stream);}catch(e1){fnMyLogs(e1);}
-		// }
-	};
-
 	signaling_socket.on('addPeer', function (config) {
 		fnMyLogs2('Signaling server said to add peer:', config);
 		var peer_id = config.peer_id;
@@ -316,24 +367,11 @@ function init () {
 		}
 		// p2p 流事件
 		if(!g_bTxtChat){
-			peer_connection.onaddstream = function (event) {
-				var remote_media = fnCreateVid(0);
-				remote_media.autoplay = true;
-				remote_media.controls = false;
-				peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
-				attachMediaStream(remote_media, event.stream);
-				fnMyLogs("peer_connection.onaddstream");
-				fnMyLogs(event);
-			}
-		
-			/* Add our local stream */
-			peer_connection.addStream(local_media_stream);
-			// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
+			initOnePeer(peer_connection,peer_id)
 		}
-
+		
+		log("config.should_create_offer " + config.should_create_offer)
 		if (config.should_create_offer) {
-			log("config.should_create_offer " + config.should_create_offer)
-			g_peer_connection = peer_connection
 			if(g_bTxtChat)fnTxtChat()
 			// console.log("Creating RTC offer to ", peer_id);
 			peer_connection.createOffer(
@@ -457,9 +495,18 @@ function ChangeSound(stream){
 	const audioTracks = stream.getAudioTracks()
 }
 
+function StopStream(){
+	if(local_media_stream)local_media_stream.getTracks().forEach(function(track) {
+		if (track.readyState == 'live') {
+			track.stop();
+		}
+	})
+	local_media_stream = null
+}
 // 初始化本地视频
 function setup_local_media (callback, errorback) {
 	if (g_bSetup) return;
+	StopStream()
 	g_bSetup = true;
 	try {
 		if (local_media_stream != null) { /* ie, if we've already been initialized */
@@ -494,7 +541,7 @@ function setup_local_media (callback, errorback) {
 			// 	googTypingNoiseDetection: true
 			// }
 		};
-		if (isChrome && isMobileDevice) oT = true;
+		// if (isChrome && isMobileDevice) oT = true;
 		// fix chrome 不支持facingMode
 		navigator.mediaDevices.getUserMedia( {
 			"audio": oT, 
@@ -570,9 +617,7 @@ function setup_local_media (callback, errorback) {
 			attachMediaStream(local_media, stream);
 			// attachMediaStream(local_media, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
-			if (callback) callback()
 			if (bNbg) fnDoNbg(local_media);
-
 		}).catch((e) => {
 			// console.log(e)
 			fnMyLogs(e);
@@ -580,6 +625,7 @@ function setup_local_media (callback, errorback) {
 			if (errorback) errorback();
 		});
 	} catch (e) { fnMyLogs(e) }
+	if (callback) callback()
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL
@@ -613,18 +659,26 @@ $(document).ready(function () {
 	oCnId = $("#cnId")
 	if(szHs) {
 		$("#cnId").val(szHs.substr(1))
-		StartVideo()
+		StartVideo(false)
 	}
 	$("#stChat").click(function () {
-		g_bTxtChat = true
-		$(".txtChat").show()
+		g_bTxtChat = true;
+		$(".txtChat").show();
+		o1=$("#myCtn");
+		o1.hide();
+		o1.html("");
+		// https://9to5answer.com/stop-close-webcam-stream-which-is-opened-by-navigator-mediadevices-getusermedia
+		StopStream();
+		g_bSetup=!g_bTxtChat;
 		join_chat_channel(oCnId.val(), {})
 	})
 	
 	$("#startChat").click(function () {
+		bN = g_bTxtChat
 		g_bTxtChat = false
 		$(".txtChat").hide()
-		StartVideo()
+		$("#myCtn").show()
+		StartVideo(bN)
 	})
 	$("#dspWr").click(function () {
 		oL = $('#logId')
