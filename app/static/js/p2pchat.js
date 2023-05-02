@@ -107,10 +107,9 @@ function fnTxtChat() {
 	for(peer_id in peers){
 		pc = peers[peer_id]
 		
-		pc.onaddstream = pc.onaddstream = function(){}
-		pc.ondatachannel = function(e){
-			log(e)
-		}
+		// pc.ondatachannel = function(e){
+		// 	log(e)
+		// }
 		sendChannel = pc.createDataChannel(getRoomName(),{'ordered':true})
 		
 		g_sendChannels.push(sendChannel)
@@ -249,26 +248,56 @@ function attachMediaStream(element, stream) {
 	// }
 };
 
+var videoSelect,audioInputSelect,audioOutputSelect,selectors
+
+function gotDevices(deviceInfos) {
+	const values = selectors.map(select => select.value);
+	selectors.forEach(select => {
+		while (select.firstChild) {
+		select.removeChild(select.firstChild);
+		}
+	});
+	for (var i = 0; i !== deviceInfos.length; i++) {
+		const deviceInfo = deviceInfos[i];
+		if(!deviceInfo.label || !deviceInfo.deviceId){continue;}
+		const option = document.createElement('option');
+		option.value = deviceInfo.deviceId;
+		if (deviceInfo.kind === 'audioinput') {
+			option.text = deviceInfo.label || `microphone ${audioInputSelect.length + 1}`;
+			audioInputSelect.appendChild(option);
+		} else if (deviceInfo.kind === 'audiooutput') {
+			option.text = deviceInfo.label || `speaker ${audioOutputSelect.length + 1}`;
+			audioOutputSelect.appendChild(option);
+		} else if (deviceInfo.kind === 'videoinput') {
+			option.text = deviceInfo.label || `camera ${videoSelect.length + 1}`;
+			videoSelect.appendChild(option);
+		} else {
+			console.log('Some other kind of source/device: ', deviceInfo);
+		}
+	}
+	selectors.forEach((select, selectorIndex) => {
+		oS1 = $(select)
+		oS1.hide();
+		if(0 < select.childNodes.length)oS1.show();
+		if (Array.prototype.slice.call(select.childNodes).some(n => n.value === values[selectorIndex])) {
+		  select.value = values[selectorIndex];
+		}
+	});
+}
+
+function listDivie(){
+	navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(log);
+}
+
 function initOnePeer(pp,peer_id){
 	peer_connection = pp
 	if(!peer_connection){
 		log("initOnePeer why ? peer_connection is null")
 		return;
 	}
-	log("initOnePeer start peer_id = " + peer_id)
-	peer_connection.onaddstream = function (event) {
-		var remote_media = fnCreateVid(0);
-		remote_media.autoplay = true;
-		remote_media.controls = false;
-		if(peer_id)peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
-		attachMediaStream(remote_media, event.stream);
-		log("peer_connection.onaddstream");
-		log(event);
-	}
-
+	
 	/* Add our local stream */
 	peer_connection.addStream(local_media_stream);
-	log("initOnePeer end peer_id = " + peer_id)
 }
 
 function initVideoChat(){
@@ -279,7 +308,6 @@ function initVideoChat(){
 		},333)
 		return;
 	}
-	log(peers)
 	for(peer_id in peers) {
 		initOnePeer(peers[peer_id], peer_id)
 	}
@@ -294,6 +322,7 @@ function init () {
 	// }
 
 	signaling_socket.on('connect', function () {
+		if(szCltFg)signaling_socket.emit("getNick",szCltFg)
 		if (local_media_stream) join_chat_channel(getRoomName(), {});
 		else {
 			// StartVideo()
@@ -364,6 +393,17 @@ function init () {
 				// type:host、 srflx，都要,not set null
 				// peer_connection.onicecandidate = null;
 			}
+		}
+		
+		peer_connection.onaddstream = function (event) {
+			try{
+				var remote_media = fnCreateVid(0);
+				remote_media.autoplay = true;
+				remote_media.controls = false;
+				peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
+				attachMediaStream(remote_media, event.stream);
+				log("peer_connection.onaddstream");
+			}catch(e){log(e)}
 		}
 		// p2p 流事件
 		if(!g_bTxtChat){
@@ -489,11 +529,57 @@ echoCancellation 是回声消除
 'left':视频源面向用户但在他们的左边，例如一个对准用户但在他们的左肩上方的摄像机。
 'right': 视频源面向用户但在用户的右边，例如，摄像机对准用户但在他们的右肩上
 */
-var g_hz = { facingMode: "user" }
+var g_hz = { facingMode: "user" },g_Constraints = 0;
+
+function appSet(stream){
+	const audioSource = document.getElementById("audioInputSelect").value;
+	const videoSource = document.getElementById("videoSelect").value;
+	var oT = {
+		deviceId: audioSource ? {exact: audioSource} : undefined,
+		noiseSuppression: true,
+		echoCancellation: true, //{ exact: true },//'system',
+		autoGainControl: false,
+		sampleRate: { max: 48000, min: 48000 },
+		channelCount: { max: 2, min: 1 },
+		volume: 1.0
+		// https://github.com/muaz-khan/WebRTC-Experiment/issues/435
+		// ,optional:[{echoCancellation: false}],
+		// mandatory: {// https://bugs.webkit.org/show_bug.cgi?id=179411
+		// 	googEchoCancellation: true,
+		// 	googAutoGainControl: true,
+		//  googExperimentalAutoGainControl: true,
+		// 	googNoiseSuppression: true,
+		//  googExperimentalNoiseSuppression:true,
+		// 	googHighpassFilter: true,
+		// 	googTypingNoiseDetection: true
+		// }
+	}
+	g_Constraints={
+	 "audio": oT, 
+	 "video": {
+		deviceId: videoSource ? {exact: videoSource} : undefined,
+		'mandatory':{
+		'width':  {'min': 4000},
+		'height': {'min': 4000}
+		},
+		optional: [ // 对视频Track的可选约束条件
+			{frameRate: {min: 60}}
+		]}
+	}
+	if(stream)stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
+	if(local_media_stream)local_media_stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
+	return g_Constraints
+}
 
 function ChangeSound(stream){
-	const audioTracks = stream.getAudioTracks()
+	try{
+		const audioTracks = stream.getAudioTracks()
+		appSet(stream)
+		audioTracks[0].applyConstraints(g_Constraints["audio"]);
+	}catch(e){log(e)}
 }
+
+
 
 function StopStream(){
 	if(local_media_stream)local_media_stream.getTracks().forEach(function(track) {
@@ -503,6 +589,7 @@ function StopStream(){
 	})
 	local_media_stream = null
 }
+
 // 初始化本地视频
 function setup_local_media (callback, errorback) {
 	if (g_bSetup) return;
@@ -522,38 +609,10 @@ function setup_local_media (callback, errorback) {
 		// navigator.mediaDevices.getUserMedia({ "audio": {echoCancellation: 'system',autoGainControl:true,sampleRate:48000, channelCount: 1, volume: 1.0,mandatory: {echoCancellation:'system'}}, "video": true}).then((stream) => 
 		// chrome not use ://mandatory: {echoCancellation:'system'}
 		// echoCancellation: {exact: false},
-		var oT = {
-			noiseSuppression: true,
-			echoCancellation: true, //{ exact: true },//'system',
-			autoGainControl: false,
-			sampleRate: { max: 48000, min: 48000 },
-			channelCount: { max: 2, min: 1 },
-			volume: 1.0
-			// https://github.com/muaz-khan/WebRTC-Experiment/issues/435
-			// ,optional:[{echoCancellation: false}],
-			// mandatory: {// https://bugs.webkit.org/show_bug.cgi?id=179411
-			// 	googEchoCancellation: true,
-			// 	googAutoGainControl: true,
-			//  googExperimentalAutoGainControl: true,
-			// 	googNoiseSuppression: true,
-			//  googExperimentalNoiseSuppression:true,
-			// 	googHighpassFilter: true,
-			// 	googTypingNoiseDetection: true
-			// }
-		};
 		// if (isChrome && isMobileDevice) oT = true;
 		// fix chrome 不支持facingMode
-		navigator.mediaDevices.getUserMedia( {
-			"audio": oT, 
-			"video": {
-                'mandatory':{
-                'width':  {'min': 4000},
-                'height': {'min': 4000}
-                },
-                optional: [ // 对视频Track的可选约束条件
-                    {frameRate: 30}
-                ]}
-			}).then((stream) => {
+		appSet()
+		navigator.mediaDevices.getUserMedia( g_Constraints).then((stream) => {
 			ChangeSound(stream)
 			local_media_stream = stream;
 			const local_media = fnCreateVid(bNbg);
@@ -618,7 +677,8 @@ function setup_local_media (callback, errorback) {
 			// attachMediaStream(local_media, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
 			if (bNbg) fnDoNbg(local_media);
-		}).catch((e) => {
+			return navigator.mediaDevices.enumerateDevices();
+		}).then(gotDevices).catch((e) => {
 			// console.log(e)
 			fnMyLogs(e);
 			fnMyLogs2("This site will not work without camera/microphone access.");
@@ -654,6 +714,23 @@ function fnDoImgStream (socket, vId) {
 }
 
 $(document).ready(function () {
+	videoSelect       = document.querySelector('select#videoSelect');
+	audioInputSelect  = document.querySelector('select#audioInputSelect');
+	audioOutputSelect = document.querySelector('select#audioOutputSelect');
+	selectors = [audioInputSelect, audioOutputSelect, videoSelect];
+	selectors.forEach(function (select) {$(select).change(appSet)});
+	// $(videoSelect).change(function(){
+	// 	var tk=local_media_stream.getVideoTracks()[0]
+	// 	const constraints = tk.getConstraints();
+		
+	// 	s1 = $(videoSelect).val()
+	// 	constraints.facingMode =  { exact: "environment" };//{deviceId:{exact: s1}}
+	// 	// constraints.facingMode = s1;
+	// 	tk.applyConstraints(constraints);
+	// 	// alert(3434)
+	// });
+
+	listDivie()
 	// navigator.mediaDevices.enumerateDevices().then(function(a){console.log(a[0])})
 	var szHs = document.location.hash,
 		oCnId = $("#cnId"),
@@ -661,7 +738,8 @@ $(document).ready(function () {
 		oStChat = $("#stChat"),
 		osdMsg = $("#sdMsg"),
 		oTxtChat = $(".txtChat")
-		oMyCtn = $("#myCtn");
+		oMyCtn = $("#myCtn"),
+		ovChat = $(".vChat");
 	if(szHs) {
 		oCnId.val(szHs.substr(1))
 		StartVideo()
@@ -671,33 +749,34 @@ $(document).ready(function () {
 		g_bTxtChat = true;
 		oTxtChat.show();
 		oMyCtn.hide();
+		ovChat.hide();
 		oMyCtn.html("");
 		// https://9to5answer.com/stop-close-webcam-stream-which-is-opened-by-navigator-mediadevices-getusermedia
 		StopStream();
 		g_bSetup=!g_bTxtChat;
-		join_chat_channel(oCnId.val(), {})
-		$(this).attr("disabled", "disabled")
-		oStartChat.removeAttr("disabled")
+		join_chat_channel(oCnId.val(), {});
+		$(this).attr("disabled", "disabled");
+		oStartChat.removeAttr("disabled");
 		osdMsg.focus()
 	})
 	// video chat
 	oStartChat.click(function () {
 		g_bTxtChat = false
-		oTxtChat.hide()
-		oMyCtn.show()
-		StartVideo()
-		$(this).attr("disabled", "disabled")
+		oTxtChat.hide();
+		oMyCtn.show();
+		ovChat.show();
+		StartVideo();
+		$(this).attr("disabled", "disabled");
 		oStChat.removeAttr("disabled")
 	})
 	$("#dspWr").click(function () {
 		oL = $('#logId')
 		this.checked ? oL.show() : oL.hide()
 	})
+	szCltFg = new ClientJS().getFingerprint()
 	init()
 	
 	szLstChannel = oCnId.val()
-	szCltFg = new ClientJS().getFingerprint()
-	if(signaling_socket)signaling_socket.emit("getNick",szCltFg)
 	oNick = $("#nick")
 	oNick.val(szCltFg)
 	oNick.change(function(){
