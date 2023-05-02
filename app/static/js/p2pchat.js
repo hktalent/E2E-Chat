@@ -362,8 +362,12 @@ function MkQrcd(){
 	document.getElementById('roomurl').textContent = szCurUrl;
 	o1 = document.getElementById("myQrcode")
 	o1.innerHTML = ""
-	new QRCode(o1, { text: szCurUrl, width: 200, height: 200 });
+	new QRCode(o1, { text: szCurUrl, width: "100%", height: 200 });
 }
+
+// 后置摄像头
+// {facingMode: "user"} 优先使用前置
+var g_hz = { exact: "environment" }
 
 // 初始化本地视频
 function setup_local_media (callback, errorback) {
