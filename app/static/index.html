@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>安全：不受任何国家、政府、机构、组织监管的加密聊天、通讯</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=5,user-scalable=yes">
+	<link href="/css/all.min,plyr,bootstrap.min,p2pchat" rel="stylesheet" />
+	<script src="/js/client.min.js"></script>
+	<script src="/js/jquery.js"></script>
+	<script src="/js/stunLists.js"></script>
+	<script src="/js/adapter-latest.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/js/socket.io-stream.js"></script>
+	<script src="/js/qrcode.min.js"></script>
+	<script src="/js/plyr.js"></script>
+	
+	<script src="/js/RecordRTC.js"></script>
+	<script src="/js/html5-qrcode.min.js"></script>
+
+	<script src="/js/p2pchat.js" async></script>
+	<style type="text/css">
+		#overlay,
+		.overlay {
+			position: absolute;
+			top: 0;
+			left: 0;
+		}
+
+		body,input {
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+
+		*{font-size: 9pt;}
+
+		.msgbox {
+			width: calc(100vw - 15px);
+			height: calc(100vh - 435px);
+			border: 1px solid #635252;
+			margin: 5px;
+			overflow: auto;
+		}
+
+		.sdbt {
+			width: calc(100vw - 60px);
+			margin: 0 0 0 5px;
+		}
+		#logId{z-index: 99999;top: 30px;left: 0;float: left;}
+	</style>
+</head>
+
+<body>
+	<div class="container" style="margin: 0 !important">
+
+		<div class="row" id="myCtn"></div>
+		<div class="row">
+			<div class="input-group mb-3">
+				<div class="input-group-text">
+					暗号<input type="text" value="xxx" class="input" aria-label="频道(暗号、聊天室名字)" id="cnId">
+					昵称<input type="text" id="nick" value="xxx1" class="input">
+					<!-- 阅后<input id="clsTm" value="1" class="input" size="2">分钟自焚; -->
+					Show Me<input type="checkbox" class="btn btn-secondary" aria-label="Show Me Video" id="showme">
+					<!-- save jpg<input type="checkbox" class="btn btn-secondary" aria-label="save jpg to server" id="saveMe">
+					save video<input type="checkbox" class="btn btn-secondary" aria-label="save Me video to server" id="saveMeVD">
+					<span id="warnId">Warning</span> 
+					<input type="checkbox" id="dspWr" class="btn btn-warning" aria-label="Warning"> -->
+					<input type="button" id="startChat" value="开聊" class="button">
+				</div>
+			</div>
+		</div>
+		<!-- <div>
+			<t>在线人：<l id="otherP"></l></t>
+		</div> -->
+	</div>
+
+	<!-- <div class="msgbox" id="msgList"></div>
+	<input id="sdMsg" class="sdbt" value="等待系统初始化、建立 端对端 安全连接..." disabled><input type="button" value="发送" id="sdBt" disabled> -->
+
+
+	<div id="intro" class="message overflow-x-hide overflow-y-hide shadow">
+		<a href="javascript:void(0)" id="closebtn">&times;</a>
+		邀请朋友一起聊
+		<i id="roomurl" data-toggle="tooltip" title="click copy"></i>
+		<i id="myQrcode"></i>
+		<div id="tooManyParticipants" class="message">人太多可能影响性能</div>
+	</div>
+	<div id="logId"></div>
+</body>
+
+</html>
