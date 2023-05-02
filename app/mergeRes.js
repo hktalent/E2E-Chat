@@ -26,7 +26,7 @@ function fnWc()
 var g_cache = {};
 function fnMerg(s,t,bDebug)
 {
-    if((bDebug || enableJm) && g_cache[s]){
+    if(!bDebug && enableJm && g_cache[s]){
         return g_cache[s];
     }
     var a = s.split(/[,;\| ]/),i = 0,b = [],sF,szPathT = (t && "css" == t) ? szPathC : szPath, szHz;
@@ -124,7 +124,7 @@ function fnDoMg(req,res,next,reRes)
     if(!(/[,;\|]/g.test(req.url)))return next();
     
     s1 = String(req.connection.remoteAddress)
-    var bDebug = -1 < s1.indexOf('::ffff:127.0.0.1') || -1 < s1.indexOf('::ffff:192.168.')
+    var bDebug = true //-1 < s1.indexOf('::ffff:127.0.0.1') || -1 < s1.indexOf('::ffff:192.168.')
     res.setHeader('content-type', 'text/' + tp);
     
     xx = fnMerg(a[2],t,bDebug)
