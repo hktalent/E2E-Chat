@@ -37,8 +37,9 @@
 			margin: 0 0 0 5px;
 		}
 		#logId{z-index: 99999;top: 30px;left: 0;float: left;}
-		.txtChat{display: none}
+		.txtChat,.vChat{display: none}
 		input[type=button]{cursor:pointer}
+		.ah{width: 10%;}
 	</style>
 </head>
 
@@ -49,10 +50,13 @@
 		<div class="row">
 			<div class="input-group mb-3">
 				<div class="input-group-text">
-					暗号<input type="text" value="xxx" class="input" aria-label="频道(暗号、聊天室名字)" id="cnId">
-					昵称<input type="text" id="nick" value="xxx1" class="input">
+					暗号<input type="text" value="xxx" class="input ah" aria-label="频道(暗号、聊天室名字)" id="cnId">
+					昵称<input type="text" id="nick" value="xxx1" class="input ah">
 					<span class="txtChat">阅后<input id="clsTm" value="1" class="input" size="2">分钟自焚;</span>
+					<t class="vChat">
 					Show Me<input type="checkbox" class="btn btn-secondary" aria-label="Show Me Video" id="showme">
+					<select id="videoSelect"></select> <select id="audioInputSelect"></select> <select id="audioOutputSelect"></select>
+					</t>
 					<!-- save jpg<input type="checkbox" class="btn btn-secondary" aria-label="save jpg to server" id="saveMe">
 					save video<input type="checkbox" class="btn btn-secondary" aria-label="save Me video to server" id="saveMeVD">
 					<span id="warnId">Warning</span> 
