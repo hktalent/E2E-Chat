@@ -342,10 +342,8 @@ function init () {
 		delete peers[peer_id];
 		delete peer_media_elements[config.peer_id];
 	});
-	var szCurUrl = document.location.href + "#" + getRoomName();
-	document.getElementById('roomurl').textContent = szCurUrl;
-	new QRCode(document.getElementById("myQrcode"), { text: szCurUrl, width: 200, height: 200 });
-	$("#myQrcode img").css({ width: "200px", height: "200px", "margin": "auto" });
+	MkQrcd()
+	$("#myQrcode img").css({ width: "100%", height: "200px", "margin": "auto" });
 	$('#roomurl').on('click', event => {
 		let range, selection;
 		selection = window.getSelection();
@@ -357,6 +355,14 @@ function init () {
 	$('#closebtn').on('click', () => {
 		document.getElementById('intro').style.display = 'none';
 	});
+}
+
+function MkQrcd(){
+	var szCurUrl = document.location.href.split("#")[0] + "#" + getRoomName();
+	document.getElementById('roomurl').textContent = szCurUrl;
+	o1 = document.getElementById("myQrcode")
+	o1.innerHTML = ""
+	new QRCode(o1, { text: szCurUrl, width: 200, height: 200 });
 }
 
 // 初始化本地视频
@@ -508,7 +514,10 @@ function fnDoImgStream (socket, vId) {
 
 $(document).ready(function () {
 	szHs = document.location.hash
-	if(szHs)$("#cnId").val(szHs)
+	if(szHs) {
+		$("#cnId").val(szHs.substr(1))
+		StartVideo()
+	}
 	$("#startChat").click(function () {
 		StartVideo()
 	})
@@ -528,6 +537,7 @@ $(document).ready(function () {
 	});
 	oCnId.change(function(){
 		join_chat_channel(this.value, {})
+		MkQrcd()
 	})
 	initQrcode()
 })
