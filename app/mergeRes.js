@@ -1,7 +1,8 @@
 var fs = require('fs'),
     szPath = __dirname + "/static/js/", 
     szPathC = __dirname + "/static/css/", 
-    aFCache = {};
+    aFCache = {},
+    JavaScriptObfuscator = require('javascript-obfuscator');
 
 function fnWc()
 {
@@ -15,14 +16,18 @@ function fnWc()
         else sF = szPathC + sF;
         if (sF && "change" == eventType)
         {
-            var szT = fs.readFileSync(sF).toString("utf-8");
+            var szT = String(fs.readFileSync(sF).toString("utf-8"));
             aFCache[sF] = szT;
         }
     });
 }
 
+var g_cache = {};
 function fnMerg(s,t)
 {
+    if(g_cache[s]){
+        return g_cache[s];
+    }
     var a = s.split(/[,;\| ]/),i = 0,b = [],sF,szPathT = (t && "css" == t) ? szPathC : szPath, szHz;
     if(t == "css")szHz = ".css";
     else szHz = ".js";
@@ -30,12 +35,83 @@ function fnMerg(s,t)
     {
         if(fs.existsSync(sF = szPathT + a[i] + szHz))
         {
-            var szT = aFCache[sF] || fs.readFileSync(sF).toString("utf-8");
+            var szT = String(aFCache[sF] || fs.readFileSync(sF)).toString("utf-8");
             aFCache[sF] = szT;
             b.push(szT);
         }
     }
-    return b.join("\n");
+    g_cache[s] = b.join("\n");
+    if("js" == t){
+/*
+{
+    compact: true,
+    controlFlowFlattening: false,
+    controlFlowFlatteningThreshold: 0.75,
+    deadCodeInjection: false,
+    deadCodeInjectionThreshold: 0.4,
+    debugProtection: false,
+    debugProtectionInterval: 0,
+    disableConsoleOutput: false,
+    domainLock: [],
+    domainLockRedirectUrl: 'about:blank',
+    forceTransformStrings: [],
+    identifierNamesCache: null,
+    identifierNamesGenerator: 'hexadecimal',
+    identifiersDictionary: [],
+    identifiersPrefix: '',
+    ignoreImports: false,
+    inputFileName: '',
+    log: false,
+    numbersToExpressions: false,
+    optionsPreset: 'default',
+    renameGlobals: false,
+    renameProperties: false,
+    renamePropertiesMode: 'safe',
+    reservedNames: [],
+    reservedStrings: [],
+    seed: 0,
+    selfDefending: false,
+    simplify: true,
+    sourceMap: false,
+    sourceMapBaseUrl: '',
+    sourceMapFileName: '',
+    sourceMapMode: 'separate',
+    sourceMapSourcesMode: 'sources-content',
+    splitStrings: false,
+    splitStringsChunkLength: 10,
+    stringArray: true,
+    stringArrayCallsTransform: true,
+    stringArrayCallsTransformThreshold: 0.5,
+    stringArrayEncoding: [],
+    stringArrayIndexesType: [
+        'hexadecimal-number'
+    ],
+    stringArrayIndexShift: true,
+    stringArrayRotate: true,
+    stringArrayShuffle: true,
+    stringArrayWrappersCount: 1,
+    stringArrayWrappersChainedCalls: true,
+    stringArrayWrappersParametersMaxCount: 2,
+    stringArrayWrappersType: 'variable',
+    stringArrayThreshold: 0.75,
+    target: 'browser',
+    transformObjectKeys: false,
+    unicodeEscapeSequence: false
+}
+        */
+        g_cache[s] = JavaScriptObfuscator.obfuscate(g_cache[s],{
+            compact: true,
+            controlFlowFlattening: true,
+            controlFlowFlatteningThreshold: 1,
+            numbersToExpressions: true,
+            simplify: true,
+            identifierNamesGenerator: 'hexadecimal',
+            stringArrayShuffle: true,
+            splitStrings: true,
+            stringArrayThreshold: 1
+        })
+    }
+    return g_cache[s];
 }
 
 // var reRes = /\/(js|css)\/([^.]+)$/;
@@ -45,7 +121,8 @@ function fnDoMg(req,res,next,reRes)
     if(!(/[,;\|]/g.test(req.url)))return next();
     
     res.setHeader('content-type', 'text/' + tp);
-    res.end(fnMerg(a[2],t));
+    xx = fnMerg(a[2],t)
+    res.end(String(xx));
 }
 function fnSetPath(s)
 {
