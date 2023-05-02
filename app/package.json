@@ -22,5 +22,8 @@
     "socket.io-stream": "^0.9.1",
     "spdy": "^4.0.2",
     "useragent": "^2.3.0"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.0.2"
   }
 }
