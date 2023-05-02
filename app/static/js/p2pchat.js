@@ -22,15 +22,18 @@ var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
 	peer_media_elements = {}, attachMediaStream = null, /* keep track of our <video>/<audio> tags, indexed by peer_id */
 	g_oYourInfo = {},
+	g_bTxtChat = false,
+	g_peer_connection =	null,
 	nLogs = 0, bNbg = false,
 	szLstChannel = '',
 	nId = 0, bCloseQrcode = true, 
 	g_bUseUpInfo = true,// submit current info to server
 	g_bSetup = false,
-	szgetYourInfo = ''
+	szgetYourInfo = '',
+	sendChannel = null,nCnt=1
 
 // 当前时间
-function getNowStr () {
+function getNowStr() {
 	var now = new Date();
 	var year = now.getFullYear(),
 		month = now.getMonth() + 1,
@@ -70,6 +73,65 @@ function getYourInfo (s) {
 			signaling_socket.emit('svClientInfo', g_oYourInfo,szCltFg)
 			szgetYourInfo = s1
 		}
+	}
+}
+
+function log(...e){
+	for(var i =0; i < e.length; i++){
+		console.log(e[i])
+	}
+}
+
+function CreateMsgDiv(n,s){
+	szId = `TmpId${nCnt}`
+	$("#msgList").append(`<div id="${szId}"></div>`)
+	o1 = $(`#${szId}`)
+	x01=getNowStr()
+	o1.text(`[${x01}]${n}: ${s}`)
+	o1.click(function() {
+		setTimeout(function(){
+			o1.remove()
+		},parseInt($("#clsTm").val()||1) * 60000)
+	})
+	nCnt++
+}
+
+function RevMsg(e){
+	log(`Message from DataChannel '${sendChannel.label}' payload '${e.data}'`)
+	var o = JSON.parse(e.data)
+	CreateMsgDiv(o.nick,o.data)
+}
+var g_sendChannel = null
+function fnTxtChat() {
+	log("fnTxtChat")
+	if(!g_peer_connection){
+		setTimeout(function(){fnTxtChat()},333)
+		return
+	}
+	pc = g_peer_connection
+	pc.ondatachannel = function(e){
+		log(e)
+	}
+	sendChannel = pc.createDataChannel(getRoomName(),{'ordered':true})
+	sendChannel.onclose = function(){
+		log("sendChannel.onclose")
+	}
+	sendChannel.onopen = function(){
+		$("#sdMsg,#sdBt").removeAttr("disabled")
+		o1 = $("#sdMsg")
+		o1.val("")
+		o1.focus()
+		log('准备就绪，你可以发送消息了')
+	}
+	sendChannel.onmessage = RevMsg
+}
+function SendMsg(s){
+	if(s){
+		if(!sendChannel){
+			setTimeout(function(){SendMsg(s)},333)
+		}
+		sendChannel.send({"nick":$("nick").val(),"msg":s})
+		log("send msg:"+ s)
 	}
 }
 
@@ -120,7 +182,12 @@ function part_chat_channel (channel) {
 }
 
 function join_chat_channel (channel, userdata) {
-	if(!signaling_socket)return;
+	if(!signaling_socket){
+		setTimeout(function(){
+			join_chat_channel (channel, userdata)
+		},333)
+		return;
+	}
 	if(szLstChannel && szLstChannel != channel){
 		part_chat_channel(szLstChannel)
 	}
@@ -248,21 +315,26 @@ function init () {
 			}
 		}
 		// p2p 流事件
-		peer_connection.onaddstream = function (event) {
-			var remote_media = fnCreateVid(0);
-			remote_media.autoplay = true;
-			remote_media.controls = false;
-			peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
-			attachMediaStream(remote_media, event.stream);
-			fnMyLogs("peer_connection.onaddstream");
-			fnMyLogs(event);
+		if(!g_bTxtChat){
+			peer_connection.onaddstream = function (event) {
+				var remote_media = fnCreateVid(0);
+				remote_media.autoplay = true;
+				remote_media.controls = false;
+				peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
+				attachMediaStream(remote_media, event.stream);
+				fnMyLogs("peer_connection.onaddstream");
+				fnMyLogs(event);
+			}
+		
+			/* Add our local stream */
+			peer_connection.addStream(local_media_stream);
+			// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
 		}
 
-		/* Add our local stream */
-		peer_connection.addStream(local_media_stream);
-		// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
-
 		if (config.should_create_offer) {
+			log("config.should_create_offer " + config.should_create_offer)
+			g_peer_connection = peer_connection
+			if(g_bTxtChat)fnTxtChat()
 			// console.log("Creating RTC offer to ", peer_id);
 			peer_connection.createOffer(
 				function (local_description) {
@@ -343,7 +415,6 @@ function init () {
 		delete peer_media_elements[config.peer_id];
 	});
 	MkQrcd()
-	$("#myQrcode img").css({ width: "100%", height: "200px", "margin": "auto" });
 	$('#roomurl').on('click', event => {
 		let range, selection;
 		selection = window.getSelection();
@@ -362,12 +433,29 @@ function MkQrcd(){
 	document.getElementById('roomurl').textContent = szCurUrl;
 	o1 = document.getElementById("myQrcode")
 	o1.innerHTML = ""
-	new QRCode(o1, { text: szCurUrl, width: "100%", height: 200 });
+	new QRCode(o1, { text: szCurUrl, width: 200, height: 200 });
+	$("#myQrcode img").css({ width: "99%", height: "200px", "margin": "auto" });
 }
 
-// 后置摄像头
-// {facingMode: "user"} 优先使用前置
-var g_hz = { exact: "environment" }
+/*
+这3个属性通过 track.getSettings 来看默认值都是 true。
+autoGainControl 是自动音量调节
+noiseSuppression 是噪声消除
+echoCancellation 是回声消除
+
+音频三要素，分别是声道数、采样率、位深：channelCount & sampleRate & sampleSize
+浏览器中得到的默认值是 1 48k 16bit 可以得到未压缩的码率：48k * 16 * 1 = 768kb/s
+
+'user': 前置摄像头
+'environment': 后置摄像头
+'left':视频源面向用户但在他们的左边，例如一个对准用户但在他们的左肩上方的摄像机。
+'right': 视频源面向用户但在用户的右边，例如，摄像机对准用户但在他们的右肩上
+*/
+var g_hz = { facingMode: "user" }
+
+function ChangeSound(stream){
+	const audioTracks = stream.getAudioTracks()
+}
 
 // 初始化本地视频
 function setup_local_media (callback, errorback) {
@@ -390,16 +478,18 @@ function setup_local_media (callback, errorback) {
 		var oT = {
 			noiseSuppression: true,
 			echoCancellation: true, //{ exact: true },//'system',
-			autoGainControl: true,
+			autoGainControl: false,
 			sampleRate: { max: 48000, min: 48000 },
 			channelCount: { max: 2, min: 1 },
 			volume: 1.0
 			// https://github.com/muaz-khan/WebRTC-Experiment/issues/435
 			// ,optional:[{echoCancellation: false}],
-			// mandatory: {
+			// mandatory: {// https://bugs.webkit.org/show_bug.cgi?id=179411
 			// 	googEchoCancellation: true,
 			// 	googAutoGainControl: true,
+			//  googExperimentalAutoGainControl: true,
 			// 	googNoiseSuppression: true,
+			//  googExperimentalNoiseSuppression:true,
 			// 	googHighpassFilter: true,
 			// 	googTypingNoiseDetection: true
 			// }
@@ -410,13 +500,14 @@ function setup_local_media (callback, errorback) {
 			"audio": oT, 
 			"video": {
                 'mandatory':{
-                'width':  {'min': 1024},
-                'height': {'min': 768}
+                'width':  {'min': 4000},
+                'height': {'min': 4000}
                 },
                 optional: [ // 对视频Track的可选约束条件
                     {frameRate: 30}
                 ]}
 			}).then((stream) => {
+			ChangeSound(stream)
 			local_media_stream = stream;
 			const local_media = fnCreateVid(bNbg);
 
@@ -517,12 +608,22 @@ function fnDoImgStream (socket, vId) {
 }
 
 $(document).ready(function () {
+	// navigator.mediaDevices.enumerateDevices().then(function(a){console.log(a[0])})
 	szHs = document.location.hash
+	oCnId = $("#cnId")
 	if(szHs) {
 		$("#cnId").val(szHs.substr(1))
 		StartVideo()
 	}
+	$("#stChat").click(function () {
+		g_bTxtChat = true
+		$(".txtChat").show()
+		join_chat_channel(oCnId.val(), {})
+	})
+	
 	$("#startChat").click(function () {
+		g_bTxtChat = false
+		$(".txtChat").hide()
 		StartVideo()
 	})
 	$("#dspWr").click(function () {
@@ -530,7 +631,7 @@ $(document).ready(function () {
 		this.checked ? oL.show() : oL.hide()
 	})
 	init()
-	oCnId = $("#cnId")
+	
 	szLstChannel = oCnId.val()
 	szCltFg = new ClientJS().getFingerprint()
 	if(signaling_socket)signaling_socket.emit("getNick",szCltFg)
@@ -544,4 +645,7 @@ $(document).ready(function () {
 		MkQrcd()
 	})
 	initQrcode()
+	$("#sdBt").click(function(){
+		SendMsg($("#sdMsg").val())
+	})
 })

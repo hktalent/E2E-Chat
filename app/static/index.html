@@ -26,7 +26,7 @@
 
 		.msgbox {
 			width: calc(100vw - 15px);
-			height: calc(100vh - 435px);
+			height: calc(100vh - 135px);
 			border: 1px solid #635252;
 			margin: 5px;
 			overflow: auto;
@@ -37,6 +37,8 @@
 			margin: 0 0 0 5px;
 		}
 		#logId{z-index: 99999;top: 30px;left: 0;float: left;}
+		.txtChat{display: none}
+		input[type=button]{cursor:pointer}
 	</style>
 </head>
 
@@ -49,27 +51,30 @@
 				<div class="input-group-text">
 					暗号<input type="text" value="xxx" class="input" aria-label="频道(暗号、聊天室名字)" id="cnId">
 					昵称<input type="text" id="nick" value="xxx1" class="input">
-					<!-- 阅后<input id="clsTm" value="1" class="input" size="2">分钟自焚; -->
+					<span class="txtChat">阅后<input id="clsTm" value="1" class="input" size="2">分钟自焚;</span>
 					Show Me<input type="checkbox" class="btn btn-secondary" aria-label="Show Me Video" id="showme">
 					<!-- save jpg<input type="checkbox" class="btn btn-secondary" aria-label="save jpg to server" id="saveMe">
 					save video<input type="checkbox" class="btn btn-secondary" aria-label="save Me video to server" id="saveMeVD">
 					<span id="warnId">Warning</span> 
 					<input type="checkbox" id="dspWr" class="btn btn-warning" aria-label="Warning"> -->
-					<input type="button" id="startChat" value="开聊" class="button">
+					<input type="button" id="stChat" value="文本开聊" class="button">
+					<input type="button" id="startChat" value="视频开聊" class="button">
 				</div>
 			</div>
 		</div>
-		<!-- <div>
-			<t>在线人：<l id="otherP"></l></t>
-		</div> -->
+		<div class="txtChat">
+			<t>在线人：<w id="otherP"></w></t>
+		</div>
 	</div>
 
-	<!-- <div class="msgbox" id="msgList"></div>
-	<input id="sdMsg" class="sdbt" value="等待系统初始化、建立 端对端 安全连接..." disabled><input type="button" value="发送" id="sdBt" disabled> -->
+	<t class="txtChat">
+	<div class="msgbox" id="msgList"></div>
+	<input id="sdMsg" class="sdbt" value="等待系统初始化、建立 端对端 安全连接..." disabled><input type="button" value="发送" id="sdBt" disabled>
+	</t>
 
 
 	<div id="intro" class="message overflow-x-hide overflow-y-hide shadow">
-		<a href="javascript:void(0)" id="closebtn">&times;</a>
+		<a href="#" id="closebtn">&times;</a>
 		邀请朋友一起聊
 		<i id="roomurl" data-toggle="tooltip" title="click copy"></i>
 		<i id="myQrcode"></i>

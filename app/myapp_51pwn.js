@@ -115,7 +115,8 @@ function myapp(option)
             return compression.filter(req, res);
         }
     }));
-    if(bUseHttps)app.use(helmet({directives:{upgradeInsecureRequests:bUseHttps}}));
+    connectSources = ["'self'", "wss://192.168.0.107:8089",, "wss://chat.51pwn.com:8089", "wss://127.0.0.1:8089"]
+    if(bUseHttps)app.use(helmet({directives:{upgradeInsecureRequests:bUseHttps, connectSrc:connectSources}}));
     app.use(helmet.referrerPolicy({policy:'no-referrer'}));
     app.use(helmet());
     app.disable('x-powered-by');
