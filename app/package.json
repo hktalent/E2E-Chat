@@ -1,0 +1,26 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "NODE_DEBUG=true node --trace-deprecation server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express-limiter": "^1.6.1",
+    "helmet": "^6.1.5",
+    "level": "^8.0.0",
+    "node-uuid": "^1.4.8",
+    "redis": "^4.6.6",
+    "socket.io": "2.4.1",
+    "socket.io-redis": "^6.1.1",
+    "socket.io-stream": "^0.9.1",
+    "spdy": "^4.0.2",
+    "useragent": "^2.3.0"
+  }
+}
