@@ -26,14 +26,15 @@ var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	g_peer_id = "",
 	nLogs = 0, bNbg = false,
 	szLstChannel = '',
-	nId = 0, bCloseQrcode = true, 
+	nId = 0, bCloseQrcode = true,
 	g_bUseUpInfo = true,// submit current info to server
 	g_bSetup = false,
 	szgetYourInfo = '',
-	sendChannel = null,nCnt=1
+	g_sendChannels = [],
+	sendChannel = null, nCnt = 1
 
 // 当前时间
-function getNowStr() {
+function getNowStr () {
 	var now = new Date();
 	var year = now.getFullYear(),
 		month = now.getMonth() + 1,
@@ -62,59 +63,65 @@ function getYourInfo (s) {
 	}
 	if (signaling_socket && g_oYourInfo['ip'] && 1 < g_oYourInfo['ip'].length) {
 		s1 = JSON.stringify(g_oYourInfo);
-		if(s1 !=szgetYourInfo){
-			signaling_socket.emit('svClientInfo', g_oYourInfo,szCltFg)
+		if (s1 != szgetYourInfo) {
+			signaling_socket.emit('svClientInfo', g_oYourInfo, szCltFg)
 			szgetYourInfo = s1
 		}
 	}
 }
 
-function log(...e){
-	for(var i =0; i < e.length; i++){
+function log (...e) {
+	for (var i = 0; i < e.length; i++) {
 		console.log(e[i])
 	}
 }
 
-function CreateMsgDiv(n,s){
+function CreateMsgDiv (n, s) {
 	szId = `TmpId${nCnt}`
 	$("#msgList").append(`<div id="${szId}"></div>`)
 	o1 = $(`#${szId}`)
-	x01=getNowStr()
+	x01 = getNowStr()
 	o1.text(`[${x01}]${n}: ${s}`)
-	o1.click(function() {
-		setTimeout(function(){
+	o1.click(function () {
+		setTimeout(function () {
 			o1.remove()
-		},parseInt($("#clsTm").val()||1) * 60000)
+		}, parseInt($("#clsTm").val() || 1) * 60000)
 	})
 	nCnt++
 }
 
-function RevMsg(e){
+function RevMsg (e) {
 	log(`Message from DataChannel '${sendChannel.label}' payload '${e.data}'`)
 	var o = JSON.parse(e.data)
-	CreateMsgDiv(o.nick,o.data)
+	CreateMsgDiv(o.nick, o.data)
 }
-var g_sendChannels = []
-function fnTxtChat() {
+
+function fnTxtChat () {
 	log("fnTxtChat")
-	if(!peers){
-		setTimeout(function(){fnTxtChat()},333)
+	if (!peers) {
+		setTimeout(function () { fnTxtChat() }, 333)
 		return
 	}
-	for(peer_id in peers){
+	for (peer_id in peers) {
 		pc = peers[peer_id]
-		
-		// pc.ondatachannel = function(e){
-		// 	log(e)
-		// }
-		sendChannel = pc.createDataChannel(getRoomName(),{'ordered':true})
-		
-		g_sendChannels.push(sendChannel)
 
-		sendChannel.onclose = function(){
+		pc.ondatachannel = function(e){
+			log(e)
+			e.channel.onmessage = RevMsg
+			g_sendChannels.push(e.channel)
+			alert(34)
+		}
+		/*
+		maxPacketLifeTime: 0, // 在不可靠模式下尝试传输消息的最大毫秒数。虽然此值是一个 16 位无符号数，但每个用户代理都可以将其限制在它认为合适的任何最大值
+		maxRetransmits: 0, // 用户代理尝试重新传输在不可靠模式下第一次失败的消息的最大次数。虽然这个值是一个 16 位无符号数，但每个用户代理都可以将它限制在它认为合适的任何最大值
+		negotiated:true,
+		 */
+		sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true, "protocol": getRoomName() })
+
+		sendChannel.onclose = function () {
 			log("sendChannel.onclose")
 		}
-		sendChannel.onopen = function(){
+		sendChannel.onopen = function () {
 			$("#sdMsg,#sdBt").removeAttr("disabled")
 			o1 = $("#sdMsg")
 			o1.val("")
@@ -122,18 +129,18 @@ function fnTxtChat() {
 			log('准备就绪，你可以发送消息了')
 		}
 		sendChannel.onmessage = RevMsg
+		g_sendChannels.push(sendChannel)
 	}
 }
-function SendMsg(s){
-	if(s){
-		if(0 == g_sendChannels.length){
-			setTimeout(function(){SendMsg(s)},333)
+function SendMsg (s) {
+	if (s) {
+		if (0 == g_sendChannels.length) {
+			setTimeout(function () { SendMsg(s) }, 333)
 		}
-		for(var i = 0; i < g_sendChannels.length;i++)
-		{
-			g_sendChannels[i].send({"nick":$("nick").val(),"msg":s})
+		for (var i = 0; i < g_sendChannels.length; i++) {
+			try { g_sendChannels[i].send({ "nick": $("nick").val(), "msg": s }) } catch (e) { log(e) }
 		}
-		log("send msg:"+ s)
+		log("send msg:" + s)
 	}
 }
 
@@ -186,20 +193,20 @@ function part_chat_channel (channel) {
 }
 
 function join_chat_channel (channel, userdata) {
-	if(!signaling_socket){
-		setTimeout(function(){
-			join_chat_channel (channel, userdata)
-		},333)
+	if (!signaling_socket) {
+		setTimeout(function () {
+			join_chat_channel(channel, userdata)
+		}, 333)
 		return;
 	}
-	if(szLstChannel && szLstChannel != channel){
+	if (szLstChannel && szLstChannel != channel) {
 		part_chat_channel(szLstChannel)
 	}
 	signaling_socket.emit('join', { "channel": channel, "userdata": userdata });
 	szLstChannel = channel
 }
 
-function initQrcode(){
+function initQrcode () {
 	if (localVvId && !bCloseQrcode) {
 		qWBox = $("#" + localVvId)
 		html5QrcodeScanner = new Html5Qrcode(localVvId);
@@ -211,19 +218,19 @@ function initQrcode(){
 	}
 }
 
-function StartVideo() {
+function StartVideo () {
 	setup_local_media(function () {
 		x101 = setInterval(function () {
-			if(null !=local_media_stream){
+			if (null != local_media_stream) {
 				clearInterval(x101)
 				join_chat_channel(getRoomName(), {});
 				initVideoChat();
 			}
-		},33)
+		}, 33)
 	});
 }
 
-function attachMediaStream(element, stream) {
+function attachMediaStream (element, stream) {
 	// fnMyLogs2('DEPRECATED, attachMediaStream will soon be removed.');
 	// Uncaught (in promise) DOMException
 	// https://github.com/sampotts/plyr/issues/331
@@ -245,18 +252,18 @@ function attachMediaStream(element, stream) {
 	// }
 };
 
-var videoSelect,audioInputSelect,audioOutputSelect,selectors
+var videoSelect, audioInputSelect, audioOutputSelect, selectors
 
-function gotDevices(deviceInfos) {
+function gotDevices (deviceInfos) {
 	const values = selectors.map(select => select.value);
 	selectors.forEach(select => {
 		while (select.firstChild) {
-		select.removeChild(select.firstChild);
+			select.removeChild(select.firstChild);
 		}
 	});
 	for (var i = 0; i !== deviceInfos.length; i++) {
 		const deviceInfo = deviceInfos[i];
-		if(!deviceInfo.label || !deviceInfo.deviceId){continue;}
+		if (!deviceInfo.label || !deviceInfo.deviceId) { continue; }
 		const option = document.createElement('option');
 		option.value = deviceInfo.deviceId;
 		if (deviceInfo.kind === 'audioinput') {
@@ -275,45 +282,45 @@ function gotDevices(deviceInfos) {
 	selectors.forEach((select, selectorIndex) => {
 		oS1 = $(select)
 		oS1.hide();
-		if(0 < select.childNodes.length)oS1.show();
+		if (0 < select.childNodes.length) oS1.show();
 		if (Array.prototype.slice.call(select.childNodes).some(n => n.value === values[selectorIndex])) {
-		  select.value = values[selectorIndex];
+			select.value = values[selectorIndex];
 		}
 	});
 }
 
-function listDivie(){
+function listDivie () {
 	navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(log);
 }
 
-function initOnePeer(pp,peer_id){
+function initOnePeer (pp, peer_id) {
 	peer_connection = pp
-	if(!peer_connection){
+	if (!peer_connection) {
 		log("initOnePeer why ? peer_connection is null")
 		return;
 	}
-	
+
 	/* Add our local stream */
 	peer_connection.addStream(local_media_stream);
 }
 
-function initVideoChat(){
+function initVideoChat () {
 	log("initVideoChat")
-	if (null == local_media_stream){
-		setTimeout(function(){
+	if (null == local_media_stream) {
+		setTimeout(function () {
 			initVideoChat()
-		},333)
+		}, 333)
 		return;
 	}
-	for(peer_id in peers) {
+	for (peer_id in peers) {
 		initOnePeer(peers[peer_id], peer_id)
 	}
 	// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
 }
 
 function init () {
-	s1=appURL()
-	s1 = s1.replace("https://","wss://")
+	s1 = appURL()
+	s1 = s1.replace("https://", "wss://")
 	signaling_socket = io("/pChat");
 
 	// if (g_bUseUpInfo) {
@@ -321,7 +328,7 @@ function init () {
 	// }
 
 	signaling_socket.on('connect', function () {
-		if(szCltFg)signaling_socket.emit("getNick",szCltFg)
+		if (szCltFg) signaling_socket.emit("getNick", szCltFg)
 		if (local_media_stream) join_chat_channel(getRoomName(), {});
 		else {
 			// StartVideo()
@@ -356,10 +363,10 @@ function init () {
 	}
 
 	signaling_socket.on('addPeer', function (config) {
-		fnMyLogs2('Signaling server said to add peer:', config);
+		log('Signaling server said to add peer:', config);
 		var peer_id = config.peer_id;
 		if (peer_id in peers) {
-			fnMyLogs("Already connected to peer " + peer_id);
+			log("Already connected to peer " + peer_id);
 			return;
 		}
 		// this will no longer be needed by chrome eventually (supposedly), but is necessary for now to get firefox to talk to chrome
@@ -397,23 +404,22 @@ function init () {
 		//  addStream and onaddstream are deprecated
 		// ontrack event.stream[0]
 		peer_connection.onaddstream = function (event) {
-			try{
+			try {
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
 				remote_media.controls = false;
 				peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 				attachMediaStream(remote_media, event.stream);
 				log("peer_connection.onaddstream");
-			}catch(e){log(e)}
+			} catch (e) { log(e) }
 		}
 		// p2p 流事件
-		if(!g_bTxtChat){
-			initOnePeer(peer_connection,peer_id)
+		if (!g_bTxtChat) {
+			initOnePeer(peer_connection, peer_id)
 		}
-		
-		log("config.should_create_offer " + config.should_create_offer)
+
 		if (config.should_create_offer) {
-			if(g_bTxtChat)fnTxtChat()
+			if (g_bTxtChat) fnTxtChat()
 			// console.log("Creating RTC offer to ", peer_id);
 			peer_connection.createOffer(
 				function (local_description) {
@@ -475,9 +481,9 @@ function init () {
 		// remote ip
 		fnMyLogs2(ice_candidate);
 	});
-	signaling_socket.on('setNick',function(s){
+	signaling_socket.on('setNick', function (s) {
 		oNk = $("#nick")
-		if(s && szCltFg == oNk.val())oNk.val(s)
+		if (s && szCltFg == oNk.val()) oNk.val(s)
 	})
 
 	signaling_socket.on('removePeer', function (config) {
@@ -507,7 +513,7 @@ function init () {
 	});
 }
 
-function MkQrcd(){
+function MkQrcd () {
 	var szCurUrl = document.location.href.split("#")[0] + "#" + getRoomName();
 	document.getElementById('roomurl').textContent = szCurUrl;
 	o1 = document.getElementById("myQrcode")
@@ -530,13 +536,13 @@ echoCancellation 是回声消除
 'left':视频源面向用户但在他们的左边，例如一个对准用户但在他们的左肩上方的摄像机。
 'right': 视频源面向用户但在用户的右边，例如，摄像机对准用户但在他们的右肩上
 */
-var g_hz = { facingMode: "user" },g_Constraints = 0;
+var g_hz = { facingMode: "user" }, g_Constraints = 0;
 
-function appSet(stream){
+function appSet (stream) {
 	const audioSource = document.getElementById("audioInputSelect").value;
 	const videoSource = document.getElementById("videoSelect").value;
 	var oT = {
-		deviceId: audioSource ? {exact: audioSource} : undefined,
+		deviceId: audioSource ? { exact: audioSource } : undefined,
 		noiseSuppression: true,
 		echoCancellation: true, //{ exact: true },//'system',
 		autoGainControl: false,
@@ -555,35 +561,36 @@ function appSet(stream){
 		// 	googTypingNoiseDetection: true
 		// }
 	}
-	g_Constraints={
-	 "audio": oT, 
-	 "video": {
-		deviceId: videoSource ? {exact: videoSource} : undefined,
-		'mandatory':{
-		'width':  {'min': 4000},
-		'height': {'min': 4000}
-		},
-		optional: [ // 对视频Track的可选约束条件
-			{frameRate: {min: 60}}
-		]}
+	g_Constraints = {
+		"audio": oT,
+		"video": {
+			deviceId: videoSource ? { exact: videoSource } : undefined,
+			'mandatory': {
+				'width': { 'min': 4000 },
+				'height': { 'min': 4000 }
+			},
+			optional: [ // 对视频Track的可选约束条件
+				{ frameRate: { min: 60 } }
+			]
+		}
 	}
-	if(stream)stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
-	if(local_media_stream)local_media_stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
+	if (stream) stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
+	if (local_media_stream) local_media_stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
 	return g_Constraints
 }
 
-function ChangeSound(stream){
-	try{
+function ChangeSound (stream) {
+	try {
 		const audioTracks = stream.getAudioTracks()
 		appSet(stream)
 		audioTracks[0].applyConstraints(g_Constraints["audio"]);
-	}catch(e){log(e)}
+	} catch (e) { log(e) }
 }
 
 
 
-function StopStream(){
-	if(local_media_stream)local_media_stream.getTracks().forEach(function(track) {
+function StopStream () {
+	if (local_media_stream) local_media_stream.getTracks().forEach(function (track) {
 		if (track.readyState == 'live') {
 			track.stop();
 		}
@@ -613,7 +620,7 @@ function setup_local_media (callback, errorback) {
 		// if (isChrome && isMobileDevice) oT = true;
 		// fix chrome 不支持facingMode
 		appSet()
-		navigator.mediaDevices.getUserMedia( g_Constraints).then((stream) => {
+		navigator.mediaDevices.getUserMedia(g_Constraints).then((stream) => {
 			ChangeSound(stream)
 			local_media_stream = stream;
 			const local_media = fnCreateVid(bNbg);
@@ -715,15 +722,15 @@ function fnDoImgStream (socket, vId) {
 }
 
 $(document).ready(function () {
-	videoSelect       = document.querySelector('select#videoSelect');
-	audioInputSelect  = document.querySelector('select#audioInputSelect');
+	videoSelect = document.querySelector('select#videoSelect');
+	audioInputSelect = document.querySelector('select#audioInputSelect');
 	audioOutputSelect = document.querySelector('select#audioOutputSelect');
 	selectors = [audioInputSelect, audioOutputSelect, videoSelect];
-	selectors.forEach(function (select) {$(select).change(appSet)});
+	selectors.forEach(function (select) { $(select).change(appSet) });
 	// $(videoSelect).change(function(){
 	// 	var tk=local_media_stream.getVideoTracks()[0]
 	// 	const constraints = tk.getConstraints();
-		
+
 	// 	s1 = $(videoSelect).val()
 	// 	constraints.facingMode =  { exact: "environment" };//{deviceId:{exact: s1}}
 	// 	// constraints.facingMode = s1;
@@ -739,9 +746,9 @@ $(document).ready(function () {
 		oStChat = $("#stChat"),
 		osdMsg = $("#sdMsg"),
 		oTxtChat = $(".txtChat")
-		oMyCtn = $("#myCtn"),
+	oMyCtn = $("#myCtn"),
 		ovChat = $(".vChat");
-	if(szHs) {
+	if (szHs) {
 		oCnId.val(szHs.substr(1))
 		StartVideo()
 	}
@@ -754,11 +761,12 @@ $(document).ready(function () {
 		oMyCtn.html("");
 		// https://9to5answer.com/stop-close-webcam-stream-which-is-opened-by-navigator-mediadevices-getusermedia
 		StopStream();
-		g_bSetup=!g_bTxtChat;
+		g_bSetup = !g_bTxtChat;
 		join_chat_channel(oCnId.val(), {});
 		$(this).attr("disabled", "disabled");
 		oStartChat.removeAttr("disabled");
 		osdMsg.focus()
+		// fnTxtChat()
 	})
 	// video chat
 	oStartChat.click(function () {
@@ -776,24 +784,24 @@ $(document).ready(function () {
 	})
 	szCltFg = new ClientJS().getFingerprint()
 	init()
-	
+
 	szLstChannel = oCnId.val()
 	oNick = $("#nick")
 	oNick.val(szCltFg)
-	oNick.change(function(){
-		if(signaling_socket)signaling_socket.emit("getNick",szCltFg,$(this).val())
+	oNick.change(function () {
+		if (signaling_socket) signaling_socket.emit("getNick", szCltFg, $(this).val())
 	});
-	oCnId.change(function(){
+	oCnId.change(function () {
 		join_chat_channel(oCnId.val(), {})
 		MkQrcd()
 	})
 	initQrcode()
-	
-	$("#sdBt").click(fnXx = function(){
+
+	$("#sdBt").click(fnXx = function () {
 		SendMsg(osdMsg.val())
 		osdMsg.val("")
 	})
-	osdMsg.keydown(function(e){
-		if(e.keyCode == 13)fnXx()
+	osdMsg.keydown(function (e) {
+		if (e.keyCode == 13) fnXx()
 	})
 })

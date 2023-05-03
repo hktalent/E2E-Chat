@@ -35,7 +35,7 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
           sudo apt-get update -yy
           sudo apt-get install  -yy redis
-          service redis-server start
+          # service redis-server start
           ps -ef | grep redis
 
       - name: run it
