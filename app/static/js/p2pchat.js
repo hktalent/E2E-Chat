@@ -75,7 +75,7 @@ function log (...e) {
 		console.log(e[i])
 	}
 }
-var szSelfK = "自己",fnTmArr = []
+var szSelfK = "自己",fnTmArr = [],bAutoRm = false;
 setInterval(() => {
 	for(var i =0; i < fnTmArr.length; i++){
 		if(fnTmArr[i]()){
@@ -86,20 +86,20 @@ setInterval(() => {
 }, 1000);
 
 function CreateMsgDiv (n, s) {
-	szId = `TmpId${nCnt}`
-	szC="msgRow "
+	var szId = `TmpId${nCnt}`
+	var szC="msgRow "
 	if(szSelfK == n)szC += "t3"
-	o9 = $("#msgList")
+	var o9 = $("#msgList")
 	o9.append(`<div id="${szId}" class="${szC}"></div>`)
-	o1 = $(`#${szId}`)
-	x01 = getNowStr()
+	var o1 = $(`#${szId}`)
+	var x01 = getNowStr()
 	o1.html(`<t class=t1>${x01}</t> [<t class=t2>${n}</t>] <d></d><x></x>`)
 	o1.find("t.t2").text(n)
 	o1.find("d").text(s)
-	n7 = parseInt($("#clsTm").val()||1)
+	var n7 = parseInt($("#clsTm").val()||1)
 	var autoRm = function () {
 		o1.unbind('click')
-		n6 = n7 * 60000
+		var n6 = n7 * 60000
 		fnTmArr.push(function(){
 			n6 -= 1000
 			o1.find("x").text( " (" + (n6/1000) + ")")
@@ -110,7 +110,8 @@ function CreateMsgDiv (n, s) {
 			return false
 		})
 	}
-	o1.click(autoRm)
+	if(bAutoRm)autoRm();
+	else o1.click(autoRm)
 	nCnt++;
 	o1[0].scrollIntoView({
 		behavior: "smooth", // or "auto" or "instant"
@@ -835,4 +836,9 @@ $(document).ready(function () {
 	osdMsg.keydown(function (e) {
 		if (e.keyCode == 13) fnXx()
 	})
+	oAutoRm = $("#autoRm");
+	oAutoRm.change(function () {
+		bAutoRm = this.checked
+	})
+	bAutoRm = oAutoRm.prop("checked")
 })
