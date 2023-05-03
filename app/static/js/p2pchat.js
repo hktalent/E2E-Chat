@@ -126,6 +126,8 @@ function RevMsg (e) {
 }
 
 function fnTxtChatOne(pc){
+	if(pc.Tok)return;
+	pc.Tok = true;
 	pc.ondatachannel = function(e){
 		e.channel.onmessage = RevMsg
 		// g_sendChannels.push(e.channel)
