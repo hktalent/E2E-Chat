@@ -37,3 +37,44 @@ html,body,.container,.row{background:#fff;width:100vw;margin: 0;}
 .video:hover {
     background: #0cf104;
     border-radius: 20%;}
+    #overlay,
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    body,input {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    *{font-size: 9pt;}
+
+    .msgbox {
+        width: calc(100vw - 15px);
+        height: calc(100vh - 135px);
+        border: 1px solid #635252;
+        margin: 5px;
+        overflow: auto;
+    }
+
+    .sdbt {
+        width: calc(100vw - 60px);
+        margin: 0 0 0 5px;
+    }
+    #logId{z-index: 99999;top: 30px;left: 0;float: left;}
+    .txtChat,.vChat{display: none}
+    input[type=button]{cursor:pointer}
+    .ah{width: 10%;}
+    .msgRow{width: 100%;overflow: auto;cursor:pointer}
+    .t1{color: chocolate;}
+    .t2{color:#740b0b}
+    .t3{background-color:#8dbbef}
+    .msgRow:hover {
+        background-color: #ebd6f5;
+        -webkit-box-shadow: 10px 10px 99px 6px rgba(76,201,240,1);
+        -moz-box-shadow: 10px 10px 99px 6px rgba(76,201,240,1);
+        box-shadow: 10px 10px 99px 6px rgba(76,201,240,1);
+    }

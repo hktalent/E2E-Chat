@@ -75,24 +75,47 @@ function log (...e) {
 		console.log(e[i])
 	}
 }
-var szSelfK = "自己"
+var szSelfK = "自己",fnTmArr = []
+setInterval(() => {
+	for(var i =0; i < fnTmArr.length; i++){
+		if(fnTmArr[i]()){
+			fnTmArr.splice(i, 1)
+			i--
+		}
+	}
+}, 1000);
+
 function CreateMsgDiv (n, s) {
 	szId = `TmpId${nCnt}`
 	szC="msgRow "
 	if(szSelfK == n)szC += "t3"
-	$("#msgList").append(`<div id="${szId}" class="${szC}"></div>`)
+	o9 = $("#msgList")
+	o9.append(`<div id="${szId}" class="${szC}"></div>`)
 	o1 = $(`#${szId}`)
 	x01 = getNowStr()
 	o1.html(`<t class=t1>${x01}</t> [<t class=t2>${n}</t>] <d></d><x></x>`)
 	o1.find("t.t2").text(n)
 	o1.find("d").text(s)
-	o1.click(function () {
-		setTimeout(function () {
-			o1.remove()
-		}, parseInt($("#clsTm").val() || 1) * 60000)
+	n7 = parseInt($("#clsTm").val()||1)
+	var autoRm = function () {
+		o1.unbind('click')
+		n6 = n7 * 60000
+		fnTmArr.push(function(){
+			n6 -= 1000
+			o1.find("x").text( " (" + (n6/1000) + ")")
+			if(0 >= n6){
+				o1.remove()
+				return true
+			}
+			return false
+		})
+	}
+	o1.click(autoRm)
+	nCnt++;
+	o1[0].scrollIntoView({
+		behavior: "smooth", // or "auto" or "instant"
+		block: "start" // or "end"
 	})
-	nCnt++
-	$("html, body").animate({ scrollTop: o1.scrollTop() }, 1000);
 }
 
 function RevMsg (e) {
