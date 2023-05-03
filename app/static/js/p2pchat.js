@@ -111,7 +111,7 @@ function CreateMsgDiv (n, s) {
 		})
 	}
 	if(bAutoRm)autoRm();
-	else o1.click(autoRm)
+	else o1.click(autoRm);
 	nCnt++;
 	o1[0].scrollIntoView({
 		behavior: "smooth", // or "auto" or "instant"
@@ -836,9 +836,14 @@ $(document).ready(function () {
 	osdMsg.keydown(function (e) {
 		if (e.keyCode == 13) fnXx()
 	})
-	oAutoRm = $("#autoRm");
+	oAutoRm = $("#atRd");
 	oAutoRm.change(function () {
-		bAutoRm = this.checked
+		bAutoRm = this.checked;
+		alert([bAutoRm,oAutoRm.prop("checked")])
 	})
-	bAutoRm = oAutoRm.prop("checked")
+	bAutoRm = oAutoRm.prop("checked");
+	$("#clsId").click(function(){
+		$("#msgList").html("")
+		fnTmArr = []
+	})
 })
