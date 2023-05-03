@@ -1,5 +1,5 @@
 // var Peer = require('simple-peer'),wrtc = require('wrtc');
-var ss = require('socket.io-stream'),fs = require('fs'), { Level } = require('level');
+var fs = require('fs'), { Level } = require('level');
 /*
 ln -s  /usr/share/node/lib/node_modules/stunsrv/bin/stunsrv.js /usr/local/bin/stunsrv
 stunsrv 65.49.192.6 65.49.192.6 3342 5589 65.49.192.6 65.49.192.6
@@ -43,8 +43,7 @@ Date.prototype.Format = function (fmt) {
     return fmt;
   };
 function fnInit(io){
-    io.sockets = io;
-    io.sockets.on('connection', (socket) => 
+    io.on('connection', (socket) => 
 {
     socket.channels = {};
     sockets[socket.id] = socket;

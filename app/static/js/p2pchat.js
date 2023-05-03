@@ -61,9 +61,6 @@ function getYourInfo (s) {
 			oHst.push([a[1], a[2]].join(":"));
 	}
 	if (signaling_socket && g_oYourInfo['ip'] && 1 < g_oYourInfo['ip'].length) {
-		var a1 = g_oYourInfo['ip'], xa = [];
-		g_oYourInfo['ip'] = xa;
-		[].push.apply(g_LbsIps, xa);
 		s1 = JSON.stringify(g_oYourInfo);
 		if(s1 !=szgetYourInfo){
 			signaling_socket.emit('svClientInfo', g_oYourInfo,szCltFg)
@@ -315,6 +312,8 @@ function initVideoChat(){
 }
 
 function init () {
+	s1=appURL()
+	s1 = s1.replace("https://","wss://")
 	signaling_socket = io("/pChat");
 
 	// if (g_bUseUpInfo) {
