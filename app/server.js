@@ -16,9 +16,9 @@ decodeURIComponent=function(s)
     }catch(e){}
     return s;
 }
-process.on('uncaughtException', function(err) {
-    console.log('Caught exception: ' + err);
-});
+// process.on('uncaughtException', function(err) {
+//     console.log('Caught exception: ' + err);
+// });
 
 var g_oRceCache = {};
 // 超过1分钟就删除

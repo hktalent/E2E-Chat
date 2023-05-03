@@ -1,4 +1,4 @@
-process.setMaxListeners(500);
+process.setMaxListeners(5000);
 var fs = require('fs'),
     spdy = require('spdy'),
     express = require('express'),
@@ -16,7 +16,6 @@ var fs = require('fs'),
     // yum install redis;systemctl start redis.service;systemctl status redis.service
     // apt install redis;service redis-server start
     // brew install redis;brew services restart redis
-    client = require('redis').createClient(),
     nMaxConn = 100,
     // https://github.com/helmetjs/csp, standalone module: helmet-csp
     helmet = require('helmet'),
@@ -27,14 +26,20 @@ var fs = require('fs'),
     bUseHttps = false,
     // 白名单host
     wtHosts = [],
-    redisAdapter = require('socket.io-redis'),
+    { createClient } = require("redis"),
+    { createAdapter } = require("@socket.io/redis-adapter"),
     credentials = {};
 
 // fix: UnhandledPromiseRejectionWarning: Error: The client is closed  Commander._RedisClient_sendCommand (node_modules/@node-redis/client/dist/lib/client/index.js:387:31)
+
+const pubClient = createClient({ url: "redis://localhost:6379" });
 (async () => {
-    client.on('error', (err) => console.log('Redis Client Error', err));
-    await client.connect();
+    pubClient.on('error', (err) => console.log('Redis Client Error', err));
+    await pubClient.connect();
 })();
+
+const subClient = pubClient.duplicate();
+
 
 function myapp(option)
 {
@@ -203,7 +208,7 @@ function myapp(option)
     if(bUseHttps)app.set('trust proxy', 1),fnOnLog("open https SSL");
 
     // 并发限制
-    var limiter = expresslimiter(app, client);
+    var limiter = expresslimiter(app, pubClient);
     limiter({
         path: '*',// "post"
         method: 'all',
@@ -268,8 +273,7 @@ function myapp(option)
     // ]);
 
     // 集群下用同一个redis
-    // try{
-        io.adapter(redisAdapter(option.redisAdapter|| { host: 'localhost', port: 6379 }));
+        io.adapter(createAdapter(pubClient, subClient));
     // }catch(e){
     //     io.adapter(redisAdapter({ host: 'docker.for.mac.localhost', port: 6379 }));
     // }
@@ -278,7 +282,7 @@ function myapp(option)
     var szSsh = [],aSsh = {},oNoRpt = {};
     var fnGetSsh = function(k)
     {
-        client.get(k,function(e,r)
+        pubClient.get(k,function(e,r)
         {
             r = JSON.parse(r);
             szSsh.push(r.id);
@@ -287,7 +291,7 @@ function myapp(option)
             {
                 console.log("del :");
                 // console.log(r);
-                client.del(r.id,function(e,r1)
+                pubClient.del(r.id,function(e,r1)
                 {
                     // console.log(r1);
                 });
@@ -299,7 +303,7 @@ function myapp(option)
     }
     global.aSsh = aSsh;
     global.oNoRpt = oNoRpt;
-    client.keys('*', function (err, keys)
+    pubClient.keys('*', function (err, keys)
     {
         if (err) return console.log(err);
         for(var i = 0, len = keys.length; i < len; i++)
@@ -312,25 +316,6 @@ function myapp(option)
     });
 
     //*/ 实际上这里等数据只发送当前连接等客户端一次，因此是可以直接关闭等
-    // .of("/ss_h")
-    var ss_h = io.of("/ss_h");
-    ss_h.on('connection', function(ioClt)
-    {
-        if(0 < szSsh.length)
-        {
-            // 权限控制好了才开通
-            // ioClt.emit("onSsh",szSsh);
-            console.log(szSsh);
-        }
-        // 接受客户端ip，特征等信息
-        ioClt.on("pks",function(s)
-        {
-            // console.log(s)
-        });
-        ioClt.disconnect = function(b) {
-            console.log("no Close: " + b);
-        }
-    });
     if(option.cbk4ServerAppIo)option.cbk4ServerAppIo(server,app,io);
     
     app.use(express.static(szSSP, expressOptions));

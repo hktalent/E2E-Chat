@@ -24,7 +24,19 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Install Dependences
-        run: sudo apt install -yy nodejs npm tmux git
+        run: |
+          sudo apt install -yy nodejs npm tmux git
+          # sudo add-apt-repository ppa:redislabs/redis
+          # sudo apt update -yy
+          # sudo apt install  -yy redis
+          
+          sudo apt install -yy lsb-release
+          curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+          sudo apt-get update -yy
+          sudo apt-get install  -yy redis
+          service redis-server start
+          ps -ef | grep redis
 
       - name: run it
         id: new-additions
@@ -36,6 +48,7 @@ jobs:
           
       - name: Commit files
         run: |
+          git add dbChat
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit --allow-empty -m "Auto update md PoCs lists [$(date)] :robot:" -a
