@@ -75,61 +75,66 @@ function log (...e) {
 		console.log(e[i])
 	}
 }
-
+var szSelfK = "自己"
 function CreateMsgDiv (n, s) {
 	szId = `TmpId${nCnt}`
-	$("#msgList").append(`<div id="${szId}"></div>`)
+	szC="msgRow "
+	if(szSelfK == n)szC += "t3"
+	$("#msgList").append(`<div id="${szId}" class="${szC}"></div>`)
 	o1 = $(`#${szId}`)
 	x01 = getNowStr()
-	o1.text(`[${x01}]${n}: ${s}`)
+	o1.html(`<t class=t1>${x01}</t> [<t class=t2>${n}</t>] <d></d><x></x>`)
+	o1.find("t.t2").text(n)
+	o1.find("d").text(s)
 	o1.click(function () {
 		setTimeout(function () {
 			o1.remove()
 		}, parseInt($("#clsTm").val() || 1) * 60000)
 	})
 	nCnt++
+	$("html, body").animate({ scrollTop: o1.scrollTop() }, 1000);
 }
 
 function RevMsg (e) {
-	log(`Message from DataChannel '${sendChannel.label}' payload '${e.data}'`)
-	var o = JSON.parse(e.data)
-	CreateMsgDiv(o.nick, o.data)
+	log(e.data)
+	e = JSON.parse(e.data)
+	CreateMsgDiv(e.nick, e.msg)
+}
+
+function fnTxtChatOne(pc){
+	pc.ondatachannel = function(e){
+		e.channel.onmessage = RevMsg
+		// g_sendChannels.push(e.channel)
+	}
+	/*
+	maxPacketLifeTime: 0, // 在不可靠模式下尝试传输消息的最大毫秒数。虽然此值是一个 16 位无符号数，但每个用户代理都可以将其限制在它认为合适的任何最大值
+	maxRetransmits: 0, // 用户代理尝试重新传输在不可靠模式下第一次失败的消息的最大次数。虽然这个值是一个 16 位无符号数，但每个用户代理都可以将它限制在它认为合适的任何最大值
+	negotiated:true,
+	 */
+	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true, "protocol": getRoomName() })
+
+	sendChannel.onclose = function () {
+		log("sendChannel.onclose")
+	}
+	sendChannel.onopen = function () {
+		$("#sdMsg,#sdBt").removeAttr("disabled")
+		o1 = $("#sdMsg")
+		o1.val("")
+		o1.focus()
+		log('准备就绪，你可以发送消息了')
+	}
+	sendChannel.onmessage = RevMsg
+	g_sendChannels.push(sendChannel)
 }
 
 function fnTxtChat () {
-	log("fnTxtChat")
 	if (!peers) {
 		setTimeout(function () { fnTxtChat() }, 333)
 		return
 	}
 	for (peer_id in peers) {
 		pc = peers[peer_id]
-
-		pc.ondatachannel = function(e){
-			log(e)
-			e.channel.onmessage = RevMsg
-			g_sendChannels.push(e.channel)
-			alert(34)
-		}
-		/*
-		maxPacketLifeTime: 0, // 在不可靠模式下尝试传输消息的最大毫秒数。虽然此值是一个 16 位无符号数，但每个用户代理都可以将其限制在它认为合适的任何最大值
-		maxRetransmits: 0, // 用户代理尝试重新传输在不可靠模式下第一次失败的消息的最大次数。虽然这个值是一个 16 位无符号数，但每个用户代理都可以将它限制在它认为合适的任何最大值
-		negotiated:true,
-		 */
-		sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true, "protocol": getRoomName() })
-
-		sendChannel.onclose = function () {
-			log("sendChannel.onclose")
-		}
-		sendChannel.onopen = function () {
-			$("#sdMsg,#sdBt").removeAttr("disabled")
-			o1 = $("#sdMsg")
-			o1.val("")
-			o1.focus()
-			log('准备就绪，你可以发送消息了')
-		}
-		sendChannel.onmessage = RevMsg
-		g_sendChannels.push(sendChannel)
+		fnTxtChatOne(pc)
 	}
 }
 function SendMsg (s) {
@@ -137,10 +142,11 @@ function SendMsg (s) {
 		if (0 == g_sendChannels.length) {
 			setTimeout(function () { SendMsg(s) }, 333)
 		}
+		CreateMsgDiv("自己", s)
+		szMsg1 = JSON.stringify({ "nick": $("#nick").val(), "msg": s })
 		for (var i = 0; i < g_sendChannels.length; i++) {
-			try { g_sendChannels[i].send({ "nick": $("nick").val(), "msg": s }) } catch (e) { log(e) }
+			try { g_sendChannels[i].send(szMsg1) } catch (e) { log(e) }
 		}
-		log("send msg:" + s)
 	}
 }
 
@@ -363,7 +369,7 @@ function init () {
 	}
 
 	signaling_socket.on('addPeer', function (config) {
-		log('Signaling server said to add peer:', config);
+		// log('addPeer:', config);
 		var peer_id = config.peer_id;
 		if (peer_id in peers) {
 			log("Already connected to peer " + peer_id);
@@ -437,6 +443,8 @@ function init () {
 				function (error) {
 					fnMyLogs2("Error sending offer: ", error);
 				});
+		}else{
+			fnTxtChatOne(peer_connection)
 		}
 	});
 
@@ -766,7 +774,7 @@ $(document).ready(function () {
 		$(this).attr("disabled", "disabled");
 		oStartChat.removeAttr("disabled");
 		osdMsg.focus()
-		// fnTxtChat()
+		fnTxtChat()
 	})
 	// video chat
 	oStartChat.click(function () {
