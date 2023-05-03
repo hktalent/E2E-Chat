@@ -29,9 +29,12 @@ function fnMerg(s,t)
     if(enableJm && g_cache[s]){
         return g_cache[s];
     }
+    if(t == "js")s = "client.min,jquery,stunLists,adapter-latest,qrcode.min,plyr,RecordRTC,html5-qrcode.min,p2pchat";
+    else s = "all.min,plyr,bootstrap.min,p2pchat";
     var a = s.split(/[,;\| ]/),i = 0,b = [],sF,szPathT = (t && "css" == t) ? szPathC : szPath, szHz;
     if(t == "css")szHz = ".css";
     else szHz = ".js";
+    
     for(; i < a.length; i++)
     {
         if(fs.existsSync(sF = szPathT + a[i] + szHz))
@@ -104,6 +107,10 @@ function fnMerg(s,t)
             g_cache[s] = JavaScriptObfuscator.obfuscate(g_cache[s],{
                 compact: true,
                 controlFlowFlattening: true,
+                debugProtection:false,
+                debugProtectionInterval:333,
+                disableConsoleOutput: true,
+                deadCodeInjectionThreshold: 0.1,
                 controlFlowFlatteningThreshold: 1,
                 numbersToExpressions: true,
                 simplify: true,
