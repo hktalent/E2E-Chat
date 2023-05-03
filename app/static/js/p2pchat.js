@@ -368,7 +368,7 @@ function init () {
 		// chrome 不支持：DtlsSrtpKeyAgreement
 		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS }, { "optional": [{ "DtlsSrtpKeyAgreement": true }] });
 		peers[peer_id] = peer_connection;
-		// p2p 打洞成功触发事件
+		// p2p 打洞成功触发事件 
 		peer_connection.onicecandidate = function (event) {
 			if (event.candidate == null) { return }
 			if (event.candidate) {
@@ -393,7 +393,9 @@ function init () {
 				// peer_connection.onicecandidate = null;
 			}
 		}
-		
+		// https://stackoverflow.com/questions/55379332/onaddstream-event-not-called
+		//  addStream and onaddstream are deprecated
+		// ontrack event.stream[0]
 		peer_connection.onaddstream = function (event) {
 			try{
 				var remote_media = fnCreateVid(0);
