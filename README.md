@@ -15,6 +15,7 @@ docker run -d -p 3478:3478 -p 3478:3478/udp -p 5349:5349 -p 5349:5349/udp -p 491
 
 
 brew services start redis
+yarn upgrade --latest
 NODE_DEBUG=true node --trace-deprecation server.js
 
 ```
@@ -24,4 +25,11 @@ https://github.com/coturn/coturn
 
 ```
 docker run -d -p 3478:3478 -p 3478:3478/udp -p 5349:5349 -p 5349:5349/udp -p 49152-65535:49152-65535/udp coturn/coturn
+```
+
+
+# code
+```
+snyk config set api=1d0e5ffb-8d5f-452a-ab64-a40dbc14c376
+snyk test
 ```
