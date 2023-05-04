@@ -3,10 +3,10 @@ var fs = require('fs'),
     spdy = require('spdy'),
     express = require('express'),
     app = express(),
+    minify = require('html-minifier').minify, 
     expresslimiter = require('express-limiter'),
     webStaticPath = __dirname + "/static/",
     mergeRes = require('./mergeRes'),
-    // browserify = require('browserify-middleware'),
     os = require('os'),
     szCurPath = __dirname + "/",
     uuid  = require('node-uuid'),
@@ -102,9 +102,37 @@ function myapp(option)
     
     mergeRes.fnSetPath(webStaticPath);
     mergeRes.fnWc();
+    mOpt = {
+        preserveLineBreaks:true,
+        collapseInlineTagWhitespace:true,
+        removeComments:            true,
+        collapseWhitespace:        true,
+        collapseBooleanAttributes: true,
+        removeAttributeQuotes:     true,
+        removeEmptyAttributes:     true,
+        removeScriptTypeAttributes:true,
+        removeStyleLinkTypeAttributes:true,
+        minifyCSS:                 true,
+        minifyJS:                  true
+    };
+    oHtmlCc = {};
     // cache静态资源等时间，这个对性能影响很大，缓冲客户端后，在设置等时间范围内、刷新不再请求
     // Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
     expressOptions.maxAge = (7*24*60*60) + 's';//'31536000s';//'3600s';
+    app.use(function(req, res, next){
+        szPath = req.path;
+        if(oHtmlCc[szPath]){
+            res.send(oHtmlCc[szPath]);
+            return
+        }
+        if("" == szPath || "/" == szPath || "/index.html" == szPath){
+            html = oHtmlCc["/"] || oHtmlCc["/index.html"] || minify(fs.readFileSync("static/index.html").toString("utf-8"), mOpt);
+            oHtmlCc[szPath] = html;
+            res.send(html);
+            return
+        }
+        next();
+    });
     // gzip压缩数据
     app.use(compression({
         "level":9,

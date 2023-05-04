@@ -65,7 +65,7 @@ html,body,.container,.row{background:#fff;width:100vw;margin: 0;}
         margin: 0 0 0 5px;
     }
     #logId{z-index: 99999;top: 30px;left: 0;float: left;}
-    .txtChat,.vChat{display: none}
+    .txtChat,.vChat,.yzhd{display: none}
     input[type=button]{cursor:pointer}
     .ah{width: 10%;}
     .msgRow{width: 100%;overflow: auto;cursor:pointer}
