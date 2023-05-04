@@ -75,8 +75,6 @@ function fnInit(io){
 
     socket.on('saveVideo', (data) => {
         var szFileName = new Date().Format('yyyy-MM-dd HH.mm.ss'),oD = data.videoDataURL;
-        // console.log(data.ip)
-        // console.log(oD.substr(0,90))
         var o = Buffer.from(oD.substr(22),'base64')
         fs.writeFileSync("resImg/" + szFileName + '.mp4',o)
     });
