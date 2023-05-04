@@ -148,7 +148,7 @@ function fnInit(io){
         }
 
         for (id in channels[channel]) {
-            channels[channel][id].emit('addPeer', {'peer_id': socket.id, 'should_create_offer': false});
+            channels[channel][id].emit('addPeer', {'peer_id': socket.id, 'should_create_offer': false,'userdata':userdata});
             socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true});
         }
 
