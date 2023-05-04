@@ -12,14 +12,18 @@
   "license": "ISC",
   "dependencies": {
     "@socket.io/redis-adapter": "^8.2.0",
+    "clean-css": "^5.3.2",
     "compression": "^1.7.4",
     "express-limiter": "^1.6.1",
     "helmet": "^6.1.5",
+    "html-minifier": "^4.0.0",
     "level": "^8.0.0",
+    "lodash.merge": "^4.6.2",
     "node-uuid": "^1.4.8",
     "redis": "^4.6.6",
     "socket.io": "4.6.1",
     "spdy": "^4.0.2",
+    "terser": "^5.17.1",
     "useragent": "^2.3.0"
   },
   "devDependencies": {
