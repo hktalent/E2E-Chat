@@ -34,7 +34,7 @@ var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	sendChannel = null, nCnt = 1
 
 // 当前时间
-function getNowStr () {
+function getNowStr() {
 	var now = new Date();
 	var year = now.getFullYear(),
 		month = now.getMonth() + 1,
@@ -120,8 +120,7 @@ function CreateMsgDiv (n, s) {
 }
 
 function RevMsg (e) {
-	log(e.data)
-	e = JSON.parse(e.data)
+	e = JSON.parse(mmMsgj(e.data))
 	CreateMsgDiv(e.nick, e.msg)
 }
 
@@ -163,13 +162,21 @@ function fnTxtChat () {
 		fnTxtChatOne(pc)
 	}
 }
+function mmMsgj(s){
+	// return s
+	return CryptoJS.AES.decrypt(s,$("#cnId").val()||getNowStr().substring(0,10)).toString (CryptoJS.enc.Utf8)
+}
+function mmMsg(s){
+	// return s
+	return CryptoJS.AES.encrypt(s,$("#cnId").val()||getNowStr().substring(0,10))
+}
 function SendMsg (s) {
 	if (s) {
 		if (0 == g_sendChannels.length) {
 			setTimeout(function () { SendMsg(s) }, 333)
 		}
 		CreateMsgDiv("自己", s)
-		szMsg1 = JSON.stringify({ "nick": $("#nick").val(), "msg": s })
+		szMsg1 = mmMsg(JSON.stringify({ "nick": $("#nick").val(), "msg": s }))
 		for (var i = 0; i < g_sendChannels.length; i++) {
 			try { g_sendChannels[i].send(szMsg1) } catch (e) { log(e) }
 		}
@@ -225,6 +232,8 @@ function part_chat_channel (channel) {
 }
 
 function join_chat_channel (channel, userdata) {
+	userdata || (userdata={});
+	userdata["nick"] = $("#nick").val();
 	if (!signaling_socket) {
 		setTimeout(function () {
 			join_chat_channel(channel, userdata)
@@ -350,6 +359,7 @@ function initVideoChat () {
 	// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
 }
 
+var g_aMembers = {};
 function init () {
 	s1 = appURL()
 	s1 = s1.replace("https://", "wss://")
@@ -369,6 +379,7 @@ function init () {
 	signaling_socket.on('disconnect', function () {
 		for (peer_id in peer_media_elements) {
 			peer_media_elements[peer_id].remove();
+			delete g_aMembers[peer_id]
 		}
 		for (peer_id in peers) {
 			peers[peer_id].close();
@@ -471,6 +482,7 @@ function init () {
 				});
 		}else{
 			fnTxtChatOne(peer_connection)
+			if(config.userdata && config.userdata.nick)g_aMembers[peer_id]=config.userdata.nick
 		}
 	});
 
@@ -841,7 +853,6 @@ $(document).ready(function () {
 	oAutoRm = $("#atRd");
 	oAutoRm.change(function () {
 		bAutoRm = this.checked;
-		alert([bAutoRm,oAutoRm.prop("checked")])
 	})
 	bAutoRm = oAutoRm.prop("checked");
 	$("#clsId").click(function(){
