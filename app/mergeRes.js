@@ -26,11 +26,12 @@ function fnWc()
 var g_cache = {};
 function fnMerg(s,t)
 {
+    if(t == "js")s = "client.min,jquery,stunLists,adapter-latest,qrcode.min,plyr,RecordRTC,html5-qrcode.min,aes,p2pchat";
+    else s = "all.min,plyr,bootstrap.min,p2pchat";
+
     if(enableJm && g_cache[s]){
         return g_cache[s];
     }
-    if(t == "js")s = "client.min,jquery,stunLists,adapter-latest,qrcode.min,plyr,RecordRTC,html5-qrcode.min,aes,p2pchat";
-    else s = "all.min,plyr,bootstrap.min,p2pchat";
     var a = s.split(/[,;\| ]/),i = 0,b = [],sF,szPathT = (t && "css" == t) ? szPathC : szPath, szHz;
     if(t == "css")szHz = ".css";
     else szHz = ".js";
