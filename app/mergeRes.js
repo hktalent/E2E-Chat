@@ -29,7 +29,7 @@ function fnMerg(s,t)
     if(enableJm && g_cache[s]){
         return g_cache[s];
     }
-    if(t == "js")s = "client.min,jquery,stunLists,adapter-latest,qrcode.min,plyr,RecordRTC,html5-qrcode.min,p2pchat";
+    if(t == "js")s = "client.min,jquery,stunLists,adapter-latest,qrcode.min,plyr,RecordRTC,html5-qrcode.min,aes,p2pchat";
     else s = "all.min,plyr,bootstrap.min,p2pchat";
     var a = s.split(/[,;\| ]/),i = 0,b = [],sF,szPathT = (t && "css" == t) ? szPathC : szPath, szHz;
     if(t == "css")szHz = ".css";
@@ -119,10 +119,20 @@ function fnMerg(s,t)
                 splitStrings: true,
                 stringArrayThreshold: 1
             })
+            console.log("加密js已经初始化完毕")
         }
     }
     return g_cache[s];
 }
+// 启动时预处理，提高速度
+fnMerg(",","js");fnMerg(",","css");
+
+function setLongTermCache(res) {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + 1);
+    res.setHeader("Expires", date.toUTCString());
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  }
 
 // var reRes = /\/(js|css)\/([^.]+)$/;
 function fnDoMg(req,res,next,reRes)
@@ -133,6 +143,7 @@ function fnDoMg(req,res,next,reRes)
     s1 = String(req.connection.remoteAddress)
     // var bDebug = false //-1 < s1.indexOf('::ffff:127.0.0.1') || -1 < s1.indexOf('::ffff:192.168.')
     res.setHeader('content-type', 'text/' + tp);
+    setLongTermCache(res)
     
     xx = fnMerg(a[2],t)
     res.end(String(xx));

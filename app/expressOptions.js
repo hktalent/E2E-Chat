@@ -1,11 +1,29 @@
+
+function setNoCache(res) {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - 1);
+  res.setHeader("Expires", date.toUTCString());
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Cache-Control", "public, no-cache");
+}
+
+function setLongTermCache(res) {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() + 1);
+  res.setHeader("Expires", date.toUTCString());
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+}
+
+
 module.exports = {
-  dotfiles: 'ignore',
-  etag: false,
-  extensions: ['htm', 'html'],
-  index: false,
-  maxAge: '1s',
-  redirect: false,
+  etag: true,
+  lastModified: true,
   setHeaders: function (res, path, stat) {
+    if (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|json|ttf|woff|woff2|eot|html)$/)) {
+      setLongTermCache(res)
+    }else{
+      setNoCache(res)
+    }
     res.set('x-timestamp', Date.now())
   }
 }
