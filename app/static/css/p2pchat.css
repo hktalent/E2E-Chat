@@ -30,10 +30,10 @@ html,body,.container,.row{background:#fff;width:100vw;margin: 0;}
 
 .video{
     background: #f52003;
-    border-radius: 6px
-    transition-property: background, border-radius;
-    transition-duration: 1s;
-    transition-timing-function: linear;}
+    border-radius: 6px;
+    transition-property:background,border-radius;
+    transition-duration:1s;
+    transition-timing-function:linear}
 .video:hover {
     background: #0cf104;
     border-radius: 20%;}
@@ -48,24 +48,25 @@ html,body,.container,.row{background:#fff;width:100vw;margin: 0;}
         margin: 0;
         padding: 0;
         overflow: hidden;
+        -webkit-appearance: none;
     }
 
-    *{font-size: 9pt;}
+    *{font-size: 1rem}
 
     .msgbox {
-        width: calc(100vw - 15px);
-        height: calc(100vh - 135px);
+        width: calc(100vw - 3rem);
+        height: calc(100vh - 8rem);
         border: 1px solid #635252;
-        margin: 5px;
+        margin: 0.4rem;
         overflow: auto;
     }
 
     .sdbt {
-        width: calc(100vw - 60px);
+        width: calc(100vw - 4rem);
         margin: 0 0 0 5px;
     }
     #logId{z-index: 99999;top: 30px;left: 0;float: left;}
-    .txtChat,.vChat,.yzhd{display: none}
+    .txtChat,.vChat,.yzhd,#intro{display: none}
     input[type=button]{cursor:pointer}
     .ah{width: 10%;}
     .msgRow{width: 100%;overflow: auto;cursor:pointer}
@@ -77,4 +78,25 @@ html,body,.container,.row{background:#fff;width:100vw;margin: 0;}
         -webkit-box-shadow: 10px 10px 99px 6px rgba(76,201,240,1);
         -moz-box-shadow: 10px 10px 99px 6px rgba(76,201,240,1);
         box-shadow: 10px 10px 99px 6px rgba(76,201,240,1);
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+      }
+      input[type="number"]::-webkit-inner-spin-button, 
+      input[type="number"]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+      }
+    @media screen{
+        #sdBt {
+          display: none;
+        }
+        .sdbt{width:98vw}
+      }
+
+      /*定义竖屏 css*/
+    @media screen and (orientation:portrait) {
+    }
+    /*定义横屏 css*/
+    @media screen and (orientation:landscape) {    
     }

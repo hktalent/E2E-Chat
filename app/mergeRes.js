@@ -33,10 +33,39 @@ var minifyOptions = {
         comments: false // 删除注释
     }
 };
+
+
+async function MakeN(){
+    x11 = "p2pchat.js"
+    s111 = fs.readFileSync(x11).toString("utf-8");
+    s111 = (await minify(s111, minifyOptions)).code
+    s1 = JavaScriptObfuscator.obfuscate(s111, {
+        compact: true,
+        controlFlowFlattening: true,
+        debugProtection: false,
+        debugProtectionInterval: 333,
+        disableConsoleOutput: true,
+        deadCodeInjectionThreshold: 0.1,
+        controlFlowFlatteningThreshold: 1,
+        numbersToExpressions: true,
+        simplify: true,
+        identifierNamesGenerator: 'hexadecimal',
+        stringArrayShuffle: true,
+        splitStrings: true,
+        stringArrayThreshold: 1
+    })
+    fs.writeFileSync(x11 + "_1", String(s1));
+}
+MakeN()
 async function fnMerg (s, t) {
+    szXf = "static/"+t + "." + t;
     if (t == "js") s = "client.min,jquery,stunLists,adapter-latest,qrcode.min,plyr,RecordRTC,html5-qrcode.min,aes,p2pchat";
     else s = "all.min,plyr,bootstrap.min,p2pchat";
-
+    // if(fs.existsSync(szXf)){
+    //     s1 = fs.readFileSync(szXf).toString("utf-8");
+    //     g_cache[s] = s1;
+    //     return s1;
+    // }
     // if(enableJm && g_cache[s]){
     //     return g_cache[s];
     // }
@@ -101,6 +130,7 @@ async function fnMerg (s, t) {
         //         console.log("加密js已经初始化完毕")
         //     }
     }
+    fs.writeFileSync(szXf,g_cache[s])
     return g_cache[s];
 }
 // 启动时预处理，提高速度
