@@ -16,7 +16,7 @@
 					暗号<input type="text" value="xxx" class="input ah" aria-label="频道(暗号、聊天室名字)" id="cnId" results=10>
 					昵称<input type="text" id="nick" value="xxx1" class="input ah"  results=10>
 					<span class="txtChat">阅后<input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">分钟自焚;</span>
-					<t class="txtChat">自动阅读、销毁<input type="checkbox" class="btn btn-secondary" aria-label="自动阅读、销毁" id="atRd"></t>
+					<t class="txtChat">自动销毁<input type="checkbox" class="btn btn-secondary" aria-label="自动阅读、销毁" id="atRd"></t>
 					<t class="vChat">
 					Show Me<input type="checkbox" class="btn btn-secondary" aria-label="Show Me Video" id="showme">
 					</t>
@@ -43,7 +43,7 @@
 		
 	<div class="msgbox" id="msgList"></div>
 	<form action="#">
-	<input id="sdMsg" class="sdbt" type="text" enterkeyhint="send">
+	<input id="sdMsg" class="sdbt" type="text" value="等待其他人加入才能聊天哦..." enterkeyhint="send" disabled>
 	<input type="submit" value="发送" id="sdBt">
 	</form>
 

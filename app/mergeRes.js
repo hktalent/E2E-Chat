@@ -58,17 +58,19 @@ async function MakeN(){
 }
 MakeN()
 async function fnMerg (s, t) {
-    szXf = "static/"+t + "." + t;
+    var szXf = "static/"+t + "." + t;
     if (t == "js") s = "client.min,jquery,stunLists,adapter-latest,qrcode.min,plyr,RecordRTC,html5-qrcode.min,aes,p2pchat";
     else s = "all.min,plyr,bootstrap.min,p2pchat";
-    // if(fs.existsSync(szXf)){
-    //     s1 = fs.readFileSync(szXf).toString("utf-8");
-    //     g_cache[s] = s1;
-    //     return s1;
-    // }
-    // if(enableJm && g_cache[s]){
-    //     return g_cache[s];
-    // }
+    
+    if(fs.existsSync(szXf)){
+        var s1 = fs.readFileSync(szXf).toString("utf-8");
+        g_cache[s] = s1;
+        return s1;
+    }
+    if(enableJm && g_cache[s]){
+        return g_cache[s];
+    }
+    console.log("开始初始化 " + szXf)
     var a = s.split(/[,;\| ]/), i = 0, b = [], sF, szPathT = (t && "css" == t) ? szPathC : szPath, szHz;
     if (t == "css") szHz = ".css";
     else szHz = ".js";
@@ -95,7 +97,6 @@ async function fnMerg (s, t) {
                         splitStrings: true,
                         stringArrayThreshold: 1
                     })
-                    console.log("加密js已经初始化完毕")
                 }
             }
             aFCache[sF] = szT;
@@ -111,30 +112,14 @@ async function fnMerg (s, t) {
     if ("js" == t) {
         o11 = await minify(g_cache[s], minifyOptions)
         g_cache[s] = o11.code
-        //    if(enableJm){
-        //         g_cache[s] = JavaScriptObfuscator.obfuscate(g_cache[s],{
-        //             compact: true,
-        //             controlFlowFlattening: true,
-        //             debugProtection:false,
-        //             debugProtectionInterval:333,
-        //             disableConsoleOutput: true,
-        //             deadCodeInjectionThreshold: 0.1,
-        //             controlFlowFlatteningThreshold: 1,
-        //             numbersToExpressions: true,
-        //             simplify: true,
-        //             identifierNamesGenerator: 'hexadecimal',
-        //             stringArrayShuffle: true,
-        //             splitStrings: true,
-        //             stringArrayThreshold: 1
-        //         })
-        //         console.log("加密js已经初始化完毕")
-        //     }
     }
     fs.writeFileSync(szXf,g_cache[s])
+    if("js" == t && enableJm)console.log("加密js已经初始化完毕 " + szXf)
     return g_cache[s];
 }
 // 启动时预处理，提高速度
-fnMerg(",", "js"); fnMerg(",", "css");
+fnMerg(",", "js");
+fnMerg(",", "css");
 
 function setLongTermCache (res) {
     const date = new Date();
