@@ -3,11 +3,21 @@ const appURL = () => {
 	return protocol + location.host;
 };
 const getRoomName = () => {
-	return $("#cnId").val()
+	return $("#cnId").val();//"Pwn"+String($("#cnId").val()).hashCode();
 }
 window.MediaStream = window.MediaStream || window.webkitMediaStream;
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
-
+String.prototype.hashCode = function() {
+	var hash = 0, i, chr;
+	if (this.length === 0) return hash;
+	for (i = 0; i < this.length; i++) {
+	  chr   = this.charCodeAt(i);
+	  hash  = ((hash << 5) - hash) + chr;
+	  hash |= 0; // Convert to 32bit integer
+	}
+	return hash;
+};
+  
 var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	IS_SCREEN_STREAMING = false,
 	szCltFg = "",
@@ -85,6 +95,10 @@ setInterval(() => {
 	}
 }, 1000);
 
+function LogMsg(s){
+	$("#msgList").append(`<div>${s}</div>`)
+}
+
 function CreateMsgDiv (n, s) {
 	var szId = `TmpId${nCnt}`
 	var szC="msgRow "
@@ -124,42 +138,52 @@ function RevMsg (e) {
 	CreateMsgDiv(e.nick, e.msg)
 }
 
+function clOpen(){
+	$("#sdMsg,#sdBt").removeAttr("disabled")
+	o1 = $("#sdMsg")
+	o1.val("")
+	o1.focus()
+	log('准备就绪，你可以发送消息了')
+}
+
+// 为每个 pc 创建文本聊天 通道
 function fnTxtChatOne(pc){
 	if(pc.Tok)return;
 	pc.Tok = true;
 	pc.ondatachannel = function(e){
 		e.channel.onmessage = RevMsg
-		// g_sendChannels.push(e.channel)
+		g_sendChannels.push(e.channel)
+		clOpen()
+		LogMsg("ondatachannel ok")
 	}
 	/*
 	maxPacketLifeTime: 0, // 在不可靠模式下尝试传输消息的最大毫秒数。虽然此值是一个 16 位无符号数，但每个用户代理都可以将其限制在它认为合适的任何最大值
 	maxRetransmits: 0, // 用户代理尝试重新传输在不可靠模式下第一次失败的消息的最大次数。虽然这个值是一个 16 位无符号数，但每个用户代理都可以将它限制在它认为合适的任何最大值
 	negotiated:true,
 	 */
-	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true, "protocol": getRoomName() })
+	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true})
 
 	sendChannel.onclose = function () {
 		log("sendChannel.onclose")
 	}
 	sendChannel.onopen = function () {
-		$("#sdMsg,#sdBt").removeAttr("disabled")
-		o1 = $("#sdMsg")
-		o1.val("")
-		o1.focus()
-		log('准备就绪，你可以发送消息了')
+		clOpen()
 	}
 	sendChannel.onmessage = RevMsg
-	g_sendChannels.push(sendChannel)
+	// g_sendChannels.push(sendChannel)
 }
 
+// 文本聊天初始化
 function fnTxtChat () {
-	if (!peers) {
-		setTimeout(function () { fnTxtChat() }, 333)
-		return
-	}
+	var bDoit = true
 	for (peer_id in peers) {
+		bDoit = false
 		pc = peers[peer_id]
 		fnTxtChatOne(pc)
+	}
+	if (bDoit) {
+		LogMsg("bDoit = " + bDoit)
+		setTimeout(function () { fnTxtChat() }, 333)
 	}
 }
 function mmMsgj(s){
@@ -231,11 +255,19 @@ function onScanSuccess (decodedText, decodedResult) {
 function part_chat_channel (channel) {
 	signaling_socket.emit('part', channel);
 }
-
 function join_chat_channel (channel, userdata) {
+	while(0 < g_sendChannels.length) {
+		try{g_sendChannels[0].close();}catch(e){}
+		g_sendChannels.splice(0, 1);
+	}
+	join_chat_channel1 (channel, userdata)
+}
+
+function join_chat_channel1 (channel, userdata) {
 	userdata || (userdata={});
 	userdata["nick"] = $("#nick").val();
-	if (!signaling_socket) {
+	
+	if (!bIoIsOk) {
 		setTimeout(function () {
 			join_chat_channel(channel, userdata)
 		}, 333)
@@ -337,7 +369,7 @@ function listDivie () {
 
 function initOnePeer (pp, peer_id) {
 	peer_connection = pp
-	if (!peer_connection) {
+	if (!local_media_stream||!peer_connection) {
 		log("initOnePeer why ? peer_connection is null")
 		return;
 	}
@@ -360,7 +392,7 @@ function initVideoChat () {
 	// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
 }
 
-var g_aMembers = {};
+var g_aMembers = {},bIoIsOk = false;
 function init () {
 	s1 = appURL()
 	s1 = s1.replace("https://", "wss://")
@@ -371,11 +403,13 @@ function init () {
 	// }
 
 	signaling_socket.on('connect', function () {
+		LogMsg("成功连接服务器");
+		bIoIsOk=true;
 		if (szCltFg) signaling_socket.emit("getNick", szCltFg)
-		if (local_media_stream) join_chat_channel(getRoomName(), {});
-		else {
-			// StartVideo()
-		}
+		// if (local_media_stream) join_chat_channel(getRoomName(), {});
+		// else {
+		// 	// StartVideo()
+		// }
 	});
 	signaling_socket.on('disconnect', function () {
 		for (peer_id in peer_media_elements) {
@@ -448,7 +482,7 @@ function init () {
 		//  addStream and onaddstream are deprecated
 		// ontrack event.stream[0]
 		peer_connection.onaddstream = function (event) {
-			try {
+			if(event.stream)try {
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
 				remote_media.controls = false;
@@ -560,6 +594,7 @@ function init () {
 	});
 }
 
+// 构建二维码
 function MkQrcd () {
 	var szCurUrl = document.location.href.split("#")[0] + "#" + getRoomName();
 	document.getElementById('roomurl').textContent = szCurUrl;
@@ -586,48 +621,48 @@ echoCancellation 是回声消除
 var g_hz = { facingMode: "user" }, g_Constraints = 0;
 
 function appSet (stream) {
-	const audioSource = document.getElementById("audioInputSelect").value;
-	const videoSource = document.getElementById("videoSelect").value;
-	var oT = {
-		deviceId: audioSource ? { exact: audioSource } : undefined,
-		noiseSuppression: true,
-		echoCancellation: true, //{ exact: true },//'system',
-		autoGainControl: false,
-		sampleRate: { max: 48000, min: 48000 },
-		channelCount: { max: 2, min: 1 },
-		volume: 1.0
-		// https://github.com/muaz-khan/WebRTC-Experiment/issues/435
-		// ,optional:[{echoCancellation: false}],
-		// mandatory: {// https://bugs.webkit.org/show_bug.cgi?id=179411
-		// 	googEchoCancellation: true,
-		// 	googAutoGainControl: true,
-		//  googExperimentalAutoGainControl: true,
-		// 	googNoiseSuppression: true,
-		//  googExperimentalNoiseSuppression:true,
-		// 	googHighpassFilter: true,
-		// 	googTypingNoiseDetection: true
-		// }
-	}
-	g_Constraints = {
-		"audio": oT,
-		"video": {
-			deviceId: videoSource ? { exact: videoSource } : undefined,
-			'mandatory': {
-				'width': { 'min': 4000 },
-				'height': { 'min': 4000 }
-			},
-			optional: [ // 对视频Track的可选约束条件
-				{ frameRate: { min: 60 } }
-			]
-		}
-	}
-	if (stream) stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
-	if (local_media_stream) local_media_stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
-	return g_Constraints
+	// const audioSource = document.getElementById("audioInputSelect").value;
+	// const videoSource = document.getElementById("videoSelect").value;
+	// var oT = {
+	// 	deviceId: audioSource ? { exact: audioSource } : undefined,
+	// 	noiseSuppression: true,
+	// 	echoCancellation: true, //{ exact: true },//'system',
+	// 	autoGainControl: false,
+	// 	sampleRate: { max: 48000, min: 48000 },
+	// 	channelCount: { max: 2, min: 1 },
+	// 	volume: 1.0
+	// 	// https://github.com/muaz-khan/WebRTC-Experiment/issues/435
+	// 	// ,optional:[{echoCancellation: false}],
+	// 	// mandatory: {// https://bugs.webkit.org/show_bug.cgi?id=179411
+	// 	// 	googEchoCancellation: true,
+	// 	// 	googAutoGainControl: true,
+	// 	//  googExperimentalAutoGainControl: true,
+	// 	// 	googNoiseSuppression: true,
+	// 	//  googExperimentalNoiseSuppression:true,
+	// 	// 	googHighpassFilter: true,
+	// 	// 	googTypingNoiseDetection: true
+	// 	// }
+	// }
+	// g_Constraints = {
+	// 	"audio": oT,
+	// 	"video": {
+	// 		deviceId: videoSource ? { exact: videoSource } : undefined,
+	// 		'mandatory': {
+	// 			'width': { 'min': 4000 },
+	// 			'height': { 'min': 4000 }
+	// 		},
+	// 		optional: [ // 对视频Track的可选约束条件
+	// 			{ frameRate: { min: 60 } }
+	// 		]
+	// 	}
+	// }
+	// if (stream) stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
+	// if (local_media_stream) local_media_stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
+	// return g_Constraints
 }
 
 function ChangeSound (stream) {
-	try {
+	if(stream)try {
 		const audioTracks = stream.getAudioTracks()
 		appSet(stream)
 		audioTracks[0].applyConstraints(g_Constraints["audio"]);
@@ -638,7 +673,7 @@ function ChangeSound (stream) {
 
 function StopStream () {
 	if (local_media_stream) local_media_stream.getTracks().forEach(function (track) {
-		if (track.readyState == 'live') {
+		if (track && track.readyState == 'live') {
 			track.stop();
 		}
 	})
@@ -769,6 +804,7 @@ function fnDoImgStream (socket, vId) {
 }
 
 $(document).ready(function () {
+	LogMsg("开始连接服务器...");
 	videoSelect = document.querySelector('select#videoSelect');
 	audioInputSelect = document.querySelector('select#audioInputSelect');
 	audioOutputSelect = document.querySelector('select#audioOutputSelect');
@@ -793,10 +829,10 @@ $(document).ready(function () {
 		oStChat = $("#stChat"),
 		osdMsg = $("#sdMsg"),
 		oTxtChat = $(".txtChat")
-	oMyCtn = $("#myCtn"),
+		oMyCtn = $("#myCtn"),
 		ovChat = $(".vChat");
 	if (szHs) {
-		oCnId.val(szHs.substr(1))
+		oCnId.val(szHs.substring(1))
 		StartVideo()
 	}
 	// text chat
@@ -809,11 +845,12 @@ $(document).ready(function () {
 		// https://9to5answer.com/stop-close-webcam-stream-which-is-opened-by-navigator-mediadevices-getusermedia
 		StopStream();
 		g_bSetup = !g_bTxtChat;
-		join_chat_channel(oCnId.val(), {});
 		$(this).attr("disabled", "disabled");
 		oStartChat.removeAttr("disabled");
 		osdMsg.focus()
-		fnTxtChat()
+		// fnTxtChat()
+		join_chat_channel(szLstChannel, {});
+		join_chat_channel(getRoomName(), {});
 	})
 	// video chat
 	oStartChat.click(function () {
@@ -832,14 +869,14 @@ $(document).ready(function () {
 	szCltFg = new ClientJS().getFingerprint()
 	init()
 
-	szLstChannel = oCnId.val()
+	szLstChannel = getRoomName()
 	oNick = $("#nick")
 	oNick.val(szCltFg)
 	oNick.change(function () {
-		if (signaling_socket) signaling_socket.emit("getNick", szCltFg, $(this).val())
+		if (bIoIsOk) signaling_socket.emit("getNick", szCltFg, $(this).val())
 	});
 	oCnId.change(function () {
-		join_chat_channel(oCnId.val(), {})
+		join_chat_channel(getRoomName(), {})
 		MkQrcd()
 	})
 	initQrcode()
@@ -860,6 +897,9 @@ $(document).ready(function () {
 	$("#clsId").click(function(){
 		oMsgBox.html("")
 		fnTmArr = []
+	})
+	$("form").submit(function(e){
+		return false
 	})
 	var MsRe = function(){
 		if(isMobileDevice){
