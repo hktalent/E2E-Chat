@@ -93,7 +93,7 @@ function CreateMsgDiv (n, s) {
 	o9.append(`<div id="${szId}" class="${szC}"></div>`)
 	var o1 = $(`#${szId}`)
 	var x01 = getNowStr()
-	o1.html(`<t class=t1>${x01}</t> [<t class=t2>${n}</t>] <d></d><x></x>`)
+	o1.html(`[<t title='${x01}' class=t2>${n}</t>] <d></d><x></x>`)
 	o1.find("t.t2").text(n)
 	o1.find("d").text(s)
 	var n7 = parseInt($("#clsTm").val()||1)
@@ -174,8 +174,9 @@ function SendMsg (s) {
 	if (s) {
 		if (0 == g_sendChannels.length) {
 			setTimeout(function () { SendMsg(s) }, 333)
+			return
 		}
-		CreateMsgDiv("自己", s)
+		CreateMsgDiv(szSelfK, s)
 		szMsg1 = mmMsg(JSON.stringify({ "nick": $("#nick").val(), "msg": s }))
 		for (var i = 0; i < g_sendChannels.length; i++) {
 			try { g_sendChannels[i].send(szMsg1) } catch (e) { log(e) }
@@ -854,9 +855,19 @@ $(document).ready(function () {
 	oAutoRm.change(function () {
 		bAutoRm = this.checked;
 	})
+	oMsgBox = $("#msgList");
 	bAutoRm = oAutoRm.prop("checked");
 	$("#clsId").click(function(){
-		$("#msgList").html("")
+		oMsgBox.html("")
 		fnTmArr = []
 	})
+	var MsRe = function(){
+		if(isMobileDevice){
+			oMsgBox.css("height","calc(100vh - 57px)")
+		}else{
+			oMsgBox.css("height","calc(100vh - 8rem)")
+		}
+	}
+	osdMsg.focus(MsRe)
+	
 })
