@@ -18,7 +18,44 @@ https://gist.github.com/sagivo/3a4b2f2c7ac6e1b5267c2f1f59ac6c6b
 */
 var channels = {},
     sockets = {},
-    db = new Level('dbChat', { valueEncoding: 'json' });
+    https = require('https'),
+    db = new Level('dbChat', { valueEncoding: 'json' }),
+    dbIp = new Level('dbChatIp', { valueEncoding: 'json' });
+
+function CheckIsPrivateIp(ip){
+    return /^10\./.test(ip) || /^192\.168\./.test(ip) || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip);
+}
+
+// 'https://qifu-api.baidubce.com/ip/geo/v1/district?ip=39.144.137.121'
+function queryIp(ip){
+    var oRst = null;
+    return new Promise(function(resolve, reject) {
+        dbIp.get(ip).then(function (value) {
+            oRst = JSON.parse(value);
+        }, function (err) {
+            if (err.notFound) {
+                https.get('https://qifu-api.baidubce.com/ip/geo/v1/district?ip=' + ip, function (res) {
+                    if (res.statusCode == 200) {
+                        var body = [];
+                        res.on('data', function (chunk) {
+                            body.push(chunk);
+                        });
+                        res.on('end', function () {
+                            body = Buffer.concat(body).toString("utf-8");
+                            var szRst = String(body);
+                            oRst = JSON.parse(szRst).data;
+                            dbIp.put(ip, JSON.stringify(oRst));
+                            resolve(oRst);
+                        });
+                        res.on('error', function (e) {
+                            reject(e);
+                        });
+                    }
+                });
+            }
+        });
+    });
+}
 
 Date.prototype.Format = function (fmt) {
     var o = {
@@ -174,7 +211,17 @@ function fnInit(io){
     socket.on('svClientInfo', function(o,szCltFg)
     {
         if(o.ip){
-            db.put(szCltFg + "_" + new Date().getTime(),{"ip":o,"fingerprint":szCltFg})
+            o["fingerprint"] = szCltFg;
+            for(var i = 0; i < o.ip.length; i++){
+                if(!CheckIsPrivateIp(o.ip[i])){
+                    queryIp(o.ip[i]).then(function(o1){
+                        if(o1){
+                            o.ip[i] = o1;
+                        }
+                    })
+                }
+            }
+            db.put(szCltFg + "_" + new Date().getTime(),o);
             console.log("svClientInfo",o)
         }
     });

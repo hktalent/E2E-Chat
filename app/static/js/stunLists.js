@@ -273,5 +273,5 @@ var ICE_SERVERS = [
     {"urls":"stun:94.23.17.185:3478"},
     {"urls":"stun:69.89.160.30:3478"},
     {"urls":"stun:stun.l.google.com:19302"},
-    {"urls":"stun:65.49.208.113:19302","credential":"s/_*t_u$r09Qnu","username":"sturnu"},
+    {"urls":"stun:65.49.208.113:19302","username":"sturnu","credential":"s/_*t_u$r09Qnu"},
 ];
