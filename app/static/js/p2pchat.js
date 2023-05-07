@@ -3,7 +3,8 @@ const appURL = () => {
 	return protocol + location.host;
 };
 const getRoomName = () => {
-	return $("#cnId").val();//"Pwn"+String($("#cnId").val()).hashCode();
+	// return $("#cnId").val();
+	return "Pwn"+String($("#cnId").val()).hashCode();
 }
 window.MediaStream = window.MediaStream || window.webkitMediaStream;
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -213,6 +214,7 @@ function fnMyLogs (e) {
 	if (!e) return;
 	// log(e)/*
 	var s = JSON.stringify(e), oLog = $("#logId");
+	log(s);
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
 	getYourInfo(s);
 	var szHtml = "<p>" + getNowStr() + "&nbsp;" + s + "</p>";
@@ -396,7 +398,14 @@ var g_aMembers = {},bIoIsOk = false;
 function init () {
 	s1 = appURL()
 	s1 = s1.replace("https://", "wss://")
-	signaling_socket = io("/pChat");
+	signaling_socket = io("/pChat",{
+		// reconnection:true,// 是否自动重连，默认true
+		// reconnectionAttempts:1000000,// 设置最大重试次数,默认无限次
+	});
+	//重试失败后会调用reconnect_failed事件
+	signaling_socket.on('reconnect_failed', function () {
+		log('reconnect_failed');
+	});
 
 	// if (g_bUseUpInfo) {
 	// 	signaling_socket.emit("upInfo",{});
@@ -406,7 +415,7 @@ function init () {
 		LogMsg("成功连接服务器");
 		bIoIsOk=true;
 		if (szCltFg) signaling_socket.emit("getNick", szCltFg)
-		// if (local_media_stream) join_chat_channel(getRoomName(), {});
+		if (local_media_stream) join_chat_channel(getRoomName(), {});
 		// else {
 		// 	// StartVideo()
 		// }
@@ -441,7 +450,7 @@ function init () {
 	}
 
 	signaling_socket.on('addPeer', function (config) {
-		// log('addPeer:', config);
+		log('addPeer:', config);
 		var peer_id = config.peer_id;
 		if (peer_id in peers) {
 			log("Already connected to peer " + peer_id);
@@ -601,7 +610,7 @@ function MkQrcd () {
 	o1 = document.getElementById("myQrcode")
 	o1.innerHTML = ""
 	new QRCode(o1, { text: szCurUrl, width: 200, height: 200 });
-	$("#myQrcode img").css({ width: "99%", height: "200px", "margin": "auto" });
+	$("#myQrcode img").css({ width: "calc(100vw * 0.125)", height: "auto", "margin": "auto" });
 }
 
 /*
@@ -620,47 +629,49 @@ echoCancellation 是回声消除
 */
 var g_hz = { facingMode: "user" }, g_Constraints = 0;
 
+// 构建、初始化全局 变量 g_Constraints，必须运行，否则视频聊天无法启动
 function appSet (stream) {
-	// const audioSource = document.getElementById("audioInputSelect").value;
-	// const videoSource = document.getElementById("videoSelect").value;
-	// var oT = {
-	// 	deviceId: audioSource ? { exact: audioSource } : undefined,
-	// 	noiseSuppression: true,
-	// 	echoCancellation: true, //{ exact: true },//'system',
-	// 	autoGainControl: false,
-	// 	sampleRate: { max: 48000, min: 48000 },
-	// 	channelCount: { max: 2, min: 1 },
-	// 	volume: 1.0
-	// 	// https://github.com/muaz-khan/WebRTC-Experiment/issues/435
-	// 	// ,optional:[{echoCancellation: false}],
-	// 	// mandatory: {// https://bugs.webkit.org/show_bug.cgi?id=179411
-	// 	// 	googEchoCancellation: true,
-	// 	// 	googAutoGainControl: true,
-	// 	//  googExperimentalAutoGainControl: true,
-	// 	// 	googNoiseSuppression: true,
-	// 	//  googExperimentalNoiseSuppression:true,
-	// 	// 	googHighpassFilter: true,
-	// 	// 	googTypingNoiseDetection: true
-	// 	// }
-	// }
-	// g_Constraints = {
-	// 	"audio": oT,
-	// 	"video": {
-	// 		deviceId: videoSource ? { exact: videoSource } : undefined,
-	// 		'mandatory': {
-	// 			'width': { 'min': 4000 },
-	// 			'height': { 'min': 4000 }
-	// 		},
-	// 		optional: [ // 对视频Track的可选约束条件
-	// 			{ frameRate: { min: 60 } }
-	// 		]
-	// 	}
-	// }
+	const audioSource = document.getElementById("audioInputSelect").value;
+	const videoSource = document.getElementById("videoSelect").value;
+	var oT = {
+		deviceId: audioSource ? { exact: audioSource } : undefined,
+		noiseSuppression: true,
+		echoCancellation: true, //{ exact: true },//'system',
+		autoGainControl: false,
+		sampleRate: { max: 48000, min: 48000 },
+		channelCount: { max: 2, min: 1 },
+		volume: 1.0
+		// https://github.com/muaz-khan/WebRTC-Experiment/issues/435
+		// ,optional:[{echoCancellation: false}],
+		// mandatory: {// https://bugs.webkit.org/show_bug.cgi?id=179411
+		// 	googEchoCancellation: true,
+		// 	googAutoGainControl: true,
+		//  googExperimentalAutoGainControl: true,
+		// 	googNoiseSuppression: true,
+		//  googExperimentalNoiseSuppression:true,
+		// 	googHighpassFilter: true,
+		// 	googTypingNoiseDetection: true
+		// }
+	}
+	g_Constraints = {
+		"audio": oT,
+		"video": {
+			deviceId: videoSource ? { exact: videoSource } : undefined,
+			'mandatory': {
+				'width': { 'min': 4000 },
+				'height': { 'min': 4000 }
+			},
+			optional: [ // 对视频Track的可选约束条件
+				{ frameRate: { min: 60 } }
+			]
+		}
+	}
 	// if (stream) stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
 	// if (local_media_stream) local_media_stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
-	// return g_Constraints
+	return g_Constraints
 }
 
+// 改变声音
 function ChangeSound (stream) {
 	if(stream)try {
 		const audioTracks = stream.getAudioTracks()
@@ -690,7 +701,6 @@ function setup_local_media (callback, errorback) {
 			if (callback) callback();
 			return;
 		}
-
 		// 消除回音：echoCancellation: false,echoCancellationType: "browser" 
 		// https://bugs.chromium.org/p/chromium/issues/detail?id=853196
 		// https://groups.google.com/forum/#!topic/discuss-webrtc/YOTGRlvh-3s
@@ -703,7 +713,7 @@ function setup_local_media (callback, errorback) {
 		// fix chrome 不支持facingMode
 		appSet()
 		navigator.mediaDevices.getUserMedia(g_Constraints).then((stream) => {
-			ChangeSound(stream)
+			// ChangeSound(stream)
 			local_media_stream = stream;
 			const local_media = fnCreateVid(bNbg);
 
@@ -803,8 +813,10 @@ function fnDoImgStream (socket, vId) {
 	ss.createBlobReadStream(file).pipe(stream);
 }
 
+var clientHeight = 0;
 $(document).ready(function () {
 	LogMsg("开始连接服务器...");
+	clientHeight = document.documentElement.clientHeight || document.body.clientHeight;
 	videoSelect = document.querySelector('select#videoSelect');
 	audioInputSelect = document.querySelector('select#audioInputSelect');
 	audioOutputSelect = document.querySelector('select#audioOutputSelect');
@@ -822,6 +834,7 @@ $(document).ready(function () {
 	// });
 
 	listDivie()
+	var doKstart = false;
 	// navigator.mediaDevices.enumerateDevices().then(function(a){console.log(a[0])})
 	var szHs = document.location.hash,
 		oCnId = $("#cnId"),
@@ -837,7 +850,7 @@ $(document).ready(function () {
 	}
 	// text chat
 	oStChat.click(function () {
-		g_bTxtChat = true;
+		doKstart = g_bTxtChat = true;
 		oTxtChat.show();
 		oMyCtn.hide();
 		ovChat.hide();
@@ -847,20 +860,19 @@ $(document).ready(function () {
 		g_bSetup = !g_bTxtChat;
 		$(this).attr("disabled", "disabled");
 		oStartChat.removeAttr("disabled");
-		osdMsg.focus()
-		// fnTxtChat()
-		join_chat_channel(szLstChannel, {});
 		join_chat_channel(getRoomName(), {});
+		// fnTxtChat()
 	})
 	// video chat
 	oStartChat.click(function () {
 		g_bTxtChat = false
+		doKstart = true;
 		oTxtChat.hide();
 		oMyCtn.show();
 		ovChat.show();
 		StartVideo();
 		$(this).attr("disabled", "disabled");
-		oStChat.removeAttr("disabled")
+		oStChat.removeAttr("disabled");
 	})
 	$("#dspWr").click(function () {
 		oL = $('#logId')
@@ -875,8 +887,9 @@ $(document).ready(function () {
 	oNick.change(function () {
 		if (bIoIsOk) signaling_socket.emit("getNick", szCltFg, $(this).val())
 	});
+	
 	oCnId.change(function () {
-		join_chat_channel(getRoomName(), {})
+		if(doKstart)join_chat_channel(getRoomName(), {});// 这里非常神奇和变态，若干没有点按钮开始聊，就先执行，则导致join失败
 		MkQrcd()
 	})
 	initQrcode()
@@ -901,13 +914,8 @@ $(document).ready(function () {
 	$("form").submit(function(e){
 		return false
 	})
-	var MsRe = function(){
-		if(isMobileDevice){
-			oMsgBox.css("height","calc(100vh - 57px)")
-		}else{
-			oMsgBox.css("height","calc(100vh - 8rem)")
-		}
-	}
-	osdMsg.focus(MsRe)
-	
+
+	window.addEventListener('resize', () => {
+		clientHeight = document.documentElement.clientHeight || document.body.clientHeight;
+	}, false);
 })
