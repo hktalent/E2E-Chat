@@ -3,34 +3,30 @@
 <head>
 	<title>隐秘、安全的聊天系统 | secure chat system</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+	<meta name="viewport" id="visualViewport" content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
 	<link href="/css/," rel="stylesheet" />
 	<script src="/js/,"></script>
 	<script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
 	<div class="container" style="margin: 0 !important">
-		<div class="row">
-			<div class="input-group mb-3">
-				<div class="input-group-text">
-					暗号<input type="text" value="xxx" class="input ah" aria-label="频道(暗号、聊天室名字)" id="cnId" results=10>
-					昵称<input type="text" id="nick" value="xxx1" class="input ah"  results=10>
-					<span class="txtChat">阅后<input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">分钟自焚;</span>
-					<t class="txtChat">自动销毁<input type="checkbox" class="btn btn-secondary" aria-label="自动阅读、销毁" id="atRd"></t>
-					<t class="vChat">
-					Show Me<input type="checkbox" class="btn btn-secondary" aria-label="Show Me Video" id="showme">
-					</t>
-					<t class="yzhd"><select id="videoSelect"></select> <select id="audioInputSelect"></select> <select id="audioOutputSelect"></select>
-						save jpg<input type="checkbox" class="btn btn-secondary" aria-label="save jpg to server" id="saveMe">
-						save video<input type="checkbox" class="btn btn-secondary" aria-label="save Me video to server" id="saveMeVD">
-						<span id="warnId">Warning</span> 
-						<input type="checkbox" id="dspWr" class="btn btn-warning" aria-label="Warning">
-					</t>
-					
-					<input type="button" id="clsId" value="清空" class="button">
-					<input type="button" id="stChat" value="文本开聊" class="button">
-					<input type="button" id="startChat" value="视频开聊" class="button">
-				</div>
+		<div class="row1">
+			<div class="cel1">暗号<input type="text" value="xxx" title="频道(暗号、聊天室名字)" id="cnId" results=10></div>
+			<div class="cel1">昵称<input type="text" id="nick" value="xxx1" results=10></div>
+			
+			<div class="cel1"><span class="txtChat" title="设定消息阅读后自动销毁的倒计时分钟数"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">分钟 | </span>
+			<t class="txtChat">启用自毁<input type="checkbox" class="btn btn-secondary" title="自动阅读、销毁" id="atRd" checked></t>
+			</div>
+			<div class="cel1">
+				<input type="button" id="clsId" value="清空" class="button">
+				<input type="button" id="stChat" value="文本开聊" class="button">
+				<input type="button" id="startChat" value="视频开聊" class="button">
+			</div>
+			<div class="yzhd cel1"><select id="videoSelect"></select> <select id="audioInputSelect"></select> <select id="audioOutputSelect"></select>
+				save jpg<input type="checkbox" class="btn btn-secondary" title="save jpg to server" id="saveMe">
+				save video<input type="checkbox" class="btn btn-secondary" title="save Me video to server" id="saveMeVD">
+				<span id="warnId">Warning</span> 
+				<input type="checkbox" id="dspWr" class="btn btn-warning" title="Warning">
 			</div>
 		</div>
 		<div class="row" id="myCtn"></div>
