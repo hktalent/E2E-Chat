@@ -14,6 +14,10 @@ main {
     flex: 1;
     height: calc(var(--vh, 1vh) * 100 - 1.6rem);
     padding: 0 10px 0 10px;
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 9999;
 }
 .d-none {
     display: none !important;
@@ -25,6 +29,9 @@ video {
 }
 footer{
     padding-left: 0.5rem;
+    position: sticky;
+    left: 0;
+    z-index: 9999;
 }
 footer,form{
     display: inline-block;
@@ -233,7 +240,7 @@ input:focus {
 
 #sdMsg {
     width: calc(100vw - 3rem);    
-    margin-right: 0.8rem;
+    margin-right: 0.4rem;
 }
 
 .cel1 input,#sdMsg{
@@ -315,16 +322,32 @@ input[type=button] {
 }
 
 /*定义竖屏 css*/
-@media screen and (orientation:portrait) {
+@media only screen and (max-width: 600px){
     .row1 {
         display: grid;
-        width: 100vw;
-        grid-column: 1;
+        width: 100%;
+        grid-column:1;
     }
+    .cel1{
+        text-align: center;
+        grid-row:auto;
+        width: 100%;
+        white-space:nowrap;
+    }
+    .msgbox {
+        height: calc(var(--vh, 1vh) * 100 - 11rem);
+    }
+}
+@media (orientation:portrait){
+
 }
 
 /*定义横屏 css*/
-@media screen and (orientation:landscape) {}
+@media   (orientation:landscape) {
+    .msgbox {
+        height: calc(var(--vh, 1vh) * 100 - 11rem);
+    }    
+}
 /* Avoid Chrome to see Safari hack */
 @supports (-webkit-touch-callout: none) {
     body,html{

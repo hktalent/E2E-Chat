@@ -224,10 +224,11 @@ function RevMsg (e) {
 	CreateMsgDiv(e.nick, mmMsgj(e.msg),e.t)
 }
 
+var clientHeight = 0;
 var fn009 = function () {
 	let vh = window.innerHeight * 0.01;
 	document.documentElement.style.setProperty('--vh', `${vh}px`);
-	vh *= 100;
+	vh *= 100 - document.body.scrollHeight - clientHeight;
 	// $("#visualViewport").attr("content","height="+vh+"px,width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover");
 	$("html,body").height(vh+"px");
 };
@@ -260,10 +261,18 @@ function fnTxtChatOne(pc){
 	sendChannel.bufferedAmountLowThreshold = maxSendSize;
 
 	sendChannel.onclose = function () {
-		log("sendChannel.onclose")
+		stopPc01(sendChannel)
 		for(i in g_sendChannels){	
 			if(g_sendChannels[i] == sendChannel){
 				g_sendChannels.splice(i,1);
+				break;
+			}
+		}
+		// 重建断开的隧道，先判断当前pc是否有效
+		pc.Tok = false;
+		for( i in peers){
+			if(peers[i] == pc){
+				fnTxtChatOne(pc)
 				break;
 			}
 		}
@@ -303,7 +312,6 @@ function send4C(ox1,s){
 	// 	return
 	// }
 	if(ox1.readyState == "closed"){
-		log('sendC closed')
 		return
 	}
 	try {ox1.send(s);} catch (e) { 
@@ -668,7 +676,7 @@ function init () {
 				},
 				function (error) {
 					fnMyLogs2("Error sending offer: ", error);
-				});
+				});//,{ iceRestart: true }
 		}else{
 			fnTxtChatOne(peer_connection)
 			if(config.userdata && config.userdata.nick)g_aMembers[peer_id]=config.userdata.nick
@@ -683,7 +691,6 @@ function init () {
 		xM = config["session_description"]["sdp"].match(/a=max-message-size:\s*(\d+)/);
 		if (xM !== null && xM.length >= 2) {
 			maxSendSize = parseInt(xM[1]) - 800;
-			log(`maxSendSize = ${maxSendSize}`)
 		  }
 		var desc = new RTCSessionDescription(remote_description);
 		var stuff = peer.setRemoteDescription(desc, function () {
@@ -724,6 +731,7 @@ function init () {
 		}
 		if (peer_id in peers) {
 			peers[peer_id].close();
+			stopPc01(peers[peer_id])
 		}
 
 		delete peers[peer_id];
@@ -741,6 +749,14 @@ function init () {
 	$('#closebtn').on('click', () => {
 		document.getElementById('intro').style.display = 'none';
 	});
+}
+
+function stopPc01(pc){
+	for (k in pc){
+		if (k.indexOf("on") == 0) {
+			pc[k] = null;
+		}
+	}
 }
 
 // 构建二维码
@@ -953,6 +969,7 @@ function fnDoImgStream (socket, vId) {
 }
 
 $(document).ready(function () {
+	clientHeight = document.documentElement.clientHeight;
 	videoSelect = document.querySelector('select#videoSelect');
 	audioInputSelect = document.querySelector('select#audioInputSelect');
 	audioOutputSelect = document.querySelector('select#audioOutputSelect');
