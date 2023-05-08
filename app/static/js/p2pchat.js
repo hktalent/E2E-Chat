@@ -40,7 +40,8 @@ var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	g_bSetup = false,
 	szgetYourInfo = '',
 	g_sendChannels = [],
-	sendChannel = null, nCnt = 1
+	maxSendSize = 65536,// 64k
+	sendChannel = null, nCnt = 1;
 
 // 当前时间
 function getNowStr() {
@@ -106,14 +107,19 @@ async function dlFile (s) {
 	});
 }
 
-function getBlob (s) {
+function getUtf8FromB64 (s) {
 	var a = s.split(";base64,");
 	const byteCharacters = atob(a[1]);
 	const byteNumbers = new Array(byteCharacters.length);
 	for (let i = 0; i < byteCharacters.length; i++) {
 		byteNumbers[i] = byteCharacters.charCodeAt(i);
 	}
-	const byteArray = new Uint8Array(byteNumbers);
+	return new Uint8Array(byteNumbers);
+}
+
+function getBlob (s) {
+	var a = s.split(";base64,");
+	const byteArray = getUtf8FromB64(s);
 	const blob = new Blob([byteArray], {type: a[0].substring(5)});
 	return blob;
 }
@@ -181,7 +187,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 
 // 文件发送、接收需要拆包和组包
 // 每次要加密，最后要base64，所有每次，原本限制每次只能发送16k，这里只能发送16/4 = 4k
-var maxLimit = 4 * 1024;
+var maxLimit = 4 * 1024;// maxSendSize/ 8
 function SendFile(s, t,szFileName) {
 	var n = 0,nL = s.length;
 	if(2 == t)CreateMsgDiv(szSelfK, `你发送了文件: ${szFileName}(${formatBytes(nL)})`,0);
@@ -246,10 +252,17 @@ function fnTxtChatOne(pc){
 	maxRetransmits: 0, // 用户代理尝试重新传输在不可靠模式下第一次失败的消息的最大次数。虽然这个值是一个 16 位无符号数，但每个用户代理都可以将它限制在它认为合适的任何最大值
 	negotiated:true,
 	 */
-	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true})
+	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true, 'maxRetransmits': 1000,'maxPacketLifeTime':99999999})
+	sendChannel.bufferedAmountLowThreshold = maxSendSize;
 
 	sendChannel.onclose = function () {
 		log("sendChannel.onclose")
+		for(i in g_sendChannels){	
+			if(g_sendChannels[i] == sendChannel){
+				g_sendChannels.splice(i,1);
+				break;
+			}
+		}
 	}
 	sendChannel.onopen = function () {
 		clOpen()
@@ -279,7 +292,19 @@ function mmMsg(s){
 	// return s
 	return CryptoJS.AES.encrypt(s,$("#cnId").val()||getNowStr().substring(0,10))
 }
-// t: 0 txt,1 img,2 file
+function send4C(ox1,s){
+	// if (ox1.bufferedAmount > ox1.bufferedAmountLowThreshold){
+	// 	LogMsg([ox1.bufferedAmount, ox1.bufferedAmountLowThreshold].join("/"))
+	// 	setTimeout(function () { send4C(ox1,s) }, 333)
+	// 	return
+	// }
+	if(ox1.readyState == "closed"){
+		return
+	}
+	try {ox1.send(szMsg1);} catch (e) { log(e.toString());setTimeout(function () { send4C(ox1,s) }, 333) }
+}
+/* t: 0 txt,1 img,2 file
+*/
 function SendMsg (s,t,n,nL,szFileName) {
 	if (s) {
 		t = t || 0
@@ -290,7 +315,20 @@ function SendMsg (s,t,n,nL,szFileName) {
 		if(0 == nL)CreateMsgDiv(szSelfK, s,t)
 		szMsg1 = mmMsg(JSON.stringify({ "nick": $("#nick").val(), "msg": s, "t": t, "n": n, "nL": nL, "szFileName": szFileName }))
 		for (var i = 0; i < g_sendChannels.length; i++) {
-			try { g_sendChannels[i].send(szMsg1) } catch (e) { log(e) }
+			try {
+				send4C(g_sendChannels[i],szMsg1)
+				// (function(ox1){
+				// 	if (ox1.bufferedAmount > ox1.bufferedAmountLowThreshold) {
+				// 		ox1.onbufferedamountlow = () => {// 有些浏览器不支持
+				// 			LogMsg([ox1.bufferedAmount, ox1.bufferedAmountLowThreshold].join("/"))
+				// 			ox1.onbufferedamountlow = null;
+				// 			ox1.send(szMsg1);
+				// 		}
+				// 		return;
+				// 	}
+				// 	ox1.send(szMsg1)
+				// })(g_sendChannels[i]);
+			} catch (e) { log(e.toString()) }
 		}
 	}
 }
