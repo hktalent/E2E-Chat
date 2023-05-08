@@ -3,22 +3,24 @@
 <head>
 	<title>隐秘、安全的聊天系统 | secure chat system</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="viewport" id="visualViewport" content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
-	<link href="/css/," rel="stylesheet" />
-	<script src="/js/,"></script>
+	<meta name="viewport" id="visualViewport" content="height=device-height,width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+	<link href="/css/,x" rel="stylesheet" />
 	<script src="/socket.io/socket.io.js"></script>
+	<script src="/js/,x"></script>
 </head>
 <body>
-	<div class="container" style="margin: 0 !important">
+	<main class="container">
 		<div class="row1">
 			<div class="cel1">暗号<input type="text" value="xxx" title="频道(暗号、聊天室名字)" id="cnId" results=10></div>
 			<div class="cel1">昵称<input type="text" id="nick" value="xxx1" results=10></div>
 			
-			<div class="cel1"><span class="txtChat" title="设定消息阅读后自动销毁的倒计时分钟数"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">分钟 | </span>
-			<t class="txtChat">启用自毁<input type="checkbox" class="btn btn-secondary" title="自动阅读、销毁" id="atRd" checked></t>
+			<div class="cel1">
+				<span class="txtChat" title="设定消息阅读后自动销毁的倒计时分钟数"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">分钟</span>
+				<span class="txtChat">启用自毁<input type="checkbox" class="btn btn-secondary" title="自动阅读、销毁" id="atRd" checked></span>
+				<span class="vChat"> Show Me<input type="checkbox" class="btn btn-secondary" aria-label="Show Me Video" id="showme"></span>
 			</div>
 			<div class="cel1">
-				<input type="button" id="clsId" value="清空" class="button">
+				<input type="button" id="clsId" value="清空" class="button txtChat">
 				<input type="button" id="stChat" value="文本开聊" class="button">
 				<input type="button" id="startChat" value="视频开聊" class="button">
 			</div>
@@ -30,21 +32,15 @@
 			</div>
 		</div>
 		<div class="row" id="myCtn"></div>
-		<div class="txtChat">
-			<t>在线人：<w id="otherP"></w></t>
-		</div>
-	</div>
+		<div class="txtChat">在线人：<w id="otherP"></w></div>
+		<div class="msgbox txtChat" id="msgList"></div>
+	</main>
 
-	<t class="txtChat">
-		
-	<div class="msgbox" id="msgList"></div>
-	<form action="#">
-	<input id="sdMsg" class="sdbt" type="text" value="等待其他人加入才能聊天哦..." enterkeyhint="send" disabled>
-	<input type="submit" value="发送" id="sdBt">
+	<footer class="txtChat">
+	<form action="#"><input id="upFile" type="file">
+	<input id="sdMsg" type="text" value="等待其他人加入才能聊天哦..." enterkeyhint="send" disabled><span placeholder="选择要发送的文件" id="mId">+</span>
 	</form>
-
-	</t>
-
+	</footer>
 
 	<div id="intro" class="message overflow-x-hide overflow-y-hide shadow">
 		<a href="#" id="closebtn">&times;</a>
@@ -55,5 +51,4 @@
 	</div>
 	<div id="logId"></div>
 </body>
-
 </html>
