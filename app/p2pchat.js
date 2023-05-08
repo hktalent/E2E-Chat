@@ -26,7 +26,7 @@ function CheckIsPrivateIp(ip){
     return /^10\./.test(ip) || /^192\.168\./.test(ip) || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip);
 }
 
-// 'https://qifu-api.baidubce.com/ip/geo/v1/district?ip=39.144.137.121'
+// curl -sk -o- 'https://qifu-api.baidubce.com/ip/geo/v1/district?ip=39.144.137.121'|jq
 function queryIp(ip){
     var oRst = null;
     return new Promise(function(resolve, reject) {
@@ -80,6 +80,28 @@ Date.prototype.Format = function (fmt) {
     return fmt;
   };
 function fnInit(io){
+    // client:
+    // auth: {
+    //     token: 'xxx' // 客户端传递令牌
+    //   }
+
+    // io.use((socket, next) => {
+    //     const token = socket.handshake.auth.token;
+      
+    //     if (!token) {
+    //       return next(new Error('Authentication error: missing token'));
+    //     }
+      
+    //     // 根据 token 验证用户身份
+    //     // 如果身份验证成功，将 user 对象附加到 socket 上
+    //     const user = authenticateUser(token);
+    //     if (!user) {
+    //       return next(new Error('Authentication error: invalid token'));
+    //     }
+      
+    //     socket.user = user;
+    //     next();
+    //   });
     io.on('connection', (socket) => 
 {
     socket.channels = {};
@@ -173,10 +195,11 @@ function fnInit(io){
         const channel = config.channel;
         const userdata = config.userdata;
 
-        if (channel in socket.channels) {
-            //console.log("["+ socket.id + "] ERROR: already joined ", channel);
-            return;
-        }
+        // 允许多次join 和 addpeer
+        // if (channel in socket.channels) {
+        //     //console.log("["+ socket.id + "] ERROR: already joined ", channel);
+        //     return;
+        // }
 
         if (!(channel in channels)) {
             channels[channel] = {};
@@ -217,12 +240,13 @@ function fnInit(io){
                     queryIp(o.ip[i]).then(function(o1){
                         if(o1){
                             o.ip[i] = o1;
+                            socket.emit('onIpInfo', {"t":0,'ip': o.ip[i],"isp":o1.isp,"prov":o1.prov,"city":o1.city});
                         }
                     })
                 }
             }
             db.put(szCltFg + "_" + new Date().getTime(),o);
-            console.log("svClientInfo",o)
+            // console.log("svClientInfo",o)
         }
     });
     

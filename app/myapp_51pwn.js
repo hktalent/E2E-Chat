@@ -148,7 +148,7 @@ function myapp(option)
             return compression.filter(req, res);
         }
     }));
-    connectSources = ["'self'", "wss://192.168.0.107:8443",, "wss://chat.51pwn.com:8443", "wss://127.0.0.1:8443"]
+    connectSources = ["'self'", "wss://192.168.0.107:8443",, "wss://chat.51pwn.com:8443", "wss://127.0.0.1:8443","wss://172.20.10.2:8443/"]
     if(bUseHttps)app.use(helmet({directives:{upgradeInsecureRequests:bUseHttps, connectSrc:connectSources}}));
     app.use(helmet.referrerPolicy({policy:'no-referrer'}));
     app.use(helmet());
