@@ -307,11 +307,10 @@ input[type=button] {
 }
 
 #mId{
-    padding-left: 0.5rem;
     cursor: pointer;
     border: 1px solid #000;
-    color: #fff;
-    border-radius: 80%;
+    color: #3f0303;
+    border-radius: 100%;
 }
 
 /*定义竖屏 css*/
