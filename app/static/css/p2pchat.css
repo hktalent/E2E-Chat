@@ -167,8 +167,8 @@ input {
 }
 .msgbox {
     width: 100%;
-    height: calc(var(--vh, 1vh) * 100 - 8rem);
-    border: 1px solid #635252;
+    height: calc(var(--vh, 1vh) * 100 - 6rem);
+    border: 0;
     margin: 0;
     overflow: auto !important;
     box-shadow: inset 0px 0px 16px 0px rgb(139, 196, 239);
