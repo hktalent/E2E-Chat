@@ -4,7 +4,7 @@ var fs = require('fs'),
     aFCache = {},
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
-    useCc = !!1;
+    useCc = !!0;
 
 function fnWc () {
     var a = [szPath, szPathC];
@@ -58,6 +58,11 @@ async function MakeN(){
     fs.writeFileSync(x11 + "_1", String(s1));
 }
 if(useCc)MakeN();
+else{
+    fs.unlink("p2pchat.js_1",()=>{});
+    fs.unlink("static/js.js",()=>{});
+    fs.unlink("static/css.css",()=>{});
+}
 async function fnMerg (s, t) {
     var szXf = "static/"+t + "." + t;
     if (t == "js") s = "client.min,jquery,stunLists,adapter-latest,qrcode.min,plyr,RecordRTC,html5-qrcode.min,aes,p2pchat";
