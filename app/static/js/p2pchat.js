@@ -117,7 +117,18 @@ function getBlob (s) {
 	const blob = new Blob([byteArray], {type: a[0].substring(5)});
 	return blob;
 }
-function CreateMsgDiv (n, s,t,szFileName) {
+function formatBytes(bytes, decimals = 2) {
+    if (!+bytes) return '0 Bytes'
+
+    const k = 1024
+    const dm = decimals < 0 ? 0 : decimals
+    const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+}
+function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	var szId = `TmpId${nCnt}`
 	var szC="msgRow "
 	if(szSelfK == n)szC += "t3"
@@ -143,7 +154,7 @@ function CreateMsgDiv (n, s,t,szFileName) {
 		var a = document.createElement("a");
 		a.href = URL.createObjectURL(getBlob(s));
 		a.download = szFileName;
-		a.innerText = "点击下载文件: " + szFileName;
+		a.innerText = "点击下载文件: " + szFileName +"("+ formatBytes(nSize)+")";
 		o1.find(szTag).append(a);
 		// o1.find("d").innerHTML("<a href=# onclick=dlFile('"+ s + "') />点击下载文件</a>");
 	}
@@ -173,7 +184,7 @@ function CreateMsgDiv (n, s,t,szFileName) {
 var maxLimit = 4 * 1024;
 function SendFile(s, t,szFileName) {
 	var n = 0,nL = s.length;
-	if(2 == t)CreateMsgDiv(szSelfK, `你发送了文件: ${szFileName}`,0);
+	if(2 == t)CreateMsgDiv(szSelfK, `你发送了文件: ${szFileName}(${formatBytes(nL)})`,0);
 	else CreateMsgDiv(szSelfK, s,t);
 	while(0 < s.length)
 	{
@@ -188,14 +199,14 @@ var oCcFile = {};
 function RevMsg (e) {
 	e = JSON.parse(mmMsgj(e.data))
 	if(e.szFileName){
-		CreateMsgDiv(e.nick, `接收到文件${e.szFileName},文件${e.nL}字节，当前序号:${e.n}`,0)
+		// CreateMsgDiv(e.nick, `接收到文件${e.szFileName},文件(${formatBytes(e.nL)})，当前序号:${e.n}`,0)
 		var o1 = oCcFile[e.szFileName] || [];
 		o1[e.n] = e.msg;
 		oCcFile[e.szFileName] = o1;
 		var s1 = o1.join("");
 		if(s1.length == e.nL)
 		{
-			CreateMsgDiv(e.nick, s1,e.t,e.szFileName);
+			CreateMsgDiv(e.nick, s1,e.t,e.szFileName,e.nL);
 			delete oCcFile[e.szFileName]
 		}
 		
