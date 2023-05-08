@@ -2,8 +2,7 @@ const appURL = () => {
 	const protocol = String(document.location).split("://")[0] + '://';
 	return protocol + location.host;
 };
-const getRoomName = () => {
-	// return $("#cnId").val();
+const getRoomName = () => {// return $("#cnId").val();
 	return "Pwn"+String($("#cnId").val()).hashCode();
 }
 window.MediaStream = window.MediaStream || window.webkitMediaStream;
@@ -25,7 +24,6 @@ var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	isChrome = !!navigator.webkitGetUserMedia,
 	isFirefox = !!navigator.mozGetUserMedia,
 	bIsMobile = /.*?(ip(hone|od)|Mobile|iPad|iPod|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune)/gmi.test(navigator.userAgent),
-	isMobileDevice = bIsMobile,
 	// detect node-webkit
 	isNodeWebkit = window.process && (typeof window.process == 'object') && window.process.versions && window.process.versions['node-webkit'],
 	signaling_socket = null, /* our socket.io connection to our webserver */
@@ -83,10 +81,10 @@ function getYourInfo (s) {
 
 function log (...e) {
 	for (var i = 0; i < e.length; i++) {
-		console.log(e[i])
+		LogMsg(JSON.stringify(e[i]))
 	}
 }
-var szSelfK = "自己",fnTmArr = [],bAutoRm = false;
+var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(() => {
 	for(var i =0; i < fnTmArr.length; i++){
 		if(fnTmArr[i]()){
@@ -100,7 +98,26 @@ function LogMsg(s){
 	$("#msgList").append(`<div>${s}</div>`)
 }
 
-function CreateMsgDiv (n, s) {
+// 文件下载,download
+async function dlFile (s) {
+	const br = await fetch(s);
+	br.blob().then(blob => {
+		window.URL.createObjectURL(new Blob(blob, {type: 'application/octet-stream'}));
+	});
+}
+
+function getBlob (s) {
+	var a = s.split(";base64,");
+	const byteCharacters = atob(a[1]);
+	const byteNumbers = new Array(byteCharacters.length);
+	for (let i = 0; i < byteCharacters.length; i++) {
+		byteNumbers[i] = byteCharacters.charCodeAt(i);
+	}
+	const byteArray = new Uint8Array(byteNumbers);
+	const blob = new Blob([byteArray], {type: a[0].substring(5)});
+	return blob;
+}
+function CreateMsgDiv (n, s,t,szFileName) {
 	var szId = `TmpId${nCnt}`
 	var szC="msgRow "
 	if(szSelfK == n)szC += "t3"
@@ -108,9 +125,28 @@ function CreateMsgDiv (n, s) {
 	o9.append(`<div id="${szId}" class="${szC}"></div>`)
 	var o1 = $(`#${szId}`)
 	var x01 = getNowStr()
-	o1.html(`[<t title='${x01}' class=t2>${n}</t>] <d></d><x></x>`)
+	o1.html(`[<t title='${x01}' class=t2>${n}</t>] <d></d><x></x><a href=#${szId} name=${szId}/>`)
 	o1.find("t.t2").text(n)
-	o1.find("d").text(s)
+	var szTag = "d";
+	if(0 == t)o1.find(szTag).text(s);
+	else if(1 == t){
+		var o22 = o1.find(szTag);
+		o22.html("<img width=100 src='"+ s + "' />");
+		o22.find("img").click(function(){
+			var o2 = $(this);
+			o2.toggleClass("fImg");
+			o1.find("a").click();
+			o1[0].scrollIntoView(siv);
+		})
+	}
+	else if(2 == t){
+		var a = document.createElement("a");
+		a.href = URL.createObjectURL(getBlob(s));
+		a.download = szFileName;
+		a.innerText = "点击下载文件: " + szFileName;
+		o1.find(szTag).append(a);
+		// o1.find("d").innerHTML("<a href=# onclick=dlFile('"+ s + "') />点击下载文件</a>");
+	}
 	var n7 = parseInt($("#clsTm").val()||1)
 	var autoRm = function () {
 		o1.unbind('click')
@@ -125,26 +161,64 @@ function CreateMsgDiv (n, s) {
 			return false
 		})
 	}
+	o1.find("a").click();
 	if(bAutoRm)autoRm();
 	else o1.click(autoRm);
 	nCnt++;
-	o1[0].scrollIntoView({
-		behavior: "smooth", // or "auto" or "instant"
-		block: "start" // or "end"
-	})
+	o1[0].scrollIntoView(siv);
 }
+
+// 文件发送、接收需要拆包和组包
+// 每次要加密，最后要base64，所有每次，原本限制每次只能发送16k，这里只能发送16/4 = 4k
+var maxLimit = 4 * 1024;
+function SendFile(s, t,szFileName) {
+	var n = 0,nL = s.length;
+	if(2 == t)CreateMsgDiv(szSelfK, `你发送了文件: ${szFileName}`,0);
+	else CreateMsgDiv(szSelfK, s,t);
+	while(0 < s.length)
+	{
+		SendMsg(s.substring(0,maxLimit),t,n++,nL,szFileName)
+		s = s.substring(maxLimit)
+	}
+}
+
+// 接收到文件、图片先缓存，最后组包
+var oCcFile = {};
 
 function RevMsg (e) {
 	e = JSON.parse(mmMsgj(e.data))
-	CreateMsgDiv(e.nick, e.msg)
+	if(e.szFileName){
+		CreateMsgDiv(e.nick, `接收到文件${e.szFileName},文件${e.nL}字节，当前序号:${e.n}`,0)
+		var o1 = oCcFile[e.szFileName] || [];
+		o1[e.n] = e.msg;
+		oCcFile[e.szFileName] = o1;
+		var s1 = o1.join("");
+		if(s1.length == e.nL)
+		{
+			CreateMsgDiv(e.nick, s1,e.t,e.szFileName);
+			delete oCcFile[e.szFileName]
+		}
+		
+		return
+	}
+	CreateMsgDiv(e.nick, e.msg,e.t)
 }
 
+var fn009 = function () {
+	let vh = window.innerHeight * 0.01;
+	document.documentElement.style.setProperty('--vh', `${vh}px`);
+	vh *= 100;
+	// $("#visualViewport").attr("content","height="+vh+"px,width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover");
+	$("html,body").height(vh+"px");
+};
 function clOpen(){
-	$("#sdMsg,#sdBt").removeAttr("disabled")
+	$("#sdMsg").removeAttr("disabled")
 	o1 = $("#sdMsg")
 	o1.val("")
 	o1.focus()
-	log('准备就绪，你可以发送消息了')
+	o1[0].scrollIntoView(siv);
+	LogMsg('准备就绪，你可以发送消息了');
+	fn009();
 }
 
 // 为每个 pc 创建文本聊天 通道
@@ -155,7 +229,6 @@ function fnTxtChatOne(pc){
 		e.channel.onmessage = RevMsg
 		g_sendChannels.push(e.channel)
 		clOpen()
-		LogMsg("ondatachannel ok")
 	}
 	/*
 	maxPacketLifeTime: 0, // 在不可靠模式下尝试传输消息的最大毫秒数。虽然此值是一个 16 位无符号数，但每个用户代理都可以将其限制在它认为合适的任何最大值
@@ -195,14 +268,16 @@ function mmMsg(s){
 	// return s
 	return CryptoJS.AES.encrypt(s,$("#cnId").val()||getNowStr().substring(0,10))
 }
-function SendMsg (s) {
+// t: 0 txt,1 img,2 file
+function SendMsg (s,t,n,nL,szFileName) {
 	if (s) {
+		t = t || 0
 		if (0 == g_sendChannels.length) {
 			setTimeout(function () { SendMsg(s) }, 333)
 			return
 		}
-		CreateMsgDiv(szSelfK, s)
-		szMsg1 = mmMsg(JSON.stringify({ "nick": $("#nick").val(), "msg": s }))
+		if(0 == nL)CreateMsgDiv(szSelfK, s,t)
+		szMsg1 = mmMsg(JSON.stringify({ "nick": $("#nick").val(), "msg": s, "t": t, "n": n, "nL": nL, "szFileName": szFileName }))
 		for (var i = 0; i < g_sendChannels.length; i++) {
 			try { g_sendChannels[i].send(szMsg1) } catch (e) { log(e) }
 		}
@@ -218,6 +293,7 @@ function fnMyLogs (e) {
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
 	getYourInfo(s);
 	var szHtml = "<p>" + getNowStr() + "&nbsp;" + s + "</p>";
+	LogMsg(szHtml);
 	if (0 < oLog.find("p").first().length) {
 		oLog = oLog.find("p").first().before(szHtml);
 	}
@@ -410,7 +486,12 @@ function init () {
 	// if (g_bUseUpInfo) {
 	// 	signaling_socket.emit("upInfo",{});
 	// }
-
+	signaling_socket.on("onIpInfo",function (o) {
+		if(0 == o.t){
+			o.t = szSelfK
+			CreateMsgDiv(szSelfK,JSON.stringify(o))
+		}
+	});
 	signaling_socket.on('connect', function () {
 		LogMsg("成功连接服务器");
 		bIoIsOk=true;
@@ -450,7 +531,6 @@ function init () {
 	}
 
 	signaling_socket.on('addPeer', function (config) {
-		log('addPeer:', config);
 		var peer_id = config.peer_id;
 		if (peer_id in peers) {
 			log("Already connected to peer " + peer_id);
@@ -459,8 +539,8 @@ function init () {
 		// this will no longer be needed by chrome eventually (supposedly), but is necessary for now to get firefox to talk to chrome
 		// ,RtpDataChannels:true,preferSCTP:isFirefox
 		// iceTransportPolicy, iceCandidatePoolSize
-		// chrome 不支持：DtlsSrtpKeyAgreement
-		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS }, { "optional": [{ "DtlsSrtpKeyAgreement": true }] });
+		// chrome 不支持：DtlsSrtpKeyAgreement "DtlsSrtpKeyAgreement": true
+		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS }, { "optional": [{ }] });
 		peers[peer_id] = peer_connection;
 		// p2p 打洞成功触发事件 
 		peer_connection.onicecandidate = function (event) {
@@ -482,7 +562,6 @@ function init () {
 						'candidate': event.candidate.candidate
 					}
 				});
-				fnMyLogs(event.candidate);
 				// type:host、 srflx，都要,not set null
 				// peer_connection.onicecandidate = null;
 			}
@@ -497,7 +576,6 @@ function init () {
 				remote_media.controls = false;
 				peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 				attachMediaStream(remote_media, event.stream);
-				log("peer_connection.onaddstream");
 			} catch (e) { log(e) }
 		}
 		// p2p 流事件
@@ -514,7 +592,6 @@ function init () {
 					peer_connection.setLocalDescription(local_description,
 						function () {
 							signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
-							fnMyLogs2("Offer setLocalDescription succeeded, peer_id ", peer_id, local_description);
 						},
 						function () {
 							fnMyLogs("Offer setLocalDescription failed!");
@@ -531,24 +608,18 @@ function init () {
 	});
 
 	signaling_socket.on('sessionDescription', function (config) {
-		fnMyLogs2('Remote description received: ', config);
 		var peer_id = config.peer_id;
 		var peer = peers[peer_id];
 		var remote_description = config.session_description;
-		fnMyLogs2(config.session_description);
 
 		var desc = new RTCSessionDescription(remote_description);
 		var stuff = peer.setRemoteDescription(desc, function () {
-			fnMyLogs2("setRemoteDescription succeeded");
 			if (remote_description.type == "offer") {
-				fnMyLogs2("Creating answer");
 				peer.createAnswer(
 					function (local_description) {
-						fnMyLogs2("Answer description is: ", local_description);
 						peer.setLocalDescription(local_description,
 							function () {
 								signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
-								fnMyLogs2("Answer setLocalDescription succeeded");
 							},
 							function () { fnMyLogs2("Answer setLocalDescription failed!"); }
 						);
@@ -561,15 +632,12 @@ function init () {
 			function (error) {
 				fnMyLogs2("setRemoteDescription error: ", error);
 			});
-		// fnMyLogs2("Description Object: ", desc);
 	});
 
 	signaling_socket.on('iceCandidate', function (config) {
 		var peer = peers[config.peer_id];
 		var ice_candidate = config.ice_candidate;
 		peer.addIceCandidate(new RTCIceCandidate(ice_candidate));
-		// remote ip
-		fnMyLogs2(ice_candidate);
 	});
 	signaling_socket.on('setNick', function (s) {
 		oNk = $("#nick")
@@ -577,7 +645,6 @@ function init () {
 	})
 
 	signaling_socket.on('removePeer', function (config) {
-		fnMyLogs2('Signaling server said to remove peer:', config);
 		var peer_id = config.peer_id;
 		if (peer_id in peer_media_elements) {
 			peer_media_elements[peer_id].remove();
@@ -709,7 +776,6 @@ function setup_local_media (callback, errorback) {
 		// navigator.mediaDevices.getUserMedia({ "audio": {echoCancellation: 'system',autoGainControl:true,sampleRate:48000, channelCount: 1, volume: 1.0,mandatory: {echoCancellation:'system'}}, "video": true}).then((stream) => 
 		// chrome not use ://mandatory: {echoCancellation:'system'}
 		// echoCancellation: {exact: false},
-		// if (isChrome && isMobileDevice) oT = true;
 		// fix chrome 不支持facingMode
 		appSet()
 		navigator.mediaDevices.getUserMedia(g_Constraints).then((stream) => {
@@ -813,10 +879,8 @@ function fnDoImgStream (socket, vId) {
 	ss.createBlobReadStream(file).pipe(stream);
 }
 
-var clientHeight = 0;
 $(document).ready(function () {
 	LogMsg("开始连接服务器...");
-	clientHeight = document.documentElement.clientHeight || document.body.clientHeight;
 	videoSelect = document.querySelector('select#videoSelect');
 	audioInputSelect = document.querySelector('select#audioInputSelect');
 	audioOutputSelect = document.querySelector('select#audioOutputSelect');
@@ -843,6 +907,7 @@ $(document).ready(function () {
 		osdMsg = $("#sdMsg"),
 		oTxtChat = $(".txtChat")
 		oMyCtn = $("#myCtn"),
+		oclsId = $("#clsId"),
 		ovChat = $(".vChat");
 	if (szHs) {
 		oCnId.val(szHs.substring(1))
@@ -851,7 +916,8 @@ $(document).ready(function () {
 	// text chat
 	oStChat.click(function () {
 		doKstart = g_bTxtChat = true;
-		oTxtChat.show();
+		oTxtChat.css("display", "inline-block");
+		oStChat.hide();
 		oMyCtn.hide();
 		ovChat.hide();
 		oMyCtn.html("");
@@ -867,6 +933,8 @@ $(document).ready(function () {
 	oStartChat.click(function () {
 		g_bTxtChat = false
 		doKstart = true;
+		oStChat.show();
+		oStartChat.hide();
 		oTxtChat.hide();
 		oMyCtn.show();
 		ovChat.show();
@@ -893,13 +961,8 @@ $(document).ready(function () {
 		MkQrcd()
 	})
 	initQrcode()
-
-	$("#sdBt").click(fnXx = function () {
-		SendMsg(osdMsg.val())
-		osdMsg.val("")
-	})
 	osdMsg.keydown(function (e) {
-		if (e.keyCode == 13) fnXx()
+		if (e.keyCode == 13) SendMsg(osdMsg.val()),osdMsg.val("")
 	})
 	oAutoRm = $("#atRd");
 	oAutoRm.change(function () {
@@ -907,15 +970,32 @@ $(document).ready(function () {
 	})
 	oMsgBox = $("#msgList");
 	bAutoRm = oAutoRm.prop("checked");
-	$("#clsId").click(function(){
+	oclsId.click(function(){
 		oMsgBox.html("")
 		fnTmArr = []
 	})
 	$("form").submit(function(e){
 		return false
 	})
-
-	window.addEventListener('resize', () => {
-		clientHeight = document.documentElement.clientHeight || document.body.clientHeight;
-	}, false);
+	fn009();
+	window.addEventListener('resize', fn009);
+	// 微信浏览器 https://www.lixf.cc/2021/03/26/webrtc-in-ios-weixin-browser/
+	document.addEventListener("WeixinJSBridgeReady", function () {  
+		document.getElementById("remoteVideo").play();
+	});
+	oUpf = $("#upFile")
+	$("#mId").click(function(){
+		oUpf.click()
+	})
+	oUpf.change(function(){
+		for(x in this.files) {
+			if(x == "length") break;
+			var oImg = new FileReader(),of1 = this.files[x];
+			oImg.readAsDataURL(of1);
+			oImg.onload = function(){
+				s = this.result;
+				SendFile(s,0 == s.indexOf("data:image") ? 1:2,of1.name)
+			};
+		}
+	})
 })
