@@ -211,7 +211,9 @@ function RevMsg (e) {
 		var s1 = o1.join("");
 		if(s1.length == e.nL)
 		{
-			s1 = mmMsgj(o1.join(""));
+			try{s1 = mmMsgj(o1.join(""));}catch(e){
+				log("解码失败： " + s1)
+			}
 			// CreateMsgDiv(e.nick, "data:" + szTOsTp + ";base64,"+btoa(s1),e.t,e.szFileName,e.nL);
 			CreateMsgDiv(e.nick, s1,e.t,e.szFileName,e.nL);
 			delete oCcFile[e.szFileName]
@@ -244,6 +246,7 @@ function fnTxtChatOne(pc){
 	if(pc.Tok)return;
 	pc.Tok = true;
 	pc.ondatachannel = function(e){
+		// log(" == pc.ondatachannel is ok ===>> ")
 		e.channel.onmessage = RevMsg
 		g_sendChannels.push(e.channel)
 		clOpen()
@@ -416,7 +419,6 @@ function join_chat_channel1 (channel, userdata) {
 	}
 	signaling_socket.emit('join', { "channel": channel, "userdata": userdata });
 	szLstChannel = channel
-	LogMsg("join_chat_channel " + channel);
 }
 
 function initQrcode () {
@@ -593,11 +595,14 @@ function init () {
 
 	signaling_socket.on('addPeer', function (config) {
 		var peer_id = config.peer_id;
-		LogMsg("addPeer " + peer_id);
-		if (peer_id in peers) {
-			log("Already connected to peer " + peer_id);
-			return;
+		// LogMsg("addPeer " + peer_id);
+		if(!config.should_create_offer){
+			LogMsg(`昵称: ${config.userdata.nick} 上线了，当前 (${config.nOnline}) 人在线`);
 		}
+		// if (peer_id in peers) {
+		// 	log("Already connected to peer " + peer_id);
+		// 	return;
+		// }
 		// this will no longer be needed by chrome eventually (supposedly), but is necessary for now to get firefox to talk to chrome
 		// ,RtpDataChannels:true,preferSCTP:isFirefox
 		// iceTransportPolicy, iceCandidatePoolSize
@@ -608,7 +613,7 @@ function init () {
 		peer_connection.onicecandidate = function (event) {
 			if (event.candidate == null) { return }
 			if (event.candidate) {
-				LogMsg("peer_connection.onicecandidate " + peer_id);
+				// LogMsg("peer_connection.onicecandidate " + peer_id);
 				var c = parseCandidate(event.candidate.candidate);
 				var oX1 = g_fgNrpt[peer_id] || {};
 				// skip ipv6
@@ -648,10 +653,10 @@ function init () {
 
 		if (config.should_create_offer) {
 			if (g_bTxtChat) fnTxtChat()
-			LogMsg("Creating RTC offer to "+ peer_id);
+			// LogMsg("Creating RTC offer to "+ peer_id);
 			peer_connection.createOffer(
 				function (local_description) {
-					LogMsg("Local offer description is: "+ local_description);
+					// LogMsg("Local offer description is: "+ local_description);
 					peer_connection.setLocalDescription(local_description,
 						function () {
 							signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
@@ -671,7 +676,7 @@ function init () {
 	});
 
 	signaling_socket.on('sessionDescription', function (config) {
-		LogMsg('Remote Session-description received from ' + config.peer_id);
+		// LogMsg('Remote Session-description received from ' + config.peer_id);
 		var peer_id = config.peer_id;
 		var peer = peers[peer_id];
 		var remote_description = config.session_description;
@@ -948,7 +953,6 @@ function fnDoImgStream (socket, vId) {
 }
 
 $(document).ready(function () {
-	LogMsg("开始连接服务器...");
 	videoSelect = document.querySelector('select#videoSelect');
 	audioInputSelect = document.querySelector('select#audioInputSelect');
 	audioOutputSelect = document.querySelector('select#audioOutputSelect');
@@ -1032,6 +1036,28 @@ $(document).ready(function () {
 	osdMsg.keydown(function (e) {
 		if (e.keyCode == 13) SendMsg(osdMsg.val()),osdMsg.val("")
 	})
+	var fnDoBlog =function(blob,szName){
+		var reader = new FileReader();
+		reader.onload = function (event) {
+			var s = this.result;
+			SendFile(s,0 == s.indexOf("data:image") ? 1:2,szName)
+		}; 
+		reader.readAsDataURL(blob);
+	};
+	// 处理图片、文件
+	osdMsg.bind("paste",function (e) {
+		var pastedData = e.originalEvent.clipboardData.getData('text');
+		log(pastedData)
+		var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+		for (var index in items) {
+			var item = items[index];
+			if(!item){continue}
+			if (item.kind === 'file' || item.type && item.type.indexOf("image") === 0) {
+				fnDoBlog(item.getAsFile(),"paste");
+			}
+		}
+    
+	});
 	oAutoRm = $("#atRd");
 	oAutoRm.change(function () {
 		bAutoRm = this.checked;
@@ -1058,12 +1084,7 @@ $(document).ready(function () {
 	oUpf.change(function(){
 		for(x in this.files) {
 			if(x == "length") break;
-			var oImg = new FileReader(),of1 = this.files[x];
-			oImg.readAsDataURL(of1);
-			oImg.onload = function(){
-				s = this.result;
-				SendFile(s,0 == s.indexOf("data:image") ? 1:2,of1.name)
-			};
+			fnDoBlog(this.files[x],this.files[x].name)
 		}
 	})
 })

@@ -79,6 +79,7 @@ Date.prototype.Format = function (fmt) {
     }
     return fmt;
   };
+var nOnline = 0;
 function fnInit(io){
     // client:
     // auth: {
@@ -191,6 +192,7 @@ function fnInit(io){
     })
 
     socket.on('join', (config) => {
+        nOnline++;
         console.log("["+ socket.id + "] join ", config);
         const channel = config.channel;
         const userdata = config.userdata;
@@ -206,8 +208,8 @@ function fnInit(io){
         }
 
         for (id in channels[channel]) {
-            channels[channel][id].emit('addPeer', {'peer_id': socket.id, 'should_create_offer': false,'userdata':userdata});
-            socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true});
+            channels[channel][id].emit('addPeer', {'peer_id': socket.id, 'should_create_offer': false,'userdata':userdata,"nOnline":nOnline});
+            socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true,"nOnline":nOnline});
         }
 
         channels[channel][socket.id] = socket;
@@ -216,6 +218,7 @@ function fnInit(io){
 
     // 离开调用
     const part = (channel) => {
+        nOnline--;
         //console.log("["+ socket.id + "] part ");
         if (!(channel in socket.channels)) {
             return;
