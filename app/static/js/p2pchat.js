@@ -5,6 +5,9 @@ const appURL = () => {
 const getRoomName = () => {// return $("#cnId").val();
 	return "Pwn"+String($("#cnId").val()).hashCode();
 }
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+	LogMsg([msg, url, lineNo, columnNo, error].join("\n"))
+}
 window.MediaStream = window.MediaStream || window.webkitMediaStream;
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 String.prototype.hashCode = function() {
@@ -34,13 +37,14 @@ var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	g_bTxtChat = false,
 	g_peer_id = "",
 	nLogs = 0, bNbg = false,
+	szTOsTp = 'application/octet-stream',
 	szLstChannel = '',
 	nId = 0, bCloseQrcode = true,
 	g_bUseUpInfo = true,// submit current info to server
 	g_bSetup = false,
 	szgetYourInfo = '',
 	g_sendChannels = [],
-	maxSendSize = 65536,// 64k
+	maxSendSize = 65535,// 64k
 	sendChannel = null, nCnt = 1;
 
 // 当前时间
@@ -103,7 +107,7 @@ function LogMsg(s){
 async function dlFile (s) {
 	const br = await fetch(s);
 	br.blob().then(blob => {
-		window.URL.createObjectURL(new Blob(blob, {type: 'application/octet-stream'}));
+		window.URL.createObjectURL(new Blob(blob, {type: szTOsTp}));
 	});
 }
 
@@ -162,7 +166,6 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 		a.download = szFileName;
 		a.innerText = "点击下载文件: " + szFileName +"("+ formatBytes(nSize)+")";
 		o1.find(szTag).append(a);
-		// o1.find("d").innerHTML("<a href=# onclick=dlFile('"+ s + "') />点击下载文件</a>");
 	}
 	var n7 = parseInt($("#clsTm").val()||1)
 	var autoRm = function () {
@@ -187,23 +190,19 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 
 // 文件发送、接收需要拆包和组包
 // 每次要加密，最后要base64，所有每次，原本限制每次只能发送16k，这里只能发送16/4 = 4k
-var maxLimit = 4 * 1024;// maxSendSize/ 8
 function SendFile(s, t,szFileName) {
 	var n = 0,nL = s.length;
 	if(2 == t)CreateMsgDiv(szSelfK, `你发送了文件: ${szFileName}(${formatBytes(nL)})`,0);
 	else CreateMsgDiv(szSelfK, s,t);
-	while(0 < s.length)
-	{
-		SendMsg(s.substring(0,maxLimit),t,n++,nL,szFileName)
-		s = s.substring(maxLimit)
-	}
+	// s = getUtf8FromB64(s).toString();// base64解码
+	SendMsg(s,t,0,nL,szFileName)
 }
 
 // 接收到文件、图片先缓存，最后组包
 var oCcFile = {};
 
 function RevMsg (e) {
-	e = JSON.parse(mmMsgj(e.data))
+	e = JSON.parse(e.data)
 	if(e.szFileName){
 		// CreateMsgDiv(e.nick, `接收到文件${e.szFileName},文件(${formatBytes(e.nL)})，当前序号:${e.n}`,0)
 		var o1 = oCcFile[e.szFileName] || [];
@@ -212,13 +211,15 @@ function RevMsg (e) {
 		var s1 = o1.join("");
 		if(s1.length == e.nL)
 		{
+			s1 = mmMsgj(o1.join(""));
+			// CreateMsgDiv(e.nick, "data:" + szTOsTp + ";base64,"+btoa(s1),e.t,e.szFileName,e.nL);
 			CreateMsgDiv(e.nick, s1,e.t,e.szFileName,e.nL);
 			delete oCcFile[e.szFileName]
 		}
 		
 		return
 	}
-	CreateMsgDiv(e.nick, e.msg,e.t)
+	CreateMsgDiv(e.nick, mmMsgj(e.msg),e.t)
 }
 
 var fn009 = function () {
@@ -252,7 +253,7 @@ function fnTxtChatOne(pc){
 	maxRetransmits: 0, // 用户代理尝试重新传输在不可靠模式下第一次失败的消息的最大次数。虽然这个值是一个 16 位无符号数，但每个用户代理都可以将它限制在它认为合适的任何最大值
 	negotiated:true,
 	 */
-	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true, 'maxRetransmits': 1000,'maxPacketLifeTime':99999999})
+	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true})
 	sendChannel.bufferedAmountLowThreshold = maxSendSize;
 
 	sendChannel.onclose = function () {
@@ -286,7 +287,7 @@ function fnTxtChat () {
 }
 function mmMsgj(s){
 	// return s
-	return CryptoJS.AES.decrypt(s,$("#cnId").val()||getNowStr().substring(0,10)).toString (CryptoJS.enc.Utf8)
+	return CryptoJS.AES.decrypt(s,$("#cnId").val()||getNowStr().substring(0,10)).toString(CryptoJS.enc.Utf8)
 }
 function mmMsg(s){
 	// return s
@@ -299,36 +300,44 @@ function send4C(ox1,s){
 	// 	return
 	// }
 	if(ox1.readyState == "closed"){
+		log('sendC closed')
 		return
 	}
-	try {ox1.send(szMsg1);} catch (e) { log(e.toString());setTimeout(function () { send4C(ox1,s) }, 333) }
+	try {ox1.send(s);} catch (e) { 
+		log(e.toString());
+		setTimeout(function () { send4C(ox1,s) }, 333) 
+	}
 }
 /* t: 0 txt,1 img,2 file
 */
-function SendMsg (s,t,n,nL,szFileName) {
+function SendMsg(s,t,n,nL,szFileName) {
 	if (s) {
-		t = t || 0
+		t = t || 0;
+		n = n || 0;
+		nL = nL || 0;
 		if (0 == g_sendChannels.length) {
 			setTimeout(function () { SendMsg(s) }, 333)
 			return
 		}
-		if(0 == nL)CreateMsgDiv(szSelfK, s,t)
-		szMsg1 = mmMsg(JSON.stringify({ "nick": $("#nick").val(), "msg": s, "t": t, "n": n, "nL": nL, "szFileName": szFileName }))
-		for (var i = 0; i < g_sendChannels.length; i++) {
-			try {
-				send4C(g_sendChannels[i],szMsg1)
-				// (function(ox1){
-				// 	if (ox1.bufferedAmount > ox1.bufferedAmountLowThreshold) {
-				// 		ox1.onbufferedamountlow = () => {// 有些浏览器不支持
-				// 			LogMsg([ox1.bufferedAmount, ox1.bufferedAmountLowThreshold].join("/"))
-				// 			ox1.onbufferedamountlow = null;
-				// 			ox1.send(szMsg1);
-				// 		}
-				// 		return;
-				// 	}
-				// 	ox1.send(szMsg1)
-				// })(g_sendChannels[i]);
-			} catch (e) { log(e.toString()) }
+		if(0 == nL)CreateMsgDiv(szSelfK, s,t);
+		var s01 = String(mmMsg(s));
+		n = 0;
+		nL = s01.length;
+		while(0 < s01.length)
+		{
+			try{
+				var nMin = Math.min(maxSendSize,s01.length);
+				s = s01.substring(0,nMin);
+				s01 = s01.substring(nMin);
+				var szMsg1 = JSON.stringify({ "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s })
+				n++;
+				for (var i = 0; i < g_sendChannels.length; i++) {
+					try {
+						send4C(g_sendChannels[i],szMsg1)
+					} catch (e) { log(e.toString()) }
+				}
+				if(0 == s01.length)break
+			}catch(e){log(e.toString());break}
 		}
 	}
 }
@@ -387,7 +396,9 @@ function join_chat_channel (channel, userdata) {
 		try{g_sendChannels[0].close();}catch(e){}
 		g_sendChannels.splice(0, 1);
 	}
-	join_chat_channel1 (channel, userdata)
+	g_sendChannels=[];
+	join_chat_channel1(channel, userdata)
+	
 }
 
 function join_chat_channel1 (channel, userdata) {
@@ -405,6 +416,7 @@ function join_chat_channel1 (channel, userdata) {
 	}
 	signaling_socket.emit('join', { "channel": channel, "userdata": userdata });
 	szLstChannel = channel
+	LogMsg("join_chat_channel " + channel);
 }
 
 function initQrcode () {
@@ -581,6 +593,7 @@ function init () {
 
 	signaling_socket.on('addPeer', function (config) {
 		var peer_id = config.peer_id;
+		LogMsg("addPeer " + peer_id);
 		if (peer_id in peers) {
 			log("Already connected to peer " + peer_id);
 			return;
@@ -595,6 +608,7 @@ function init () {
 		peer_connection.onicecandidate = function (event) {
 			if (event.candidate == null) { return }
 			if (event.candidate) {
+				LogMsg("peer_connection.onicecandidate " + peer_id);
 				var c = parseCandidate(event.candidate.candidate);
 				var oX1 = g_fgNrpt[peer_id] || {};
 				// skip ipv6
@@ -634,10 +648,10 @@ function init () {
 
 		if (config.should_create_offer) {
 			if (g_bTxtChat) fnTxtChat()
-			// console.log("Creating RTC offer to ", peer_id);
+			LogMsg("Creating RTC offer to "+ peer_id);
 			peer_connection.createOffer(
 				function (local_description) {
-					// console.log("Local offer description is: ", local_description);
+					LogMsg("Local offer description is: "+ local_description);
 					peer_connection.setLocalDescription(local_description,
 						function () {
 							signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
@@ -657,10 +671,15 @@ function init () {
 	});
 
 	signaling_socket.on('sessionDescription', function (config) {
+		LogMsg('Remote Session-description received from ' + config.peer_id);
 		var peer_id = config.peer_id;
 		var peer = peers[peer_id];
 		var remote_description = config.session_description;
-
+		xM = config["session_description"]["sdp"].match(/a=max-message-size:\s*(\d+)/);
+		if (xM !== null && xM.length >= 2) {
+			maxSendSize = parseInt(xM[1]) - 800;
+			log(`maxSendSize = ${maxSendSize}`)
+		  }
 		var desc = new RTCSessionDescription(remote_description);
 		var stuff = peer.setRemoteDescription(desc, function () {
 			if (remote_description.type == "offer") {
