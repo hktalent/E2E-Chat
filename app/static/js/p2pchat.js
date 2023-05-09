@@ -228,9 +228,9 @@ var clientHeight = 0;
 var fn009 = function () {
 	let vh = window.innerHeight * 0.01;
 	document.documentElement.style.setProperty('--vh', `${vh}px`);
-	vh *= 100 - document.body.scrollHeight - clientHeight;
+	// vh = vh * 100 - $(document).scrollTop() - clientHeight;
 	// $("#visualViewport").attr("content","height="+vh+"px,width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover");
-	$("html,body").height(vh+"px");
+	// $("html,body").height(vh+"px");
 };
 function clOpen(){
 	$("#sdMsg").removeAttr("disabled")
@@ -239,7 +239,6 @@ function clOpen(){
 	o1.focus()
 	o1[0].scrollIntoView(siv);
 	LogMsg('准备就绪，你可以发送消息了');
-	fn009();
 }
 
 // 为每个 pc 创建文本聊天 通道
