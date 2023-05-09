@@ -526,6 +526,16 @@ function initOnePeer (pp, peer_id) {
 	peer_connection.addStream(local_media_stream);
 }
 
+// 更新在线人
+function upListMb(s,b){
+	try{
+		var a = [$("#nick").val()];
+		for(var k in g_aMembers){
+			a.push(g_aMembers[k])
+		}
+		$("#otherP").html(a.join("&nbsp;|&nbsp;"))
+	}catch(e){log(e)}
+}
 function initVideoChat () {
 	log("initVideoChat")
 	if (null == local_media_stream) {
@@ -606,6 +616,10 @@ function init () {
 		if(!config.should_create_offer){
 			LogMsg(`昵称: ${config.userdata.nick} 上线了，当前 (${config.nOnline}) 人在线`);
 		}
+		if(config.userdata && config.userdata.nick){
+			g_aMembers[peer_id] = config.userdata.nick;
+			upListMb()
+		}
 		// if (peer_id in peers) {
 		// 	log("Already connected to peer " + peer_id);
 		// 	return;
@@ -616,6 +630,7 @@ function init () {
 		// chrome 不支持：DtlsSrtpKeyAgreement "DtlsSrtpKeyAgreement": true
 		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS }, { "optional": [{ }] });
 		peers[peer_id] = peer_connection;
+		
 		// p2p 打洞成功触发事件 
 		peer_connection.onicecandidate = function (event) {
 			if (event.candidate == null) { return }
@@ -735,6 +750,8 @@ function init () {
 
 		delete peers[peer_id];
 		delete peer_media_elements[config.peer_id];
+		delete g_aMembers[peer_id];
+		upListMb()
 	});
 	MkQrcd()
 	$('#roomurl').on('click', event => {

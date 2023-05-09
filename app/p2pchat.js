@@ -196,6 +196,7 @@ function fnInit(io){
         console.log("["+ socket.id + "] join ", config);
         const channel = config.channel;
         const userdata = config.userdata;
+        socket.nick = userdata.nick; 
 
         // 允许多次join 和 addpeer
         // if (channel in socket.channels) {
@@ -209,7 +210,7 @@ function fnInit(io){
 
         for (id in channels[channel]) {
             channels[channel][id].emit('addPeer', {'peer_id': socket.id, 'should_create_offer': false,'userdata':userdata,"nOnline":nOnline});
-            socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true,"nOnline":nOnline});
+            socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true,'userdata':{'nick':channels[channel][id].nick},"nOnline":nOnline});
         }
 
         channels[channel][socket.id] = socket;
