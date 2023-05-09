@@ -15,3 +15,5 @@ rcp app/expressOptions.js /root/${xxx}/app/
 
 rcp app/static/js/ie.js /root/${xxx}/app/static/js/
 rcp app/static/js/kindle.js /root/${xxx}/app/static/js/
+rcp app/static/js/test.js /root/${xxx}/app/static/js/
+rcp app/static/x.html /root/${xxx}/app/static/

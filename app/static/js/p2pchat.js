@@ -86,7 +86,11 @@ function getYourInfo (s) {
 
 function log (...e) {
 	for (var i = 0; i < e.length; i++) {
-		LogMsg(JSON.stringify(e[i]))
+		try{
+			LogMsg(JSON.stringify(e[i]))
+		}catch(e){
+			console.log(e[i])
+		}
 	}
 }
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
@@ -243,10 +247,14 @@ function clOpen(){
 
 // 为每个 pc 创建文本聊天 通道
 function fnTxtChatOne(pc){
-	if(pc.Tok)return;
+	try{
+	if(pc.Tok){
+		log("pc.Tok = ",pc.Tok)
+		return;
+	}
 	pc.Tok = true;
 	pc.ondatachannel = function(e){
-		// log(" == pc.ondatachannel is ok ===>> ")
+		log(" == pc.ondatachannel is ok ===>> ")
 		e.channel.onmessage = RevMsg
 		g_sendChannels.push(e.channel)
 		clOpen()
@@ -257,8 +265,7 @@ function fnTxtChatOne(pc){
 	negotiated:true,
 	 */
 	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true})
-	sendChannel.bufferedAmountLowThreshold = maxSendSize;
-
+	
 	sendChannel.onclose = function () {
 		stopPc01(sendChannel)
 		for(i in g_sendChannels){	
@@ -281,6 +288,7 @@ function fnTxtChatOne(pc){
 	}
 	sendChannel.onmessage = RevMsg
 	// g_sendChannels.push(sendChannel)
+	}catch(e){log(e)}
 }
 
 // 文本聊天初始化
@@ -403,7 +411,7 @@ function part_chat_channel (channel) {
 }
 function join_chat_channel (channel, userdata) {
 	while(0 < g_sendChannels.length) {
-		try{g_sendChannels[0].close();}catch(e){}
+		try{g_sendChannels[0].close();}catch(e){log(e)}
 		g_sendChannels.splice(0, 1);
 	}
 	g_sendChannels=[];
@@ -554,10 +562,7 @@ var g_aMembers = {},bIoIsOk = false;
 function init () {
 	s1 = appURL()
 	s1 = s1.replace("https://", "wss://")
-	signaling_socket = io("/pChat",{
-		// reconnection:true,// 是否自动重连，默认true
-		// reconnectionAttempts:1000000,// 设置最大重试次数,默认无限次
-	});
+	signaling_socket = io("/pChat");
 	//重试失败后会调用reconnect_failed事件
 	signaling_socket.on('reconnect_failed', function () {
 		log('reconnect_failed');
@@ -576,7 +581,7 @@ function init () {
 		LogMsg("成功连接服务器");
 		bIoIsOk=true;
 		if (szCltFg) signaling_socket.emit("getNick", szCltFg)
-		if (local_media_stream) join_chat_channel(getRoomName(), {});
+		if (local_media_stream) join_chat_channel(getRoomName(),{});
 		// else {
 		// 	// StartVideo()
 		// }
@@ -594,7 +599,6 @@ function init () {
 		peer_media_elements = {};
 	});
 
-	var g_fgNrpt = {}, recorder;
 	function parseCandidate (text) {
 		const candidateStr = 'candidate:';
 		const pos = text.indexOf(candidateStr) + candidateStr.length;
@@ -613,6 +617,10 @@ function init () {
 	signaling_socket.on('addPeer', function (config) {
 		var peer_id = config.peer_id;
 		// LogMsg("addPeer " + peer_id);
+		if (peer_id in peers) {
+			log("Already connected to peer " + peer_id);
+			return;
+		}
 		if(!config.should_create_offer){
 			LogMsg(`昵称: ${config.userdata.nick} 上线了`);
 		}
@@ -630,8 +638,7 @@ function init () {
 		// ,RtpDataChannels:true,preferSCTP:isFirefox
 		// iceTransportPolicy, iceCandidatePoolSize
 		// chrome 不支持：DtlsSrtpKeyAgreement "DtlsSrtpKeyAgreement": true
-
-		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,
+		/*
 			// iceTransportPolicy: 'all',
 			// bundlePolicy: 'max-bundle',
 			// rtcpMuxPolicy: 'require', 
@@ -639,50 +646,61 @@ function init () {
 			// sdpSemantics: 'unified-plan',
 			// tcpCandidatePolicy: 'disable',
 			// IceTransportsType: 'nohost',// default all
-			});
+		*/
+
+		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,iceTransportPolicy: 'all'});
+		fnTxtChatOne(peer_connection);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
+
 		peers[peer_id] = peer_connection;
 		
-		try{
-			peer_connection.onerror=log;
-			peer_connection.ontrack=log;
-		}catch(e){log(e)}
+		peer_connection.onicegatheringstatechange = function(){
+			// log("peer_connection.iceGatheringState = " + peer_connection.iceGatheringState)
+			if (peer_connection.iceGatheringState !== 'complete') {
+				return;
+			}
+		}
+		
 		// p2p 打洞成功触发事件 
 		peer_connection.onicecandidate = function (event) {
 			if (event.candidate == null) { return }
 			if (event.candidate) {
+				log("event.candidate.candidate = ",event.candidate.candidate);
+				if (event.candidate.candidate === '') {
+					return;
+				}
+				console.log('onicecandidate == ', event.candidate);
 				// LogMsg("peer_connection.onicecandidate " + peer_id);
-				log(event.candidate.candidate)
+				log("event.candidate.candidate = ",event.candidate.candidate)
 				var c = parseCandidate(event.candidate.candidate);
-				var oX1 = g_fgNrpt[peer_id] || {};
-				// skip ipv6
-				// if(c.address.length > 16)return;
-				// 避免重复
-				var tpTmp = c.address + c.type;
-				// if(oX1[tpTmp])return;
-				oX1[tpTmp] = c;
-				g_fgNrpt[peer_id] = oX1;
-				signaling_socket.emit('relayICECandidate', {
-					'peer_id': peer_id,
-					'ice_candidate': {
-						'sdpMLineIndex': event.candidate.sdpMLineIndex,
-						'candidate': event.candidate.candidate
-					}
-				});
-				// type:host、 srflx，都要,not set null
-				// peer_connection.onicecandidate = null;
+				if(c.address && c.port){
+					// skip ipv6
+					if(c.address.length > 16)return;
+					signaling_socket.emit('relayICECandidate', {
+						'peer_id': peer_id,
+						'ice_candidate': {
+							'sdpMLineIndex': event.candidate.sdpMLineIndex,
+							'candidate': event.candidate.candidate
+						}
+					});
+					log("peer_connection.onicecandidate = null;")
+					// type:host、 srflx，都要,not set null
+					// peer_connection.onicecandidate = null;
+				}else{
+					log(c)
+				}
 			}
 		}
 		// https://stackoverflow.com/questions/55379332/onaddstream-event-not-called
 		//  addStream and onaddstream are deprecated
 		// ontrack event.stream[0]
 		peer_connection.onaddstream = function (event) {
-			if(!g_bTxtChat && event.stream)try {
+			if(!g_bTxtChat && event.stream){try {
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
 				remote_media.controls = false;
 				peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 				attachMediaStream(remote_media, event.stream);
-			} catch (e) { log(e) }
+			} catch (e) { log(e) }}
 		}
 		// p2p 流事件
 		if (!g_bTxtChat) {
@@ -691,36 +709,42 @@ function init () {
 
 		if (config.should_create_offer) {
 			// LogMsg("Creating RTC offer to "+ peer_id);
-			peer_connection.createOffer(
+			peer_connection.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true,}).then(
 				function (local_description) {
-					// LogMsg("Local offer description is: "+ local_description);
+					log("Local offer description is: ", local_description);
 					peer_connection.setLocalDescription(local_description,
 						function () {
 							signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
 						},
 						function () {
 							fnMyLogs("Offer setLocalDescription failed!");
-							log.apply(this, arguments);
 						}
 					);
-				},
-				function (error) {
-					fnMyLogs2("Error sending offer: ", error);
 				});//,{ iceRestart: true }
 		}
-		fnTxtChatOne(peer_connection);
+		try{
+			peer_connection.onicecandidateerror=log;
+			peer_connection.ontrack=log;
+			peer_connection.onerror=log;
+		}catch(e){log(e)}
 	});
 
 	signaling_socket.on('sessionDescription', function (config) {
-		// LogMsg('Remote Session-description received from ' + config.peer_id);
 		var peer_id = config.peer_id;
 		var peer = peers[peer_id];
 		var remote_description = config.session_description;
 		// LogMsg(`用户 ${config.userdata.nick} E2E/P2P 安全连接ok`);
-		xM = config["session_description"]["sdp"].match(/a=max-message-size:\s*(\d+)/);
-		if (xM !== null && xM.length >= 2) {
-			maxSendSize = parseInt(xM[1]) - 800;
-		  }
+		try{
+			log("sessionDescription == ",config)
+			xM = config["session_description"]["sdp"].match(/a=max-message-size:\s*(\d+)/);
+			if (xM && xM.length >= 2) {
+				var n08 = parseInt(xM[1]) - 800;
+				if(65535 == maxSendSize){maxSendSize = n08;}
+				else {maxSendSize = Math.min(n08,maxSendSize);}
+				LogMsg(`set maxSendSize = ${maxSendSize}`)
+			}
+		}catch(e){log(e)}
+		// log('1 Remote Session-description received from ', config);
 		var desc = new RTCSessionDescription(remote_description);
 		var stuff = peer.setRemoteDescription(desc, function () {
 			if (remote_description.type == "offer") {
@@ -729,6 +753,7 @@ function init () {
 						peer.setLocalDescription(local_description,
 							function () {
 								signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
+								// log("setRemoteDescription -> createAnswer -> setLocalDescription - > relaySessionDescription")
 							},
 							function () { fnMyLogs2("Answer setLocalDescription failed!"); }
 						);
@@ -738,9 +763,9 @@ function init () {
 					});
 			}
 		},
-			function (error) {
-				fnMyLogs2("setRemoteDescription error: ", error);
-			});
+		function (error) {
+			fnMyLogs2("setRemoteDescription error: ", error);
+		});
 	});
 
 	signaling_socket.on('iceCandidate', function (config) {

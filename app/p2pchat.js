@@ -200,22 +200,24 @@ function fnInit(io){
         socket.nick = userdata.nick; 
 
         // 允许多次join 和 addpeer
-        // if (channel in socket.channels) {
-        //     //console.log("["+ socket.id + "] ERROR: already joined ", channel);
-        //     return;
-        // }
+        if (channel in socket.channels) {
+            console.log("["+ socket.id + "] ERROR: already joined ", channel);
+            return;
+        }
 
         if (!(channel in channels)) {
             channels[channel] = {};
         }
 
+        var o1 = {'peer_id': socket.id, 'should_create_offer': false,'userdata':userdata,"nOnline":nOnline};
         for (id in channels[channel]) {
-            channels[channel][id].emit('addPeer', {'peer_id': socket.id, 'should_create_offer': false,'userdata':userdata,"nOnline":nOnline});
+            channels[channel][id].emit('addPeer', o1);
             socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true,'userdata':{'nick':channels[channel][id].nick},"nOnline":nOnline});
         }
 
         channels[channel][socket.id] = socket;
         socket.channels[channel] = channel;
+        // console.log("["+ socket.id + "] joined ", channel);
     });
 
     // 离开调用
@@ -268,7 +270,7 @@ function fnInit(io){
     socket.on('relaySessionDescription', (config) => {
         let peer_id = config.peer_id;
         let session_description = config.session_description;
-        //console.log("["+ socket.id + "] relaying session description to [" + peer_id + "] ", session_description);
+        // console.log("relaySessionDescription ==> ["+ socket.id + "] relaying session description to [" + peer_id + "] ", session_description);
         let o = {'peer_id': socket.id, 'session_description': session_description};
         if (peer_id in sockets) {
             sockets[peer_id].emit('sessionDescription', o);
