@@ -105,6 +105,7 @@ function fnInit(io){
     //   });
     io.on('connection', (socket) => 
 {
+    nOnline++;
     socket.channels = {};
     sockets[socket.id] = socket;
 
@@ -175,6 +176,7 @@ function fnInit(io){
 
     //console.log("["+ socket.id + "] connection accepted");
     socket.on('disconnect', () => {
+        nOnline--;
         for (const channel in socket.channels) {
             part(channel);
         }
@@ -192,7 +194,6 @@ function fnInit(io){
     })
 
     socket.on('join', (config) => {
-        nOnline++;
         console.log("["+ socket.id + "] join ", config);
         const channel = config.channel;
         const userdata = config.userdata;
@@ -219,7 +220,6 @@ function fnInit(io){
 
     // 离开调用
     const part = (channel) => {
-        nOnline--;
         //console.log("["+ socket.id + "] part ");
         if (!(channel in socket.channels)) {
             return;
