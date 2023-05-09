@@ -619,6 +619,7 @@ function init () {
 		if(config.userdata && config.userdata.nick){
 			g_aMembers[peer_id] = config.userdata.nick;
 			upListMb()
+			LogMsg(`开始为用户 ${config.userdata.nick} 创建 E2E/P2P 安全连接，这需要一点时间，请稍等...`);
 		}
 		// if (peer_id in peers) {
 		// 	log("Already connected to peer " + peer_id);
@@ -628,6 +629,7 @@ function init () {
 		// ,RtpDataChannels:true,preferSCTP:isFirefox
 		// iceTransportPolicy, iceCandidatePoolSize
 		// chrome 不支持：DtlsSrtpKeyAgreement "DtlsSrtpKeyAgreement": true
+
 		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS }, { "optional": [{ }] });
 		peers[peer_id] = peer_connection;
 		
@@ -768,11 +770,11 @@ function init () {
 }
 
 function stopPc01(pc){
-	// for (k in pc){
-	// 	if (k.indexOf("on") == 0) {
-	// 		pc[k] = null;
-	// 	}
-	// }
+	for (k in pc){
+		if (k.indexOf("on") == 0) {
+			pc[k] = null;
+		}
+	}
 }
 
 // 构建二维码
