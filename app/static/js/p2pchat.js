@@ -768,11 +768,11 @@ function init () {
 }
 
 function stopPc01(pc){
-	for (k in pc){
-		if (k.indexOf("on") == 0) {
-			pc[k] = null;
-		}
-	}
+	// for (k in pc){
+	// 	if (k.indexOf("on") == 0) {
+	// 		pc[k] = null;
+	// 	}
+	// }
 }
 
 // 构建二维码
