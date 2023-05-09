@@ -704,6 +704,7 @@ function init () {
 		var peer_id = config.peer_id;
 		var peer = peers[peer_id];
 		var remote_description = config.session_description;
+		// LogMsg(`用户 ${config.userdata.nick} E2E/P2P 安全连接ok`);
 		xM = config["session_description"]["sdp"].match(/a=max-message-size:\s*(\d+)/);
 		if (xM !== null && xM.length >= 2) {
 			maxSendSize = parseInt(xM[1]) - 800;
