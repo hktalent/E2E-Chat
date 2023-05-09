@@ -614,30 +614,44 @@ function init () {
 		var peer_id = config.peer_id;
 		// LogMsg("addPeer " + peer_id);
 		if(!config.should_create_offer){
-			LogMsg(`昵称: ${config.userdata.nick} 上线了，当前 (${config.nOnline}) 人在线`);
+			LogMsg(`昵称: ${config.userdata.nick} 上线了`);
 		}
+		LogMsg(`当前共 (${config.nOnline}) 人在线`);
 		if(config.userdata && config.userdata.nick){
 			g_aMembers[peer_id] = config.userdata.nick;
 			upListMb()
 			LogMsg(`开始为用户 ${config.userdata.nick} 创建 E2E/P2P 安全连接，这需要一点时间，请稍等...`);
 		}
-		// if (peer_id in peers) {
-		// 	log("Already connected to peer " + peer_id);
-		// 	return;
-		// }
+		if (peer_id in peers) {
+			log("Already connected to peer " + peer_id);
+			return;
+		}
 		// this will no longer be needed by chrome eventually (supposedly), but is necessary for now to get firefox to talk to chrome
 		// ,RtpDataChannels:true,preferSCTP:isFirefox
 		// iceTransportPolicy, iceCandidatePoolSize
 		// chrome 不支持：DtlsSrtpKeyAgreement "DtlsSrtpKeyAgreement": true
 
-		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS }, { "optional": [{ }] });
+		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,
+			// iceTransportPolicy: 'all',
+			// bundlePolicy: 'max-bundle',
+			// rtcpMuxPolicy: 'require', 
+			// iceCandidatePoolSize: 100,
+			// sdpSemantics: 'unified-plan',
+			// tcpCandidatePolicy: 'disable',
+			// IceTransportsType: 'nohost',// default all
+			});
 		peers[peer_id] = peer_connection;
 		
+		try{
+			peer_connection.onerror=log;
+			peer_connection.ontrack=log;
+		}catch(e){log(e)}
 		// p2p 打洞成功触发事件 
 		peer_connection.onicecandidate = function (event) {
 			if (event.candidate == null) { return }
 			if (event.candidate) {
 				// LogMsg("peer_connection.onicecandidate " + peer_id);
+				log(event.candidate.candidate)
 				var c = parseCandidate(event.candidate.candidate);
 				var oX1 = g_fgNrpt[peer_id] || {};
 				// skip ipv6
@@ -662,7 +676,7 @@ function init () {
 		//  addStream and onaddstream are deprecated
 		// ontrack event.stream[0]
 		peer_connection.onaddstream = function (event) {
-			if(event.stream)try {
+			if(!g_bTxtChat && event.stream)try {
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
 				remote_media.controls = false;
@@ -676,7 +690,6 @@ function init () {
 		}
 
 		if (config.should_create_offer) {
-			if (g_bTxtChat) fnTxtChat()
 			// LogMsg("Creating RTC offer to "+ peer_id);
 			peer_connection.createOffer(
 				function (local_description) {
@@ -687,16 +700,15 @@ function init () {
 						},
 						function () {
 							fnMyLogs("Offer setLocalDescription failed!");
+							log.apply(this, arguments);
 						}
 					);
 				},
 				function (error) {
 					fnMyLogs2("Error sending offer: ", error);
 				});//,{ iceRestart: true }
-		}else{
-			fnTxtChatOne(peer_connection)
-			if(config.userdata && config.userdata.nick)g_aMembers[peer_id]=config.userdata.nick
 		}
+		fnTxtChatOne(peer_connection);
 	});
 
 	signaling_socket.on('sessionDescription', function (config) {
