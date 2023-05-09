@@ -4,7 +4,7 @@ var fs = require('fs'),
     aFCache = {},
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
-    useCc = !!1;
+    useCc = !!0;
 
 function fnWc () {
     var a = [szPath, szPathC];

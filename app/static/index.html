@@ -7,10 +7,10 @@
 	<meta name=apple-mobile-web-app-capable content=yes>
   	<meta name=mobile-web-app-capable content=yes>
 	<link href="/css/,x" rel="stylesheet" />
-	<script src="/socket.io/socket.io.js" defer></script>
+	<script src="/socket.io/socket.io.js"></script>
 	<script data-polyfill=kindle>if(!Object.bind)document.write('<script src="/js/kindle.js"><\x2fscript>');</script>
   	<script data-polyfill=ie11>try{new CustomEvent('💩')}catch(_){document.write('<script src="/js/ie.js"><\x2fscript>')}</script>
-	<script src="/js/,x" defer></script>
+	<script src="/js/,x"></script>
 </head>
 <body>
 	<main class="container">
@@ -20,7 +20,7 @@
 			
 			<div class="cel1">
 				<span class="txtChat" title="设定消息阅读后自动销毁的倒计时分钟数"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">分钟</span>
-				<span class="txtChat">启用自毁<input type="checkbox" class="btn btn-secondary" title="自动阅读、销毁" id="atRd" checked></span>
+				<span class="txtChat">自毁<input type="checkbox" class="btn btn-secondary" title="自动阅读、销毁" id="atRd" checked></span>
 				<span class="vChat"> Show Me<input type="checkbox" class="btn btn-secondary" aria-label="Show Me Video" id="showme"></span>
 			</div>
 			<div class="cel1">
@@ -36,7 +36,7 @@
 			</div>
 		</div>
 		<div class="row" id="myCtn"></div>
-		<div class="txtChat">在线人：<w id="otherP"></w></div>
+		<div class="txtChat">群员：<w id="otherP"></w></div>
 		<div class="msgbox txtChat" id="msgList"></div>
 	</main>
 
