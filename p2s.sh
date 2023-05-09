@@ -9,3 +9,6 @@ rcp app/mergeRes.js /root/app1/app/
 rcp app/myapp_51pwn.js /root/app1/app/
 rcp app/server.js /root/app1/app/
 rcp app/expressOptions.js /root/app1/app/
+
+rcp app/static/js/ie.js /root/app1/app/static/js/
+rcp app/static/js/kindle.js /root/app1/app/static/js/
