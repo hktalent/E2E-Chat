@@ -337,13 +337,16 @@ input[type=button] {
     .msgbox {
         height: calc(var(--vh, 1vh) * 100 - 11rem);
     }
+    .cel1 input[type=text] {
+        width: calc(100% - 4.5rem);
+    }
 }
 @media (orientation:portrait){
 
 }
 
 /*定义横屏 css*/
-@media   (orientation:landscape) {
+@media  (max-width: 600px) and (orientation:landscape) {
     .msgbox {
         height: calc(var(--vh, 1vh) * 100 - 11rem);
     }    

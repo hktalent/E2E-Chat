@@ -4,7 +4,7 @@ var fs = require('fs'),
     aFCache = {},
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
-    useCc = !!0;
+    useCc = !!1;
 
 function fnWc () {
     var a = [szPath, szPathC];
@@ -65,7 +65,7 @@ else{
 }
 async function fnMerg (s, t) {
     var szXf = "static/"+t + "." + t;
-    if (t == "js") s = "client.min,jquery,stunLists,adapter-latest,qrcode.min,plyr,RecordRTC,html5-qrcode.min,aes,p2pchat";
+    if (t == "js") s = "client.min,jquery,stunLists,adapter-latest,qrcode.min,plyr,RecordRTC,html5-qrcode.min,aes,fix,p2pchat";
     // else s = "all.min,plyr,bootstrap.min,p2pchat";
     else s = "plyr,p2pchat";
     if(useCc){
