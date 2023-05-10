@@ -399,7 +399,17 @@ function SendMsg(s,t,n,nL,szFileName) {
 				}
 				bSd = 1;
 			}else{ // ss 普通方式发送数据
-				signaling_socket.emit('msg4One', {"peer_id":k, "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s01 });
+				// 数据 分片 发送
+				while(0 < s01.length)
+				{
+					try{
+						var nMin = 10 * 1024;// 10k
+						s = s01.substring(0,nMin);
+						s01 = s01.substring(nMin);
+						signaling_socket.emit('msg4One', {"peer_id":k, "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s });
+						n++;
+					}catch(e){log(e.toString());break}
+				}
 				bSd = 2;
 			}
 			if(bSd){
