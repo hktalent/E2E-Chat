@@ -191,6 +191,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	else o1.click(autoRm);
 	nCnt++;
 	o1[0].scrollIntoView(siv);
+	$(body).scrollTop(0);
 }
 
 // 文件发送、接收需要拆包和组包
@@ -330,39 +331,6 @@ function send4C(ox1,s){
 	try {ox1.send(s);} catch (e) { 
 		log(e.toString());
 		setTimeout(function () { send4C(ox1,s) }, 333) 
-	}
-}
-/* t: 0 txt,1 img,2 file
-*/
-function SendMsg1(s,t,n,nL,szFileName) {
-	if (s) {
-		t = t || 0;
-		n = n || 0;
-		nL = nL || 0;
-		if (0 == g_sendChannels.length) {
-			setTimeout(function () { SendMsg(s) }, 333)
-			return
-		}
-		if(0 == nL)CreateMsgDiv(szSelfK, s,t);
-		var s01 = String(mmMsg(s));
-		n = 0;
-		nL = s01.length;
-		while(0 < s01.length)
-		{
-			try{
-				var nMin = Math.min(maxSendSize,s01.length);
-				s = s01.substring(0,nMin);
-				s01 = s01.substring(nMin);
-				var szMsg1 = JSON.stringify({ "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s })
-				n++;
-				for (var i = 0; i < g_sendChannels.length; i++) {
-					try {
-						send4C(g_sendChannels[i],szMsg1)
-					} catch (e) { log(e.toString()) }
-				}
-				if(0 == s01.length)break
-			}catch(e){log(e.toString());break}
-		}
 	}
 }
 
