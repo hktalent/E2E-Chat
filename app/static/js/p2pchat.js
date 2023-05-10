@@ -45,6 +45,7 @@ var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	szgetYourInfo = '',
 	g_sendChannels = [],
 	maxSendSize = 65535,// 64k
+	b_clickJoin = false,
 	sendChannel = null, nCnt = 1;
 
 // 当前时间
@@ -237,27 +238,27 @@ var fn009 = function () {
 	// $("html,body").height(vh+"px");
 };
 function clOpen(){
-	$("#sdMsg").removeAttr("disabled")
 	o1 = $("#sdMsg")
 	o1.val("")
 	o1.focus()
 	o1[0].scrollIntoView(siv);
-	LogMsg('准备就绪，你可以发送消息了');
 }
 
 // 为每个 pc 创建文本聊天 通道
-function fnTxtChatOne(pc){
+function fnTxtChatOne(pc,peer_id){
 	try{
 	if(pc.Tok){
-		log("pc.Tok = ",pc.Tok)
+		// log("pc.Tok = ",pc.Tok)
 		return;
 	}
 	pc.Tok = true;
 	pc.ondatachannel = function(e){
-		log(" == pc.ondatachannel is ok ===>> ")
+		// log(" == pc.ondatachannel is ok ===>> ")
 		e.channel.onmessage = RevMsg
 		g_sendChannels.push(e.channel)
 		clOpen()
+		if(peer_id && g_aMembers[peer_id])
+		g_aMembers[peer_id]['sendChannel'] = e.channel;
 	}
 	/*
 	maxPacketLifeTime: 0, // 在不可靠模式下尝试传输消息的最大毫秒数。虽然此值是一个 16 位无符号数，但每个用户代理都可以将其限制在它认为合适的任何最大值
@@ -278,13 +279,18 @@ function fnTxtChatOne(pc){
 		pc.Tok = false;
 		for( i in peers){
 			if(peers[i] == pc){
-				fnTxtChatOne(pc)
+				fnTxtChatOne(pc,i)
 				break;
 			}
 		}
 	}
 	sendChannel.onopen = function () {
-		clOpen()
+		if(peer_id && g_aMembers[peer_id])
+		{
+			var sNick = g_aMembers[peer_id]["nick"]
+			log(sNick)
+			LogMsg(`你可以 基于 P2P/E2E 加密模式给 ${sNick} 发送消息了`);
+		}
 	}
 	sendChannel.onmessage = RevMsg
 	// g_sendChannels.push(sendChannel)
@@ -297,7 +303,7 @@ function fnTxtChat () {
 	for (peer_id in peers) {
 		bDoit = false
 		pc = peers[peer_id]
-		fnTxtChatOne(pc)
+		fnTxtChatOne(pc,peer_id)
 	}
 	if (bDoit) {
 		LogMsg("bDoit = " + bDoit)
@@ -328,7 +334,7 @@ function send4C(ox1,s){
 }
 /* t: 0 txt,1 img,2 file
 */
-function SendMsg(s,t,n,nL,szFileName) {
+function SendMsg1(s,t,n,nL,szFileName) {
 	if (s) {
 		t = t || 0;
 		n = n || 0;
@@ -356,6 +362,52 @@ function SendMsg(s,t,n,nL,szFileName) {
 				}
 				if(0 == s01.length)break
 			}catch(e){log(e.toString());break}
+		}
+	}
+}
+
+// 1、当前人pc ok 就基于 P2P 发送
+// 2、当前人pc 不ok 就基于 服务器 发送
+function SendMsg(s,t,n,nL,szFileName) {
+	if (s) {
+		t = t || 0;
+		n = n || 0;
+		nL = nL || 0;
+		// 文本消息时，给自己 留一条
+		if(0 == nL)CreateMsgDiv(szSelfK, s,t);
+		// 发送前加密数据
+		var s01 = String(mmMsg(s));
+		
+		nL = s01.length;
+		for(var k in g_aMembers){
+			n = 0;
+			var bSd = 0;
+			if(g_aMembers[k]["pcok"] && g_aMembers[k]['sendChannel']){
+				// 数据 分片 发送
+				while(0 < s01.length)
+				{
+					try{
+						var nMin = g_aMembers[k]['maxSendSize'] || maxSendSize;
+						s = s01.substring(0,nMin);
+						s01 = s01.substring(nMin);
+						var szMsg1 = JSON.stringify({ "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s })
+						n++;
+						var sendChannel = g_aMembers[k]['sendChannel'];
+						send4C(sendChannel,szMsg1)
+						if(0 == s01.length)break
+					}catch(e){log(e.toString());break}
+				}
+				bSd = 1;
+			}else{ // ss 普通方式发送数据
+				signaling_socket.emit('msg4One', {"peer_id":k, "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s01 });
+				bSd = 2;
+			}
+			if(bSd){
+				// var oM = {1:"P2P/E2E",2:"Sc服务器"}[bSd]
+				// LogMsg(`给 [${g_aMembers[k]["nick"]}] 的消息已经基于 [${oM}] 模式发送`)
+			}else{
+				LogMsg(`当前没有其他人，消息没有发出`)
+			}
 		}
 	}
 }
@@ -409,23 +461,35 @@ function onScanSuccess (decodedText, decodedResult) {
 function part_chat_channel (channel) {
 	signaling_socket.emit('part', channel);
 }
+
+function JoinRoom(){
+	if(!b_clickJoin)return;
+	var szRoom = $("#cnId").val();
+	if(szRoom){
+		join_chat_channel(szRoom,{nick:$("#nick").val()});
+	}
+}
+
 function join_chat_channel (channel, userdata) {
+	if(!b_clickJoin)return;
 	while(0 < g_sendChannels.length) {
 		try{g_sendChannels[0].close();}catch(e){log(e)}
 		g_sendChannels.splice(0, 1);
 	}
 	g_sendChannels=[];
+	g_aMembers={};
 	join_chat_channel1(channel, userdata)
 	
 }
 
 function join_chat_channel1 (channel, userdata) {
+	if(!b_clickJoin)return;
 	userdata || (userdata={});
 	userdata["nick"] = $("#nick").val();
 	
 	if (!bIoIsOk) {
 		setTimeout(function () {
-			join_chat_channel(channel, userdata)
+			join_chat_channel1(channel, userdata)
 		}, 333)
 		return;
 	}
@@ -453,7 +517,7 @@ function StartVideo () {
 		x101 = setInterval(function () {
 			if (null != local_media_stream) {
 				clearInterval(x101)
-				join_chat_channel(getRoomName(), {});
+				JoinRoom();
 				initVideoChat();
 			}
 		}, 33)
@@ -539,7 +603,7 @@ function upListMb(s,b){
 	try{
 		var a = [$("#nick").val()];
 		for(var k in g_aMembers){
-			a.push(g_aMembers[k])
+			a.push(g_aMembers[k]["nick"])
 		}
 		$("#otherP").html(a.join("&nbsp;|&nbsp;"))
 	}catch(e){log(e)}
@@ -581,7 +645,7 @@ function init () {
 		LogMsg("成功连接服务器");
 		bIoIsOk=true;
 		if (szCltFg) signaling_socket.emit("getNick", szCltFg)
-		if (local_media_stream) join_chat_channel(getRoomName(),{});
+		JoinRoom();
 		// else {
 		// 	// StartVideo()
 		// }
@@ -597,6 +661,10 @@ function init () {
 
 		peers = {};
 		peer_media_elements = {};
+	});
+	signaling_socket.on('msg4One',function (o) {
+		// log("接收到 msg4One 消息",o)
+		RevMsg({"data":JSON.stringify(o)})
 	});
 
 	function parseCandidate (text) {
@@ -616,24 +684,19 @@ function init () {
 
 	signaling_socket.on('addPeer', function (config) {
 		var peer_id = config.peer_id;
-		// LogMsg("addPeer " + peer_id);
-		if (peer_id in peers) {
-			log("Already connected to peer " + peer_id);
-			return;
-		}
 		if(!config.should_create_offer){
 			LogMsg(`昵称: ${config.userdata.nick} 上线了`);
 		}
 		LogMsg(`当前共 (${config.nOnline}) 人在线`);
 		if(config.userdata && config.userdata.nick){
-			g_aMembers[peer_id] = config.userdata.nick;
+			g_aMembers[peer_id] = {nick:config.userdata.nick};
 			upListMb()
-			LogMsg(`开始为用户 ${config.userdata.nick} 创建 E2E/P2P 安全连接，这需要一点时间，请稍等...`);
 		}
-		if (peer_id in peers) {
-			log("Already connected to peer " + peer_id);
-			return;
-		}
+		// 对方下线后，再次重新连接上来，但是会导致 setRemoteDescription 错误
+		// if (peer_id in peers) {
+		// 	log("Already connected to peer " + peer_id);
+		// 	return;
+		// }
 		// this will no longer be needed by chrome eventually (supposedly), but is necessary for now to get firefox to talk to chrome
 		// ,RtpDataChannels:true,preferSCTP:isFirefox
 		// iceTransportPolicy, iceCandidatePoolSize
@@ -648,12 +711,20 @@ function init () {
 			// IceTransportsType: 'nohost',// default all
 		*/
 
-		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,iceTransportPolicy: 'all'});
-		fnTxtChatOne(peer_connection);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
+		// 每个 ：
+		//  1、pc 对应 一个 peer_id
+		//  2、pc 对应 一个 一个用户，对应一个 maxSendSize
+		// 
+		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,iceTransportPolicy: 'all',iceCandidatePoolSize: 50});
+		g_aMembers[peer_id]["pc"]=peer_connection;
+		fnTxtChatOne(peer_connection,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 
 		peers[peer_id] = peer_connection;
 		
 		peer_connection.onicegatheringstatechange = function(){
+			if (peer_connection.iceConnectionState === 'failed') {
+				try{peer_connection.restartIce()}catch(e){log('peer_connection.restartIce ',e)}
+			}
 			// log("peer_connection.iceGatheringState = " + peer_connection.iceGatheringState)
 			if (peer_connection.iceGatheringState !== 'complete') {
 				return;
@@ -664,17 +735,18 @@ function init () {
 		peer_connection.onicecandidate = function (event) {
 			if (event.candidate == null) { return }
 			if (event.candidate) {
-				log("event.candidate.candidate = ",event.candidate.candidate);
+				// log("event.candidate.candidate = ",event.candidate.candidate);
 				if (event.candidate.candidate === '') {
 					return;
 				}
-				console.log('onicecandidate == ', event.candidate);
+				// console.log('onicecandidate == ', event.candidate);
 				// LogMsg("peer_connection.onicecandidate " + peer_id);
-				log("event.candidate.candidate = ",event.candidate.candidate)
+				// log("event.candidate.candidate = ",event.candidate.candidate)
 				var c = parseCandidate(event.candidate.candidate);
-				if(c.address && c.port){
+				// if(c.address && c.port){
 					// skip ipv6
-					if(c.address.length > 16)return;
+					// if(c.address.length > 16)return;
+					if(c && c.type && c.type == 'relay')log(`P2P/E2E ip: `,c)
 					signaling_socket.emit('relayICECandidate', {
 						'peer_id': peer_id,
 						'ice_candidate': {
@@ -682,12 +754,10 @@ function init () {
 							'candidate': event.candidate.candidate
 						}
 					});
-					log("peer_connection.onicecandidate = null;")
+					// log("peer_connection.onicecandidate = null;")
 					// type:host、 srflx，都要,not set null
 					// peer_connection.onicecandidate = null;
-				}else{
-					log(c)
-				}
+				// }
 			}
 		}
 		// https://stackoverflow.com/questions/55379332/onaddstream-event-not-called
@@ -711,7 +781,7 @@ function init () {
 			// LogMsg("Creating RTC offer to "+ peer_id);
 			peer_connection.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true,}).then(
 				function (local_description) {
-					log("Local offer description is: ", local_description);
+					// log("Local offer description is: ", local_description);
 					peer_connection.setLocalDescription(local_description,
 						function () {
 							signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
@@ -722,11 +792,11 @@ function init () {
 					);
 				});//,{ iceRestart: true }
 		}
-		try{
-			peer_connection.onicecandidateerror=log;
-			peer_connection.ontrack=log;
-			peer_connection.onerror=log;
-		}catch(e){log(e)}
+		// try{
+		// 	peer_connection.onicecandidateerror=log;
+		// 	peer_connection.ontrack=log;
+		// 	peer_connection.onerror=log;
+		// }catch(e){log(e)}
 	});
 
 	signaling_socket.on('sessionDescription', function (config) {
@@ -735,13 +805,12 @@ function init () {
 		var remote_description = config.session_description;
 		// LogMsg(`用户 ${config.userdata.nick} E2E/P2P 安全连接ok`);
 		try{
-			log("sessionDescription == ",config)
+			// log("sessionDescription == ",config)
 			xM = config["session_description"]["sdp"].match(/a=max-message-size:\s*(\d+)/);
 			if (xM && xM.length >= 2) {
 				var n08 = parseInt(xM[1]) - 800;
-				if(65535 == maxSendSize){maxSendSize = n08;}
-				else {maxSendSize = Math.min(n08,maxSendSize);}
-				LogMsg(`set maxSendSize = ${maxSendSize}`)
+				g_aMembers[peer_id]["maxSendSize"]=n08;
+				// LogMsg(`set ${peer_id} maxSendSize = ${n08}`)
 			}
 		}catch(e){log(e)}
 		// log('1 Remote Session-description received from ', config);
@@ -753,9 +822,10 @@ function init () {
 						peer.setLocalDescription(local_description,
 							function () {
 								signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
+								g_aMembers[peer_id]["pcok"]=true
 								// log("setRemoteDescription -> createAnswer -> setLocalDescription - > relaySessionDescription")
 							},
-							function () { fnMyLogs2("Answer setLocalDescription failed!"); }
+							function () { log("Answer setLocalDescription failed!",local_description); }
 						);
 					},
 					function (error) {
@@ -764,7 +834,7 @@ function init () {
 			}
 		},
 		function (error) {
-			fnMyLogs2("setRemoteDescription error: ", error);
+			log("setRemoteDescription error: ", error,remote_description);
 		});
 	});
 
@@ -1060,7 +1130,7 @@ $(document).ready(function () {
 	}
 	// text chat
 	oStChat.click(function () {
-		doKstart = g_bTxtChat = true;
+		b_clickJoin = doKstart = g_bTxtChat = true;
 		oTxtChat.css("display", "inline-block");
 		oStChat.hide();
 		oMyCtn.hide();
@@ -1071,11 +1141,12 @@ $(document).ready(function () {
 		g_bSetup = !g_bTxtChat;
 		$(this).attr("disabled", "disabled");
 		oStartChat.removeAttr("disabled");
-		join_chat_channel(getRoomName(), {});
+		JoinRoom();
 		// fnTxtChat()
 	})
 	// video chat
 	oStartChat.click(function () {
+		b_clickJoin=true;
 		g_bTxtChat = false
 		doKstart = true;
 		oStChat.show();
@@ -1102,7 +1173,7 @@ $(document).ready(function () {
 	});
 	
 	oCnId.change(function () {
-		if(doKstart)join_chat_channel(getRoomName(), {});// 这里非常神奇和变态，若干没有点按钮开始聊，就先执行，则导致join失败
+		if(doKstart)JoinRoom();// 这里非常神奇和变态，若干没有点按钮开始聊，就先执行，则导致join失败
 		MkQrcd()
 	})
 	initQrcode()
