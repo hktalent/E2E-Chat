@@ -194,16 +194,16 @@ function fnInit(io){
     })
 
     socket.on('join', (config) => {
-        console.log("["+ socket.id + "] join ", config);
+        // console.log("["+ socket.id + "] join ", config);
         const channel = config.channel;
         const userdata = config.userdata;
         socket.nick = userdata.nick; 
 
-        // 允许多次join 和 addpeer
-        if (channel in socket.channels) {
-            console.log("["+ socket.id + "] ERROR: already joined ", channel);
-            return;
-        }
+        // 允许多次join 和 addpeer ,短线重连时允许的
+        // if (channel in socket.channels) {
+        //     console.log("["+ socket.id + "] ERROR: already joined ", channel);
+        //     return;
+        // }
 
         if (!(channel in channels)) {
             channels[channel] = {};
@@ -256,7 +256,14 @@ function fnInit(io){
         }
     });
     
-
+    socket.on('msg4One', function(o){
+        if(socket.id == o.peer_id){return}
+        if(o.peer_id && sockets[o.peer_id]){
+            sockets[o.peer_id].emit('msg4One', o);
+        }else{
+            console.log("msg4One 没有找到有效 的sockets",o.peer_id)
+        }
+    });
     socket.on('relayICECandidate', (config) => {
         let peer_id = config.peer_id;
         let ice_candidate = config.ice_candidate;
