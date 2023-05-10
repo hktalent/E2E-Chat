@@ -288,8 +288,8 @@ function fnTxtChatOne(pc,peer_id){
 		if(peer_id && g_aMembers[peer_id])
 		{
 			var sNick = g_aMembers[peer_id]["nick"]
-			log(sNick)
-			LogMsg(`你可以 基于 P2P/E2E 加密模式给 ${sNick} 发送消息了`);
+			// log(sNick)
+			// LogMsg(`你可以 基于 P2P/E2E 加密模式给 ${sNick} 发送消息了`);
 		}
 	}
 	sendChannel.onmessage = RevMsg
