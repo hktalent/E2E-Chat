@@ -281,12 +281,16 @@ input:focus {
 .txtChat,
 .vChat,
 .yzhd,
+.alwhd,
 #intro {
     display: none
 }
 
-input[type=button] {
+input[type=button],#msgList img {
     cursor: pointer
+}
+#msgList img{
+    padding-left: 0.5rem;
 }
 
 .ah {
