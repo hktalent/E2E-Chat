@@ -257,7 +257,10 @@ function fnInit(io){
     });
     
     socket.on('msg4One', function(o){
-        if(socket.id == o.peer_id){return}
+        if(socket.id == o.peer_id){
+            console.log("msg4One socket.id == o.peer_id",o.peer_id);
+            return
+        }
         if(o.peer_id && sockets[o.peer_id]){
             sockets[o.peer_id].emit('msg4One', o);
         }else{

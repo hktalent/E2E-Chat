@@ -43,7 +43,6 @@ var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	g_bUseUpInfo = true,// submit current info to server
 	g_bSetup = false,
 	szgetYourInfo = '',
-	g_sendChannels = [],
 	maxSendSize = 65535,// 64k
 	b_clickJoin = false,
 	sendChannel = null, nCnt = 1;
@@ -87,6 +86,7 @@ function getYourInfo (s) {
 
 function log (...e) {
 	for (var i = 0; i < e.length; i++) {
+		if(e[i])
 		try{
 			LogMsg(JSON.stringify(e[i]))
 		}catch(e){
@@ -157,15 +157,16 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	o9.append(`<div id="${szId}" class="${szC}"></div>`)
 	var o1 = $(`#${szId}`)
 	var x01 = getNowStr()
-	var szCp = 0 == t && n != szSelfK ? "<img title='click copy text|点击拷贝' src=/cp1.svg>": "";
-	szCp += n == szSelfK ? "": "<audio class=alwhd autoplay=true src=msg.mp3></audio>";
+	// var szCp = 0 == t && n != szSelfK ? "<img title='click copy text|点击拷贝' src=/cp1.svg>": "";
+	var szCp = 0 == t && n != szSelfK ? `<svg height="16" viewBox="0 0 16 16" version="1.1" width="16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path></svg>`: "";
+	szCp += n == szSelfK ? "": "<audio class=alwhd autoplay=true src='data:audio/mp3;base64,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'></audio>";
 	o1.html(`[<t title='${x01}' class=t2>${n}</t>] <d></d>${szCp}<x></x><a href=#${szId} name=${szId}/>`)
 	o1.find("t.t2").text(n)
 	var szTag = "d";
 	if(0 == t){
 		var oT1 = o1.find(szTag)
 		oT1.text(s);
-		var x009 = o1.find("img");
+		var x009 = o1.find("svg");
 		x009.click(function(){
 			copyText(o1.find("d"));
 		});
@@ -257,49 +258,40 @@ var fn009 = function () {
 };
 function clOpen(){
 	o1 = $("#sdMsg")
-	o1.val("")
-	o1.focus()
+	o1.val("");
+	o1.focus();
 }
-
+var g_ostt = {"connecting":1,"connected":1};
 // 为每个 pc 创建文本聊天 通道
 function fnTxtChatOne(pc,peer_id){
-	try{
-	if(pc.Tok){
+	
+	if(pc.Tok || g_aMembers[peer_id] && (!g_aMembers[peer_id]["pc"] || !g_ostt[g_aMembers[peer_id]["pc"].connectionState])){
 		// log("pc.Tok = ",pc.Tok)
 		return;
 	}
-	pc.Tok = true;
 	pc.ondatachannel = function(e){
 		// log(" == pc.ondatachannel is ok ===>> ")
 		e.channel.onmessage = RevMsg
-		g_sendChannels.push(e.channel)
-		clOpen()
-		if(peer_id && g_aMembers[peer_id])
-		g_aMembers[peer_id]['sendChannel'] = e.channel;
+		if(peer_id && g_aMembers[peer_id]){g_aMembers[peer_id]['sendChannel'] = e.channel;clOpen()}
+		else {log(`${peer_id} 没有成功注册到 g_aMembers`);}
 	}
 	/*
 	maxPacketLifeTime: 0, // 在不可靠模式下尝试传输消息的最大毫秒数。虽然此值是一个 16 位无符号数，但每个用户代理都可以将其限制在它认为合适的任何最大值
 	maxRetransmits: 0, // 用户代理尝试重新传输在不可靠模式下第一次失败的消息的最大次数。虽然这个值是一个 16 位无符号数，但每个用户代理都可以将它限制在它认为合适的任何最大值
 	negotiated:true,
-	 */
+	*/
 	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true})
 	
 	sendChannel.onclose = function () {
-		stopPc01(sendChannel)
-		for(i in g_sendChannels){	
-			if(g_sendChannels[i] == sendChannel){
-				g_sendChannels.splice(i,1);
-				break;
-			}
+		if(g_aMembers[peer_id]){
+			delete g_aMembers[peer_id]['sendChannel'];
+			g_aMembers[peer_id]['pcok'] = false;
 		}
+		stopPc01(sendChannel)
+		
 		// 重建断开的隧道，先判断当前pc是否有效
 		pc.Tok = false;
-		for( i in peers){
-			if(peers[i] == pc){
-				fnTxtChatOne(pc,i)
-				break;
-			}
-		}
+		fnTxtChatOne(pc,peer_id);
 	}
 	sendChannel.onopen = function () {
 		if(peer_id && g_aMembers[peer_id])
@@ -309,9 +301,9 @@ function fnTxtChatOne(pc,peer_id){
 			// LogMsg(`你可以 基于 P2P/E2E 加密模式给 ${sNick} 发送消息了`);
 		}
 	}
-	sendChannel.onmessage = RevMsg
-	// g_sendChannels.push(sendChannel)
-	}catch(e){log(e)}
+	sendChannel.onmessage = RevMsg;
+	pc.Tok = true;
+	
 }
 
 // 文本聊天初始化
@@ -341,7 +333,9 @@ function send4C(ox1,s){
 	// 	setTimeout(function () { send4C(ox1,s) }, 333)
 	// 	return
 	// }
-	if(ox1.readyState == "closed"){
+	if(ox1.readyState == "closed"){// 这里让其他成员传播消息
+		log('通道关闭了')
+		setTimeout(function () { send4C(ox1,s) }, 333);
 		return
 	}
 	try {ox1.send(s);} catch (e) { 
@@ -360,54 +354,59 @@ function SendMsg(s,t,n,nL,szFileName) {
 		onL = nL;
 		var oks = "",oldS = s;
 		// 发送前加密数据
-		var s01 = String(mmMsg(s));
+		var s01 = String(mmMsg(s)),s022 = s01;
 		
 		nL = s01.length;
 		for(var k in g_aMembers){
-			n = 0;
-			var bSd = 0;
-			if(g_aMembers[k]["pcok"] && g_aMembers[k]['sendChannel']){
-				// 数据 分片 发送
-				while(0 < s01.length)
-				{
-					try{
-						var nMin = g_aMembers[k]['maxSendSize'] || maxSendSize;
-						s = s01.substring(0,nMin);
-						s01 = s01.substring(nMin);
-						var szMsg1 = JSON.stringify({ "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s })
-						n++;
-						var sendChannel = g_aMembers[k]['sendChannel'];
-						send4C(sendChannel,szMsg1)
-						if(0 == s01.length)break
-					}catch(e){log(e.toString());break}
+			try{
+				s01 = s022;
+				n = 0;
+				var bSd = 0;
+				if(g_aMembers[k]["pcok"] && g_aMembers[k]['pc'] && g_ostt[g_aMembers[k]["pc"].connectionState] && g_aMembers[k]['sendChannel']){
+					// 数据 分片 发送
+					while(0 < s01.length)
+					{
+						try{
+							var nMin = g_aMembers[k]['maxSendSize'] || maxSendSize;
+							s = s01.substring(0,nMin);
+							s01 = s01.substring(nMin);
+							var szMsg1 = JSON.stringify({ "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s })
+							var sendChannel = g_aMembers[k]['sendChannel'];
+							send4C(sendChannel,szMsg1)
+							if(0 == s01.length)break;
+							n++;
+						}catch(e){log(e);break}
+					}
+					bSd = 1;
+				}else if(bIoIsOk){ // ss 普通方式发送数据
+					// 数据 分片 发送
+					while(0 < s01.length)
+					{
+						try{
+							var nMin = 10 * 1024;// 10k
+							s = s01.substring(0,nMin);
+							s01 = s01.substring(nMin);
+							signaling_socket.emit('msg4One', {"peer_id":k, "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s });
+							n++;
+						}catch(e){console.log(e);break}
+					}
+					bSd = 2;
 				}
-				bSd = 1;
-			}else{ // ss 普通方式发送数据
-				// 数据 分片 发送
-				while(0 < s01.length)
-				{
-					try{
-						var nMin = 10 * 1024;// 10k
-						s = s01.substring(0,nMin);
-						s01 = s01.substring(nMin);
-						signaling_socket.emit('msg4One', {"peer_id":k, "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s });
-						n++;
-					}catch(e){log(e.toString());break}
+				if(bSd){
+					oks = "✅"
+					// var oM = {1:"P2P/E2E",2:"Sc服务器"}[bSd]
+					// LogMsg(`给 ${k} [${g_aMembers[k]["nick"]}] 的消息已经基于 [${oM}] 模式发送`)
+					// console.log([k,g_aMembers[k]])
+				}else{
+					oks = "❎"
+					// LogMsg(`当前没有其他人，消息没有发出`)
 				}
-				bSd = 2;
-			}
-			if(bSd){
-				oks = "✅"
-				// var oM = {1:"P2P/E2E",2:"Sc服务器"}[bSd]
-				// LogMsg(`给 [${g_aMembers[k]["nick"]}] 的消息已经基于 [${oM}] 模式发送`)
-			}else{
-				oks = "❎"
-				LogMsg(`当前没有其他人，消息没有发出`)
-			}
+			}catch(e){}
 		}
 		// 文本消息时，给自己 留一条
 		if(0 == onL)CreateMsgDiv(szSelfK, oldS + oks,t);
 	}
+	
 }
 
 // 日志的输出
@@ -470,11 +469,12 @@ function JoinRoom(){
 
 function join_chat_channel (channel, userdata) {
 	if(!b_clickJoin)return;
-	while(0 < g_sendChannels.length) {
-		try{g_sendChannels[0].close();}catch(e){log(e)}
-		g_sendChannels.splice(0, 1);
+	for(var k in g_aMembers){
+		if(g_aMembers[k]['sendChannel']){
+			try{g_aMembers[k]['sendChannel'].close()}catch(e){}
+			delete g_aMembers[k]['sendChannel'];
+		}
 	}
-	g_sendChannels=[];
 	g_aMembers={};
 	join_chat_channel1(channel, userdata)
 	
@@ -640,7 +640,7 @@ function init () {
 		}
 	});
 	signaling_socket.on('connect', function () {
-		LogMsg("成功连接服务器");
+		// LogMsg("成功连接服务器");
 		bIoIsOk=true;
 		if (szCltFg) signaling_socket.emit("getNick", szCltFg)
 		JoinRoom();
@@ -649,6 +649,7 @@ function init () {
 		// }
 	});
 	signaling_socket.on('disconnect', function () {
+		bIoIsOk = false;
 		for (peer_id in peer_media_elements) {
 			peer_media_elements[peer_id].remove();
 			delete g_aMembers[peer_id]
@@ -659,9 +660,11 @@ function init () {
 
 		peers = {};
 		peer_media_elements = {};
+		
 	});
 	signaling_socket.on('msg4One',function (o) {
 		// log("接收到 msg4One 消息",o)
+		// console.log(["msg4One",o])
 		RevMsg({"data":JSON.stringify(o)})
 	});
 
@@ -683,9 +686,9 @@ function init () {
 	signaling_socket.on('addPeer', function (config) {
 		var peer_id = config.peer_id;
 		if(!config.should_create_offer){
-			LogMsg(`昵称: ${config.userdata.nick} 上线了<audio class=alwhd autoplay=true src=online.mp3></audio>`);
+			LogMsg(`昵称: ${config.userdata.nick} 上线了<audio class=alwhd autoplay=true src='data:audio/mp3;base64,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'></audio>`);
 		}
-		LogMsg(`当前共 (${config.nOnline}) 人在线`);
+		// LogMsg(`当前共 (${config.nOnline}) 人在线`);
 		if(config.userdata && config.userdata.nick){
 			g_aMembers[peer_id] = {nick:config.userdata.nick};
 			upListMb()
@@ -714,8 +717,6 @@ function init () {
 		//  2、pc 对应 一个 一个用户，对应一个 maxSendSize
 		// 
 		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,iceTransportPolicy: 'all',iceCandidatePoolSize: 50});
-		g_aMembers[peer_id]["pc"]=peer_connection;
-		fnTxtChatOne(peer_connection,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 
 		peers[peer_id] = peer_connection;
 		
@@ -727,6 +728,8 @@ function init () {
 			if (peer_connection.iceGatheringState !== 'complete') {
 				return;
 			}
+			g_aMembers[peer_id]["pc"]=peer_connection;
+			fnTxtChatOne(peer_connection,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 		}
 		
 		// p2p 打洞成功触发事件 
@@ -790,11 +793,16 @@ function init () {
 					);
 				});//,{ iceRestart: true }
 		}
-		// try{
+		
+		try{
+			peer_connection.onclose = function () {
+				delete g_aMembers[peer_id]["pc"];
+				delete g_aMembers[peer_id]['sendChannel'];
+			};
 		// 	peer_connection.onicecandidateerror=log;
 		// 	peer_connection.ontrack=log;
 		// 	peer_connection.onerror=log;
-		// }catch(e){log(e)}
+		}catch(e){log("onclose::",e)}
 	});
 
 	signaling_socket.on('sessionDescription', function (config) {
