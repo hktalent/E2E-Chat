@@ -143,6 +143,12 @@ function formatBytes(bytes, decimals = 2) {
 
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
+function copyText(o) {
+	o.select();
+	// o.setSelectionRange(0, 99999)
+	document.execCommand("copy");
+	navigator.clipboard.writeText(o.text());
+}
 function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	var szId = `TmpId${nCnt}`
 	var szC="msgRow "
@@ -151,10 +157,19 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	o9.append(`<div id="${szId}" class="${szC}"></div>`)
 	var o1 = $(`#${szId}`)
 	var x01 = getNowStr()
-	o1.html(`[<t title='${x01}' class=t2>${n}</t>] <d></d><x></x><a href=#${szId} name=${szId}/>`)
+	var szCp = 0 == t && n != szSelfK ? "<img title='click copy text|点击拷贝' src=/cp1.svg>": "";
+	szCp += n == szSelfK ? "": "<audio class=alwhd autoplay=true src=msg.mp3></audio>";
+	o1.html(`[<t title='${x01}' class=t2>${n}</t>] <d></d>${szCp}<x></x><a href=#${szId} name=${szId}/>`)
 	o1.find("t.t2").text(n)
 	var szTag = "d";
-	if(0 == t)o1.find(szTag).text(s);
+	if(0 == t){
+		var oT1 = o1.find(szTag)
+		oT1.text(s);
+		var x009 = o1.find("img");
+		x009.click(function(){
+			copyText(o1.find("d"));
+		});
+	}
 	else if(1 == t){
 		var o22 = o1.find(szTag);
 		o22.html("<img width=100 src='"+ s + "' />");
@@ -162,7 +177,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 			var o2 = $(this);
 			o2.toggleClass("fImg");
 			o1.find("a").click();
-			o1[0].scrollIntoView(siv);
+			o9.scrollTop(100000,100000);
 		})
 	}
 	else if(2 == t){
@@ -190,8 +205,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	if(bAutoRm)autoRm();
 	else o1.click(autoRm);
 	nCnt++;
-	o1[0].scrollIntoView(siv);
-	$(body).scrollTop(0);
+	o9.scrollTop(100000,100000);
 }
 
 // 文件发送、接收需要拆包和组包
@@ -230,6 +244,9 @@ function RevMsg (e) {
 	CreateMsgDiv(e.nick, mmMsgj(e.msg),e.t)
 }
 
+// https://emojipedia.org/check-mark-button/
+// 
+
 var clientHeight = 0;
 var fn009 = function () {
 	let vh = window.innerHeight * 0.01;
@@ -242,7 +259,6 @@ function clOpen(){
 	o1 = $("#sdMsg")
 	o1.val("")
 	o1.focus()
-	o1[0].scrollIntoView(siv);
 }
 
 // 为每个 pc 创建文本聊天 通道
@@ -341,8 +357,8 @@ function SendMsg(s,t,n,nL,szFileName) {
 		t = t || 0;
 		n = n || 0;
 		nL = nL || 0;
-		// 文本消息时，给自己 留一条
-		if(0 == nL)CreateMsgDiv(szSelfK, s,t);
+		onL = nL;
+		var oks = "",oldS = s;
 		// 发送前加密数据
 		var s01 = String(mmMsg(s));
 		
@@ -381,12 +397,16 @@ function SendMsg(s,t,n,nL,szFileName) {
 				bSd = 2;
 			}
 			if(bSd){
+				oks = "✅"
 				// var oM = {1:"P2P/E2E",2:"Sc服务器"}[bSd]
 				// LogMsg(`给 [${g_aMembers[k]["nick"]}] 的消息已经基于 [${oM}] 模式发送`)
 			}else{
+				oks = "❎"
 				LogMsg(`当前没有其他人，消息没有发出`)
 			}
 		}
+		// 文本消息时，给自己 留一条
+		if(0 == onL)CreateMsgDiv(szSelfK, oldS + oks,t);
 	}
 }
 
@@ -663,7 +683,7 @@ function init () {
 	signaling_socket.on('addPeer', function (config) {
 		var peer_id = config.peer_id;
 		if(!config.should_create_offer){
-			LogMsg(`昵称: ${config.userdata.nick} 上线了`);
+			LogMsg(`昵称: ${config.userdata.nick} 上线了<audio class=alwhd autoplay=true src=online.mp3></audio>`);
 		}
 		LogMsg(`当前共 (${config.nOnline}) 人在线`);
 		if(config.userdata && config.userdata.nick){
@@ -1168,8 +1188,8 @@ $(document).ready(function () {
 	};
 	// 处理图片、文件
 	osdMsg.bind("paste",function (e) {
-		var pastedData = e.originalEvent.clipboardData.getData('text');
-		log(pastedData)
+		// var pastedData = e.originalEvent.clipboardData.getData('text');
+		// log(pastedData)
 		var items = (e.clipboardData || e.originalEvent.clipboardData).items;
 		for (var index in items) {
 			var item = items[index];
