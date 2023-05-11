@@ -144,9 +144,9 @@ function formatBytes(bytes, decimals = 2) {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 function copyText(o) {
-	o.select();
+	// o.select();
 	// o.setSelectionRange(0, 99999)
-	document.execCommand("copy");
+	// document.execCommand("copy");
 	navigator.clipboard.writeText(o.text());
 }
 function CreateMsgDiv (n, s,t,szFileName,nSize) {
