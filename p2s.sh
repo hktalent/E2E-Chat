@@ -3,17 +3,25 @@ export rport=26188
 
 xxx="app2"
 
+# 静态资源，经常需要更新
 rcp app/static/js.js /root/${xxx}/app/static/
-rcp app/static/index.html /root/${xxx}/app/static/
 rcp app/static/css.css /root/${xxx}/app/static/
 
+rcp app/static/index.html /root/${xxx}/app/static/
+
+# server
 rcp app/p2pchat.js_1 /root/${xxx}/app/p2pchat.js
 rcp app/mergeRes.js /root/${xxx}/app/
-rcp app/myapp_51pwn.js /root/${xxx}/app/
-rcp app/server.js /root/${xxx}/app/
-rcp app/expressOptions.js /root/${xxx}/app/
 
-rcp app/static/js/ie.js /root/${xxx}/app/static/js/
-rcp app/static/js/kindle.js /root/${xxx}/app/static/js/
-rcp app/static/js/test.js /root/${xxx}/app/static/js/
-rcp app/static/x.html /root/${xxx}/app/static/
+# rcp app/myapp_51pwn.js /root/${xxx}/app/
+# rcp app/server.js /root/${xxx}/app/
+# rcp app/expressOptions.js /root/${xxx}/app/
+
+# 静态资源，不需要常更新
+# rcp app/static/js/ie.js /root/${xxx}/app/static/js/
+# rcp app/static/js/kindle.js /root/${xxx}/app/static/js/
+# rcp app/static/js/test.js /root/${xxx}/app/static/js/
+# rcp app/static/x.html /root/${xxx}/app/static/
+# rcp app/static/cp1.svg /root/${xxx}/app/static/
+# rcp app/static/msg.mp3 /root/${xxx}/app/static/
+# rcp app/static/online.mp3 /root/${xxx}/app/static/
