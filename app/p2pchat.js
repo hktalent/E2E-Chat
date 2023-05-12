@@ -26,6 +26,32 @@ function CheckIsPrivateIp(ip){
     return /^10\./.test(ip) || /^192\.168\./.test(ip) || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip);
 }
 
+/* 客户端指纹id: 昵称
+ { gt: 'a', limit: 10 }
+ const entries = await db.iterator({ limit: 100 }).all()
+
+for (const [key, value] of entries) {
+  // ..
+}
+658285334_1683397015407 =  {
+  ip: {
+    ip: [
+      '192.168.0.100:65480',
+      '117.176.250.29:17218',
+      '192.168.0.107:59599'
+    ]
+  },
+  fingerprint: 658285334
+}
+ */
+async function ListAllDb(){
+    for await (const [key, value] of db.iterator({})) {
+        var a = key.split('_');
+        console.log(a[0], new Date(parseInt(a[1])).toLocaleString(), value);
+    }
+}
+// ListAllDb()
+
 // curl -sk -o- 'https://qifu-api.baidubce.com/ip/geo/v1/district?ip=39.144.137.121'|jq
 function queryIp(ip){
     var oRst = null;
@@ -144,7 +170,7 @@ function fnInit(io){
         if(s){
             if(!s2){
                 db.get(s).then(function(s1){
-                    s1 && socket.emit("setNick",s1)
+                    s1 && socket.emit("setNick",s1);
                 }).catch(function(e){})
             }else{
                 db.put(s,s2)
@@ -192,7 +218,11 @@ function fnInit(io){
             socket.emit('removePeer', {'peer_id': id});
         }
     })
-
+    var g_ggM = {},g_sMsg = `<w class=smsg>欢迎使用安全、私密聊天系统,管理员提醒您:<br>
+1、尽量使用手机网络,不要使用Wi-Fi,那样会暴露你的准确ip位置,而手机网络的ip事动态的<br>
+2、使用本系统的电脑、手机不要安装微信、QQ、搜狗输入法等国产软件,这些软件可能会暗中收集你的信息、安全得不到保障<br>
+3、开车时可以约定所有人同时使用视频聊天系统<br>
+4、建议您升级成为本系统的 VIP,将获得更多的安全保障</w>`
     socket.on('join', (config) => {
         // console.log("["+ socket.id + "] join ", config);
         const channel = config.channel;
@@ -252,6 +282,14 @@ function fnInit(io){
                 }
             }
             db.put(szCltFg + "_" + new Date().getTime(),o);
+            // 发公告，每个人每天只发1次
+            if(!g_ggM[szCltFg]){
+                g_ggM[szCltFg] = 1;
+                socket.emit('msg4One',{ "nick":'系统公告',t:3,msg:g_sMsg})
+                setTimeout(function(){
+                    delete g_ggM[szCltFg];
+                },1000 * 60 *60 * 24)
+            }
             // console.log("svClientInfo",o)
         }
     });
