@@ -732,7 +732,6 @@ function init () {
 				return;
 			}
 			g_aMembers[peer_id]["pc"]=peer_connection;
-			fnTxtChatOne(peer_connection,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 		}
 		
 		// p2p 打洞成功触发事件 
@@ -832,6 +831,7 @@ function init () {
 							function () {
 								signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
 								g_aMembers[peer_id]["pcok"]=true
+								fnTxtChatOne(peer_connection,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 								// log("setRemoteDescription -> createAnswer -> setLocalDescription - > relaySessionDescription")
 							},
 							function () { log("Answer setLocalDescription failed!",local_description); }
