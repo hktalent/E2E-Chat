@@ -263,11 +263,10 @@ function clOpen(){
 	o1.val("");
 	o1.focus();
 }
-var g_ostt = {"connecting":1,"connected":1};
+var g_ostt = {"connected":1};// "connecting":1,
 // 为每个 pc 创建文本聊天 通道
 function fnTxtChatOne(pc,peer_id){
-	
-	if(pc.Tok || g_aMembers[peer_id] && (!g_aMembers[peer_id]["pc"] || !g_ostt[g_aMembers[peer_id]["pc"].connectionState])){
+	if(pc.Tok || g_aMembers[peer_id] && (!g_aMembers[peer_id]["pc"] || !g_ostt[g_aMembers[peer_id]["pc"].connectionState||''])){
 		// log("pc.Tok = ",pc.Tok)
 		return;
 	}
