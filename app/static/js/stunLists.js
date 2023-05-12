@@ -1,13 +1,12 @@
 var ICE_SERVERS = [
+{
+    "urls": "turn:65.49.208.113:3478",
+    "credential": "REDACTED_TURN_CREDENTIAL",
+    "username": "e2eu",
+},
 {"urls":"stun:stun.miwifi.com:3478"},
 {"urls":"stun:65.49.208.113:3478"},
 {"urls":"turn:104.224.169.71:80","username":"turn server","credential":"hieKedq"},
-// {
-//         url: 'turn:65.49.208.113:3478',
-//         credential: 'REDACTED_TURN_CREDENTIAL',
-//         username: 'e2eu',
-//         credentialType: 'password',
-// },
 {"urls":"stun:stun.pjsip.org:3478"},
 {"urls":"stun:stun.hoiio.com:3478"},
 {"urls":"stun:stun.sipgate.net:3478"},

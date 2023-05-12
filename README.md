@@ -12,6 +12,33 @@
 - 图片支持点击放大
 - 默认 1 分钟自动销毁聊天内容，特别注意，苹果手机目前测试发现，如果浏览器在后台后，计时器会被系统暂停，重新打开后计时器会继续
 
+# /usr/local/etc/turnserver.conf
+```
+# cat /usr/local/etc/turnserver.conf|grep -Ev '^#|^\s*$'
+listening-device=eth0
+listening-port=3478
+listening-ip=65.49.208.113
+external-ip=65.49.208.113
+realm=REDACTED_TURN_CREDENTIAL
+no-rfc5780
+no-stun-backward-compatibility
+response-origin-only-with-rfc5780
+user=e2eu:REDACTED_TURN_CREDENTIAL
+cli-password=REDACTED_TURN_CREDENTIAL
+tls-listening-port=5349
+relay-threads=50
+lt-cred-mech
+pidfile="/var/run/turnserver.pid"
+cert= /root/app2/ca/fullchain.pem
+pkey=/root/app2/ca/privkey.pem
+fingerprint
+lt-cred-mech
+relay-ip=65.49.208.113
+
+
+
+```
+
 # How Run
 ```
 find . -name ".DS_Store" -delete
