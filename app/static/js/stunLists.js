@@ -6,7 +6,6 @@ var ICE_SERVERS = [
 },
 {"urls":"stun:stun.miwifi.com:3478"},
 {"urls":"stun:65.49.208.113:3478"},
-{"urls":"turn:104.224.169.71:80","username":"turn server","credential":"hieKedq"},
 {"urls":"stun:stun.pjsip.org:3478"},
 {"urls":"stun:stun.hoiio.com:3478"},
 {"urls":"stun:stun.sipgate.net:3478"},
@@ -77,6 +76,8 @@ var ICE_SERVERS = [
 {"urls":"stun:stun.sma.de:3478"},
 {"urls":"stun:stun.sipnet.ru:3478"},
 {"urls":"stun:stun.sipnet.net:3478"},
+{"urls":"turn:104.224.169.71:80","username":"turn server","credential":"hieKedq"},
+
 
     // {
     //     url: 'turn:65.49.208.113:3478',
