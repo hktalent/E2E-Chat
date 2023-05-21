@@ -127,9 +127,7 @@ function myapp(option)
         }
         if("" == szPath || "/" == szPath || "/index.html" == szPath){
             var szEn = String(res.getHeader("accept-language") || ""),szFn = "/index.html";
-            console.log([szEn,szEn.indexOf("en")])
             if(0 == szEn.indexOf("en"))szFn = "/index_en.html";
-            console.log(szFn)
             html = oHtmlCc[szFn] || oHtmlCc[szFn] || minify(fs.readFileSync("static" + szFn).toString("utf-8"), mOpt);
             oHtmlCc[szFn] = html;
             res.send(html);
