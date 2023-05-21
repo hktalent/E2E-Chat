@@ -3,9 +3,11 @@
 "ignore": [
         ".git",
         ".svn",
+        "p2pchat.js_1",
         "db/*",
         "tools/*",
         "pocs/*",
+        "dbChatIp/*",
         "resImg/*",
         "resources/*",
         "node_modules/**/node_modules",
