@@ -1,7 +1,11 @@
 export rip=65.49.208.113
 export rport=26188
 
-xxx="app2"
+xxx="app1"
+
+rcp app/nodemon.json /root/${xxx}/app/
+rcp app/static/index_en.html /root/${xxx}/app/static/
+rcp app/myapp_51pwn.js /root/${xxx}/app/
 
 # 静态资源，经常需要更新
 rcp app/static/js.js /root/${xxx}/app/static/
