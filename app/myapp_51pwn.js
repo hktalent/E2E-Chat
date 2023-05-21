@@ -126,8 +126,10 @@ function myapp(option)
             return
         }
         if("" == szPath || "/" == szPath || "/index.html" == szPath){
-            html = oHtmlCc["/"] || oHtmlCc["/index.html"] || minify(fs.readFileSync("static/index.html").toString("utf-8"), mOpt);
-            oHtmlCc[szPath] = html;
+            var szEn = String(res.getHeader("Accept-Language") || ""),szFn = "/index.html";
+            if(0 == szEn.indexOf("en"))szFn = "/index_en.html";
+            html = oHtmlCc[szFn] || oHtmlCc[szFn] || minify(fs.readFileSync("static" + szFn).toString("utf-8"), mOpt);
+            oHtmlCc[szFn] = html;
             res.send(html);
             return
         }
