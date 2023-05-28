@@ -198,7 +198,7 @@ input {
 }
 
 .cel1 input[type=text] {
-    width: calc(100% - 3rem);
+    width: calc(100% - 1rem);
 }
 
 input:focus {
@@ -333,6 +333,7 @@ input[type=button],#msgList img {
     border: 1px solid #000;
     color: #3f0303;
     border-radius: 100%;
+    content: "暗号|Channel";
 }
 
 /*定义竖屏 css*/
@@ -352,7 +353,7 @@ input[type=button],#msgList img {
         height: calc(var(--vh, 1vh) * 100 - 12.5rem);
     }
     .cel1 input[type=text] {
-        width: calc(100% - 4.5rem);
+        width: calc(100%);
     }
 }
 @media (orientation:portrait){

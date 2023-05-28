@@ -4,8 +4,9 @@ var fs = require('fs'),
     aFCache = {},
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
-    useCc = !!1;
+    useCc =  !!1;
 
+if(process.env['DEBUG'])useCc = false;
 function fnWc () {
     var a = [szPath, szPathC];
     for (var i = 0; i < a.length; i++)
