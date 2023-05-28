@@ -1239,4 +1239,7 @@ $(document).ready(function () {
 			fnDoBlog(this.files[x],this.files[x].name)
 		}
 	})
+	$("input").each(function(){
+		this.title = this.placeholder||this.title||"";
+	})
 })
