@@ -948,8 +948,8 @@ function appSet (stream) {
 		"video": {
 			deviceId: videoSource ? { exact: videoSource } : undefined,
 			'mandatory': {
-				'width': { 'min': 4000 },
-				'height': { 'min': 4000 }
+				'width': { 'min': 3840 },
+				'height': { 'min': 2160 }
 			},
 			optional: [ // 对视频Track的可选约束条件
 				{ frameRate: { min: 60 } }
