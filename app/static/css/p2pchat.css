@@ -118,7 +118,7 @@ video:fullscreen {
     width: 33vw;
     -webkit-box-shadow: 0 8px 6px -6px black;
     -moz-box-shadow: 0 8px 6px -6px black;
-    box-shadow: 0 8px 6px -6px black;
+    box-shadow: 0 10px 16px -6px black;
 }
 
 .input-group-text>input {
@@ -176,6 +176,7 @@ input {
 }
 .msgbox {
     width: 97%;
+    background-color: #f5f5f5;
     display: block;
     padding: 0.3rem;
     height: calc(var(--vh, 1vh) * 100 - 6.5rem);
@@ -305,7 +306,6 @@ input[type=button],#msgList img {
 
 .msgRow {
     width: 100%;
-    overflow: auto;
     cursor: pointer
 }
 
@@ -317,15 +317,63 @@ input[type=button],#msgList img {
     color: #740b0b
 }
 
+.t3,.tleft{
+    max-width: calc(80%);
+    position: relative;
+    display: inline-block;
+    line-height:1.2rem;
+    min-height: 35px;
+    line-height: 2.1; 
+    padding: 6px 10px;
+    word-break: break-all;
+    border-radius: 4px;
+    box-shadow: 0px 1px 7px -5px #000;
+    color: #000;
+    border:0px solid #000;
+    margin-top: 0;
+    letter-spacing: 2px;
+    font-style: normal;
+    margin-top: 10px;
+    -webkit-box-shadow: 6px 5px 24px #666666;
+    -moz-box-shadow: 6px 5px 24px #666666;
+    box-shadow: 6px 5px 24px #666666;
+}
+
 .t3 {
-    background-color: #8dbbef
+    float: right;
+    text-align: left;
+    background-color: #9eea6a;
+    margin-right: 10px;
+}
+.tleft:after, .t3:after{
+    content: "";
+    border-top: solid 5px #00800000;
+    border-bottom: solid 5px #00800000;
+    position: absolute;
+    top: 10px;
+}
+.t3:after {
+    border-left: solid 10px #9eea6a;
+    border-right: solid 10px #00800000;
+    left: 100%;
+}
+.tleft{
+    background-color: white;
+    text-align: left;
+    margin-left: 10px;
+}
+.tleft:after {
+    border-left: solid 10px #00800000;
+    border-right: solid 10px white;
+    position: absolute;
+    right: 100%;
 }
 
 .msgRow:hover {
     background-color: #ebd6f5;
-    -webkit-box-shadow: 10px 10px 99px 6px rgba(76, 201, 240, 1);
-    -moz-box-shadow: 10px 10px 99px 6px rgb(41, 85, 98);
-    box-shadow: 10px 10px 99px 6px rgba(76, 201, 240, 1);
+    -webkit-box-shadow: 6px 5px 24px #666666;
+    -moz-box-shadow: 6px 5px 24px #666666;
+    box-shadow: 6px 5px 24px #666666;
 }
 
 #mId{
@@ -334,6 +382,9 @@ input[type=button],#msgList img {
     color: #3f0303;
     border-radius: 100%;
     content: "暗号|Channel";
+}
+.clall{
+    clear:both;
 }
 
 /*定义竖屏 css*/
