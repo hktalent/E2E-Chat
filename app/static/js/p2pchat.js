@@ -96,10 +96,12 @@ function log (...e) {
 }
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(() => {
-	for(var i =0; i < fnTmArr.length; i++){
-		if(fnTmArr[i]()){
-			fnTmArr.splice(i, 1)
-			i--
+	if($("#atRd").prop("checked")){
+		for(var i =0; i < fnTmArr.length; i++){
+			if(fnTmArr[i]()){
+				fnTmArr.splice(i, 1)
+				i--
+			}
 		}
 	}
 }, 1000);
@@ -153,8 +155,9 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	var szId = `TmpId${nCnt}`
 	var szC="msgRow "
 	if(szSelfK == n)szC += "t3"
+	else szC += "tleft"
 	var o9 = $("#msgList")
-	o9.append(`<div id="${szId}" class="${szC}"></div>`)
+	o9.append(`<div id="${szId}" class="${szC}"></div><div class=clall />`)
 	var o1 = $(`#${szId}`)
 	var x01 = getNowStr()
 	// var szCp = 0 == t && n != szSelfK ? "<img title='click copy text|点击拷贝' src=/cp1.svg>": "";
@@ -748,7 +751,7 @@ function init () {
 				// if(c.address && c.port){
 					// skip ipv6
 					// if(c.address.length > 16)return;
-					if(c && c.type && c.type == 'relay')log(`P2P/E2E ip: `,c)
+					// if(c && c.type && c.type == 'relay')log(`P2P/E2E ip: `,c)
 					signaling_socket.emit('relayICECandidate', {
 						'peer_id': peer_id,
 						'ice_candidate': {
