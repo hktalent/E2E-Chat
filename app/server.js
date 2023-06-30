@@ -44,8 +44,8 @@ var oMyapp = new myapp({
     // 单ip最大允许连接数
     singleIpMaxConnect:100,
     useHttps: true,
-    caKey: serverRootPath + '../ca/privkey.pem',
-    caCert:serverRootPath + '../ca/fullchain.pem',
+    caKey: serverRootPath + '../ca/privkey.pem',// "/root/.local/share/certmagic/certificates/acme-v02.api.letsencrypt.org-directory/51pwn.com/51pwn.com.key",// 
+    caCert: serverRootPath + '../ca/fullchain.pem',// "/root/.local/share/certmagic/certificates/acme-v02.api.letsencrypt.org-directory/51pwn.com/51pwn.com.crt",// 
     port: nPort,
     wtHosts:[/^.*$/],
     redisAdapter:{ host: '127.0.0.1', port: 6379 },

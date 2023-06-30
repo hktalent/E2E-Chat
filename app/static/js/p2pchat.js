@@ -88,7 +88,7 @@ function log (...e) {
 	for (var i = 0; i < e.length; i++) {
 		if(e[i])
 		try{
-			LogMsg(JSON.stringify(e[i]))
+			// LogMsg(JSON.stringify(e[i]))
 		}catch(e){
 			console.log(e[i])
 		}
@@ -1106,6 +1106,10 @@ function fnDoImgStream (socket, vId) {
 }
 
 $(document).ready(function () {
+	// navigator.storage.estimate().then((quota) => {
+	// 	alert([quota.quota,quota.usage])
+	// });
+
 	clientHeight = document.documentElement.clientHeight;
 	videoSelect = document.querySelector('select#videoSelect');
 	audioInputSelect = document.querySelector('select#audioInputSelect');
