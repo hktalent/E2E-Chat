@@ -959,19 +959,34 @@ function appSet (stream) {
 		// 	googTypingNoiseDetection: true
 		// }
 	}
+	var n001 = 3,n002 = 1280,n003 = 720;
 	g_Constraints = {
 		"audio": oT,
 		"video": {
 			deviceId: videoSource ? { exact: videoSource } : undefined,
 			'mandatory': {
-				'width': { 'min': 3840 },
-				'height': { 'min': 2160 }
+				minWidth: n002,
+				maxWidth: n002,
+				minHeight: n003,
+				maxHeight: n003,
+				minFrameRate: n001,
+				maxFrameRate: n001,
+				'width': { 'min': n002,ideal: n002,max: n002 },
+				'height': { 'min': n003,ideal: n003,max: n003 },
 			},
 			optional: [ // 对视频Track的可选约束条件
-				{ frameRate: { min: 5,max:5 } }
+				{ frameRate: { min: n001,max:n001,ideal:n001 } }
 			]
 		}
 	}
+	if(!!navigator.mozGetUserMedia) {
+		g_Constraints["video"] = {
+			width: n002,
+			height: n003,
+			frameRate: n001
+		};
+	}	
+	
 	// if (stream) stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
 	// if (local_media_stream) local_media_stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
 	return g_Constraints
@@ -985,8 +1000,6 @@ function ChangeSound (stream) {
 		audioTracks[0].applyConstraints(g_Constraints["audio"]);
 	} catch (e) { log(e) }
 }
-
-
 
 function StopStream () {
 	if (local_media_stream) local_media_stream.getTracks().forEach(function (track) {
@@ -1034,11 +1047,12 @@ function setup_local_media (callback, errorback) {
 				});
 				var recorder = RecordRTC(videoOnlyStream || stream || local_media, {
 					'type': 'video'// 测评表明 AV1 是最佳的
-					, 'mimeType': 'video/webm; codecs="av01.2.19H.12.0.000.09.16.09.1, flac"' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9
+					, 'mimeType': 'video/webm;codecs=h264' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
 					// ,disableLogs: true,
 					// ,'video': local_media
-					// both for audio and video tracks
-    				// ,bitsPerSecond: 128000
+					// both for audio and video tracks 256 * 8 * 640
+					,audioBitsPerSecond:100
+    				,videoBitsPerSecond: 5000
 					// used by MultiStreamRecorder - to access HTMLCanvasElement
     				// ,elementClass: 'multi-streams-mixer'
 					// ,recorderType: !!navigator.mozGetUserMedia ? MediaStreamRecorder : WhammyRecorder
