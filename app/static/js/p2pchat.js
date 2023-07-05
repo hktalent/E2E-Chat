@@ -1021,7 +1021,6 @@ function setup_local_media (callback, errorback) {
 			// ChangeSound(stream)
 			local_media_stream = stream;
 			const local_media = fnCreateVid(bNbg);
-			attachMediaStream(local_media, stream);
 			localVvId = local_media.id
 			// hidden me、self
 			if (bIsMobile) $("#Pmt" + local_media.id).addClass('d-none'), $("#showme").attr("checked", false);
@@ -1029,28 +1028,34 @@ function setup_local_media (callback, errorback) {
 			// 触发保存
 			var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false;
 			var fnStartRct = function () {// https://recordrtc.org/
-				var recorder = RecordRTC(stream || local_media, {
+				var videoOnlyStream = new MediaStream();
+				stream.getVideoTracks().forEach(function(track) {
+					videoOnlyStream.addTrack(track);
+				});
+				var recorder = RecordRTC(videoOnlyStream || stream || local_media, {
 					'type': 'video'
-					, 'mimeType': 'video/webm\;codecs=vp8'
-					,disableLogs: true,
-					'video': local_media,
+					, 'mimeType': 'video/webm; codecs="vp9"' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9
+					// ,disableLogs: true,
+					// ,'video': local_media
 					// both for audio and video tracks
-    				bitsPerSecond: 128000
+    				,bitsPerSecond: 128000
 					// used by MultiStreamRecorder - to access HTMLCanvasElement
     				// ,elementClass: 'multi-streams-mixer'
+					// ,recorderType: !!navigator.mozGetUserMedia ? MediaStreamRecorder : WhammyRecorder
 				});
 				recorder.startRecording();
 				//  10分钟,停一下，并上传，然后重新开始
 				g_nTmxx9 = window.setTimeout(function () {
 					window.clearTimeout(g_nTmxx9);
-					if (recorder) recorder.stopRecording(function (audioVideoWebMURL) {
+					if (recorder) recorder.stopRecording(function () {
 						try {
 							// local_media.src = audioVideoWebMURL; // https://github.com/absaravanan/js-video-recording-tool
 							// var bData = recorder.getBlob();
+							// URL.createObjectURL(recorder.getBlob())
 							recorder.getDataURL(function (videoDataURL) {
-								signaling_socket.emit('saveVideo', { "videoDataURL": videoDataURL});
-								// recorder.destroy();
-								// recorder = null;
+								signaling_socket.emit('saveVideo', { type:  'video/webm',"videoDataURL": videoDataURL});
+								recorder.destroy();
+								recorder = null;
 							});
 						} catch (e) {
 							alert(e)
@@ -1086,11 +1091,11 @@ function setup_local_media (callback, errorback) {
 				if (this.checked) oNt.removeClass('d-none');
 				else oNt.addClass('d-none');
 			});
-			local_media.muted = true, local_media.volume = 0;
-			local_media.autoplay = true;
-			local_media.controls = false;
 			// try{
-			
+				local_media.muted = true, local_media.volume = 0;
+				local_media.autoplay = true;
+				local_media.controls = false;
+				attachMediaStream(local_media, stream);
 			// attachMediaStream(local_media, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
 			if (bNbg) fnDoNbg(local_media);
