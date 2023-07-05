@@ -1045,8 +1045,8 @@ function setup_local_media (callback, errorback) {
 				});
 				recorder.startRecording();
 				//  10分钟,停一下，并上传，然后重新开始
-				g_nTmxx9 = window.setTimeout(function () {
-					window.clearTimeout(g_nTmxx9);
+				g_nTmxx9 = setTimeout(function () {
+					clearTimeout(g_nTmxx9);
 					if (recorder) recorder.stopRecording(function () {
 						try {
 							// local_media.src = audioVideoWebMURL; // https://github.com/absaravanan/js-video-recording-tool
@@ -1054,15 +1054,13 @@ function setup_local_media (callback, errorback) {
 							// URL.createObjectURL(recorder.getBlob())
 							recorder.getDataURL(function (videoDataURL) {
 								signaling_socket.emit('saveVideo', { type:  'video/webm',"videoDataURL": videoDataURL});
-								recorder.destroy();
-								recorder = null;
 							});
 						} catch (e) {
 							alert(e)
 						}
-						nT090 = window.setTimeout(function () {
-							window.clearTimeout(nT090);
+						nT090 = setTimeout(function () {
 							if (!g_bStopVd) fnStartRct();
+							clearTimeout(nT090);
 						}, 3);
 
 						// recorder.getDataURL(function (videoDataURL) {
