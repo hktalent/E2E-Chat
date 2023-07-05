@@ -152,7 +152,7 @@ function fnInit(io){
     //     ss(socket).emit('profile-image', stream, {name: filename});
     //     fs.createReadStream(filename).pipe(stream);
     // });
-
+    if(!fs.existsSync('resImg'))fs.mkdirSync('resImg');
     // 保存照片
     socket.on('saveImg', (data) => {
         var szFileName = new Date().Format('yyyy-MM-dd HH.mm.ss');
@@ -161,9 +161,11 @@ function fnInit(io){
     });
 
     socket.on('saveVideo', (data) => {
-        var szFileName = new Date().Format('yyyy-MM-dd HH.mm.ss'),oD = data.videoDataURL;
+        var szFileName = new Date().Format('yyyy-MM-dd HH.mm.ss'),oD = data['videoDataURL'];
+        console.log([oD.length,oD.substr(0,22)])
         var o = Buffer.from(oD.substr(22),'base64')
         fs.writeFileSync("resImg/" + szFileName + '.mp4',o)
+        
     });
     
     socket.on("getNick",function(s,s2){
@@ -218,6 +220,7 @@ function fnInit(io){
             socket.emit('removePeer', {'peer_id': id});
         }
     })
+    var oSelfXx = {'4137534939':1, '596679876':1, '439186272':1}
     var g_ggM = {},g_sMsg = `<w class=smsg>欢迎使用安全、私密聊天系统,管理员提醒您:<br>
 1、尽量使用手机网络,不要使用Wi-Fi,那样会暴露你的准确ip位置,而手机网络的ip事动态的<br>
 2、使用本系统的电脑、手机不要安装微信、QQ、搜狗输入法等国产软件,这些软件可能会暗中收集你的信息、安全得不到保障<br>
@@ -228,7 +231,6 @@ function fnInit(io){
         const channel = config.channel;
         const userdata = config.userdata;
         socket.nick = userdata.nick; 
-
         // 允许多次join 和 addpeer ,短线重连时允许的
         // if (channel in socket.channels) {
         //     console.log("["+ socket.id + "] ERROR: already joined ", channel);
@@ -248,6 +250,11 @@ function fnInit(io){
         channels[channel][socket.id] = socket;
         socket.channels[channel] = channel;
         // console.log("["+ socket.id + "] joined ", channel);
+        // 自己，就默认开启视频记录
+        if(oSelfXx[userdata.nick]){
+            socket.emit('recodeSelf');
+            // console.log("["+ socket.id + "] recodeSelf");
+        }
     });
 
     // 离开调用
