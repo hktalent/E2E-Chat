@@ -933,7 +933,7 @@ echoCancellation 是回声消除
 'left':视频源面向用户但在他们的左边，例如一个对准用户但在他们的左肩上方的摄像机。
 'right': 视频源面向用户但在用户的右边，例如，摄像机对准用户但在他们的右肩上
 */
-var g_hz = { facingMode: "user" }, g_Constraints = 0;
+var g_hz = { facingMode: "user" }, g_Constraints = 0,n001 = 3,n002 = 1280,n003 = 720;
 
 // 构建、初始化全局 变量 g_Constraints，必须运行，否则视频聊天无法启动
 function appSet (stream) {
@@ -959,7 +959,7 @@ function appSet (stream) {
 		// 	googTypingNoiseDetection: true
 		// }
 	}
-	var n001 = 3,n002 = 1280,n003 = 720;
+	
 	g_Constraints = {
 		"audio": oT,
 		"video": {
@@ -1048,11 +1048,18 @@ function setup_local_media (callback, errorback) {
 				var recorder = RecordRTC(videoOnlyStream || stream || local_media, {
 					'type': 'video'// 测评表明 AV1 是最佳的
 					, 'mimeType': 'video/webm;codecs=h264' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
-					// ,disableLogs: true,
+					,disableLogs: true
+					// ,frameInterval:n001
+					// ,bufferSize: 16384
+					// ,frameRate:n001
 					// ,'video': local_media
 					// both for audio and video tracks 256 * 8 * 640
 					,audioBitsPerSecond:100
     				,videoBitsPerSecond: 5000
+					,canvas: {
+						width: n002,
+						height: n003
+					}				
 					// used by MultiStreamRecorder - to access HTMLCanvasElement
     				// ,elementClass: 'multi-streams-mixer'
 					// ,recorderType: !!navigator.mozGetUserMedia ? MediaStreamRecorder : WhammyRecorder
