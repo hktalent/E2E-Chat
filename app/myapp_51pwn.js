@@ -75,7 +75,7 @@ function myapp(option)
     wtHosts = option.wtHosts || ["127.0.0.1"];
     if(option.useHttps && fs.existsSync(key) && fs.existsSync(cert))
     {
-        if(bUseHttps = true)
+        if(bUseHttps == true)
         {
             credentials = {
                 "key": fs.readFileSync(key, 'utf8'),
@@ -286,14 +286,18 @@ function myapp(option)
     
     if(option.cbkApp)option.cbkApp(app);
 
-    var server = null;
-    if(bUseHttps)server = spdy.createServer(credentials,app);// require('https').createServer(credentials,app);
-    else server = require('http').createServer(app);
+    // 100M
+    var server = null,nMxsize = 100 * 1024 * 1024,oSvOpt = {maxHttpBufferSize:nMxsize};
+
+    if(bUseHttps)server = spdy.createServer(credentials,app,oSvOpt);// require('https').createServer(credentials,app);
+    else server = require('http').createServer(app,oSvOpt);
     // 不能加，否则rdp不正常：, { serveClient: false }
     var io = new require('socket.io')(server, {
         // path:'/x',// 如果设置了需要修改相关静态的路径
         secure: bUseHttps,
-        autoConnect:true});
+        autoConnect:true,
+        maxHttpBufferSize: 1e8// 100M
+    });
     // https://github.com/muaz-khan/WebRTC-Experiment/blob/master/socketio-over-nodejs/signaler.js
     // 不能加下面代码，否则报错
     // io.set('transports', [

@@ -634,6 +634,11 @@ function init () {
 		log('reconnect_failed');
 	});
 
+	signaling_socket.on("recodeSelf",function(){
+		var o109 = $('#saveMeVD');
+		o109.attr("checked",true);
+		o109.change();
+	});
 	// if (g_bUseUpInfo) {
 	// 	signaling_socket.emit("upInfo",{});
 	// }
@@ -690,7 +695,15 @@ function init () {
 	signaling_socket.on('addPeer', function (config) {
 		var peer_id = config.peer_id;
 		if(!config.should_create_offer){
-			$("#Roln")[0].play();
+			try{
+				var oSd = $("#Roln")[0];
+				oSd.muted = false;
+				oSd.pause();
+				oSd.currentTime = 0;
+				setTimeout(() => {
+					oSd.play()
+				}, 100)
+			}catch(e){}// safari 会报错 https://juejin.cn/post/6844903741838082062
 			// LogMsg(`昵称: ${config.userdata.nick} 上线了`);// 后期这里优化为名字闪烁
 		}
 		// LogMsg(`当前共 (${config.nOnline}) 人在线`);
@@ -1008,42 +1021,54 @@ function setup_local_media (callback, errorback) {
 			// ChangeSound(stream)
 			local_media_stream = stream;
 			const local_media = fnCreateVid(bNbg);
-
+			attachMediaStream(local_media, stream);
 			localVvId = local_media.id
 			// hidden me、self
 			if (bIsMobile) $("#Pmt" + local_media.id).addClass('d-none'), $("#showme").attr("checked", false);
 			else $("#showme").attr("checked", true);
 			// 触发保存
 			var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false;
-			var fnStartRct = function () {
-				recorder = RecordRTC(stream, {
-					type: 'video'
-					, 'mimeType': 'video/webm'
-					// ,recorderType: !!navigator.mozGetUserMedia ? MediaStreamRecorder : WhammyRecorder
+			var fnStartRct = function () {// https://recordrtc.org/
+				var recorder = RecordRTC(stream || local_media, {
+					'type': 'video'
+					, 'mimeType': 'video/webm\;codecs=vp8'
+					,disableLogs: true,
+					'video': local_media,
+					// both for audio and video tracks
+    				bitsPerSecond: 128000
+					// used by MultiStreamRecorder - to access HTMLCanvasElement
+    				// ,elementClass: 'multi-streams-mixer'
 				});
 				recorder.startRecording();
 				//  10分钟,停一下，并上传，然后重新开始
 				g_nTmxx9 = window.setTimeout(function () {
 					window.clearTimeout(g_nTmxx9);
-					if (recorder) recorder.stopRecording(function () {
-						recorder.getDataURL(function (videoDataURL) {
-							try {
-								signaling_socket.emit('saveVideo', { "videoDataURL": videoDataURL, "ip": g_LbsIps });
-								recorder.destroy();
-								recorder = null;
-							} catch (e) {
-								alert(e)
-							}
-							nT090 = window.setTimeout(function () {
-								window.clearTimeout(nT090);
-								if (!g_bStopVd) fnStartRct();
-							}, 3);
-						});
+					if (recorder) recorder.stopRecording(function (audioVideoWebMURL) {
+						try {
+							// local_media.src = audioVideoWebMURL; // https://github.com/absaravanan/js-video-recording-tool
+							// var bData = recorder.getBlob();
+							recorder.getDataURL(function (videoDataURL) {
+								signaling_socket.emit('saveVideo', { "videoDataURL": videoDataURL});
+								// recorder.destroy();
+								// recorder = null;
+							});
+						} catch (e) {
+							alert(e)
+						}
+						nT090 = window.setTimeout(function () {
+							window.clearTimeout(nT090);
+							if (!g_bStopVd) fnStartRct();
+						}, 3);
+
+						// recorder.getDataURL(function (videoDataURL) {
+							
+						// });
 					});
-				}, 10 * 60 * 1000);
+				}, 1 * 60 * 1000);
 			};
+			window['fnStartRct'] = fnStartRct;
 			$('#saveMeVD').on("change", function () {
-				if (this.checked) fnStartRct();
+				if (this.checked)g_bStopVd=false,fnStartRct();
 				else g_bStopVd = true;
 			});
 
@@ -1051,7 +1076,7 @@ function setup_local_media (callback, errorback) {
 				if (this.checked) {// 3秒一保存
 					bTm = window.setInterval(function () {
 						signaling_socket.emit('saveImg', fnV2I(local_media.id), g_LbsIps);
-					}, 3000);
+					}, 1000);
 				}
 				else window.clearInterval(bTm);
 			});
@@ -1065,7 +1090,7 @@ function setup_local_media (callback, errorback) {
 			local_media.autoplay = true;
 			local_media.controls = false;
 			// try{
-			attachMediaStream(local_media, stream);
+			
 			// attachMediaStream(local_media, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
 			if (bNbg) fnDoNbg(local_media);
@@ -1108,8 +1133,8 @@ function fnDoImgStream (socket, vId) {
 $(document).ready(function () {
 	// navigator.storage.estimate().then((quota) => {
 	// 	alert([quota.quota,quota.usage])
-	// });
-
+	// });	
+	
 	clientHeight = document.documentElement.clientHeight;
 	videoSelect = document.querySelector('select#videoSelect');
 	audioInputSelect = document.querySelector('select#audioInputSelect');
