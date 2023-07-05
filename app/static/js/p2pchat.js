@@ -968,7 +968,7 @@ function appSet (stream) {
 				'height': { 'min': 2160 }
 			},
 			optional: [ // 对视频Track的可选约束条件
-				{ frameRate: { min: 60 } }
+				{ frameRate: { min: 5,max:5 } }
 			]
 		}
 	}
@@ -1033,12 +1033,12 @@ function setup_local_media (callback, errorback) {
 					videoOnlyStream.addTrack(track);
 				});
 				var recorder = RecordRTC(videoOnlyStream || stream || local_media, {
-					'type': 'video'
-					, 'mimeType': 'video/webm; codecs="vp9"' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9
+					'type': 'video'// 测评表明 AV1 是最佳的
+					, 'mimeType': 'video/webm; codecs="av01.2.19H.12.0.000.09.16.09.1, flac"' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9
 					// ,disableLogs: true,
 					// ,'video': local_media
 					// both for audio and video tracks
-    				,bitsPerSecond: 128000
+    				// ,bitsPerSecond: 128000
 					// used by MultiStreamRecorder - to access HTMLCanvasElement
     				// ,elementClass: 'multi-streams-mixer'
 					// ,recorderType: !!navigator.mozGetUserMedia ? MediaStreamRecorder : WhammyRecorder
