@@ -1,23 +1,23 @@
 *{outline: none;}
 body {
     min-height: -webkit-fill-available;
-}
-body {
-    display: flex; 
-    flex-direction: column;
     font-size: 1rem;
     margin: 0;
     overflow: hidden;
+    display: flex; 
+    flex-direction: column;
+    width:  100%;
 }
 
 main {
-    flex: 1;
+    width:  100%;
     height: auto;
     padding: 0 10px 0 10px;
+    z-index: 9999;
+    flex:1;
     position: sticky;
     top: 0;
     left: 0;
-    z-index: 9999;
 }
 .d-none {
     display: none !important;
@@ -29,7 +29,6 @@ video {
 }
 footer{
     padding-left: 0.5rem;
-    left: 0;
     z-index: 9999;
 }
 footer,form{
@@ -41,15 +40,12 @@ video:fullscreen {
 }
 
 .video {
-    margin: 0 auto;
-    padding: 0 auto;
     width: 100%;
     height: 100%;
     overflow: hidden;
 }
 
-#myQrcode img,
-#myQrcode img {
+#myQrcode img,.video  {
     margin: 0 auto;
     padding: 0 auto
 }
@@ -116,9 +112,6 @@ video:fullscreen {
     display: inline;
     grid-column: 1;
     width: 33vw;
-    -webkit-box-shadow: 0 8px 6px -6px black;
-    -moz-box-shadow: 0 8px 6px -6px black;
-    box-shadow: 0 10px 16px -6px black;
 }
 rounded:hover{
     box-shadow: 0 18px 22px -6px rgb(244, 4, 4) !important;
@@ -128,19 +121,15 @@ rounded:hover{
     margin: 0 15px
 }
 
-.container, .row {
+.row {
     background: #fff;
     width: 100%;
-}
-.row {
     display: flex;
-    width: 100vw;
 }
 
 #logId,#upFile {
     display: none
 }
-
 
 .video {
     background: #f51f0361;
@@ -162,8 +151,7 @@ rounded:hover{
     left: 0;
 }
 
-body,
-input {
+body,input {
     margin: 0;
     padding: 0;
 }
@@ -191,8 +179,8 @@ input {
 .msgbox div{display: block;}
 
 .row1 {
-    display: grid;
     width: 100vw;
+    display: grid;
     grid-column: 5;
 }
 
@@ -410,9 +398,6 @@ input[type=button],#msgList img {
         width: calc(100%);
     }
 }
-@media (orientation:portrait){
-
-}
 
 /*定义横屏 css*/
 @media  (max-width: 600px) and (orientation:landscape) {
@@ -428,3 +413,21 @@ input[type=button],#msgList img {
     }
     
   }
+#loader,#rects{display:none;position: absolute;z-index: 999999999;}
+
+#loader:after {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 50%;
+    width: 200px;
+    line-height: 25px;
+    text-align: center;
+    color: lightcoral;
+    font-size: .9em;
+    content: "LOADING MODEL: "attr(percent)"%";
+}
+main{
+    display: auto !important;
+    flex: none !important;
+}
