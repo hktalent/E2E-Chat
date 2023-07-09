@@ -1,0 +1,20 @@
+## System and generated files
+.idea
+.DS_Store
+.sass-cache
+
+## Directories
+.mxDev/
+log/
+dist/
+node_modules/
+bower_components/
+backup/
+dist/model/
+app/static/model
+
+## Files
+result.xml
+npm-debug.log
+package-lock.json
+yarn.lock
