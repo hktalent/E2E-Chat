@@ -23,6 +23,7 @@ String.prototype.hashCode = function() {
   
 var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
 	IS_SCREEN_STREAMING = false,
+	local_media = null,
 	szCltFg = "",
 	isChrome = !!navigator.webkitGetUserMedia,
 	isFirefox = !!navigator.mozGetUserMedia,
@@ -521,6 +522,7 @@ function StartVideo () {
 				clearInterval(x101)
 				JoinRoom();
 				initVideoChat();
+				if(window["main"])window["main"]();
 			}
 		}, 33)
 	});
@@ -1033,8 +1035,9 @@ function setup_local_media (callback, errorback) {
 		appSet()
 		navigator.mediaDevices.getUserMedia(g_Constraints).then((stream) => {
 			// ChangeSound(stream)
+			window.stream = stream;
 			local_media_stream = stream;
-			const local_media = fnCreateVid(bNbg);
+			webcam = local_media = fnCreateVid(bNbg);
 			localVvId = local_media.id
 			// hidden me、self
 			if (bIsMobile) $("#Pmt" + local_media.id).addClass('d-none'), $("#showme").attr("checked", false);
@@ -1156,6 +1159,7 @@ function fnDoImgStream (socket, vId) {
 }
 
 $(document).ready(function () {
+	// $("main").css({"display":"auto!important","flex":"none!important"});
 	// navigator.storage.estimate().then((quota) => {
 	// 	alert([quota.quota,quota.usage])
 	// });	
