@@ -19,7 +19,7 @@ module.exports = {
   etag: true,
   lastModified: true,
   setHeaders: function (res, path, stat) {
-    if (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|json|ttf|woff|woff2|eot|html)$/)) {
+    if (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|json|ttf|woff|woff2|eot|html|json)$/) || path.match(/group[0-9]{1,}-shard[0-9]{1,}of[0-9]{1,}$/)) {
       setLongTermCache(res)
     }else{
       setNoCache(res)

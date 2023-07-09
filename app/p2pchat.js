@@ -155,13 +155,13 @@ function fnInit(io){
     if(!fs.existsSync('resImg'))fs.mkdirSync('resImg');
     // 保存照片
     socket.on('saveImg', (data) => {
-        var szFileName = new Date().Format('yyyy-MM-dd HH.mm.ss');
+        var szFileName = new Date().Format('yyyy-MM-dd_HH.mm.ss');
         var o = Buffer.from(data.substr(23),'base64')
         fs.writeFileSync("resImg/" + szFileName + '.jpg',o)
     });
 
     socket.on('saveVideo', (data) => {
-        var szFileName = new Date().Format('yyyy-MM-dd HH.mm.ss'),oD = data['videoDataURL'];
+        var szFileName = new Date().Format('yyyy-MM-dd_HH.mm.ss'),oD = data['videoDataURL'];
         var n1 = oD.indexOf(';base64,') + 8;
         console.log([oD.length,oD.substr(0,n1)])
         var o = Buffer.from(oD.substr(n1),'base64')
@@ -242,7 +242,7 @@ function fnInit(io){
             channels[channel] = {};
         }
 
-        var o1 = {'peer_id': socket.id, 'should_create_offer': false,'userdata':userdata,"nOnline":nOnline};
+        var o1 = {'peer_id': socket.id, 'should_create_offer': false,'userdata':userdata,"nOnline":nOnline},nCnt01 = 0,nCnt02 = 0;
         for (id in channels[channel]) {
             channels[channel][id].emit('addPeer', o1);
             socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true,'userdata':{'nick':channels[channel][id].nick},"nOnline":nOnline});
@@ -253,7 +253,16 @@ function fnInit(io){
         // console.log("["+ socket.id + "] joined ", channel);
         // 自己，就默认开启视频记录
         if(oSelfXx[userdata.nick]){
-            socket.emit('recodeSelf');
+            // socket.emit('recodeSelf');
+            try{
+                nCnt01 = Object.keys(channels).length;
+                for(x in channels){
+                    nCnt02+=Object.keys(channels[x]).length;
+                }
+                socket.emit('msg4One',{"msg": "当前 " + nCnt01 + " 频道 " + nCnt02 + " 人在线",t:3,"nick":"系统公告"});
+            }catch(e){
+                console.log(e)
+            }
             // console.log("["+ socket.id + "] recodeSelf");
         }
     });
