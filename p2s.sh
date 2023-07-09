@@ -11,6 +11,9 @@ rcp app/myapp_51pwn.js /root/${xxx}/app/
 rcp app/static/js.js /root/${xxx}/app/static/
 rcp app/static/css.css /root/${xxx}/app/static/
 
+rcp app/static/js/sw.js /root/${xxx}/app/static/js/
+rcp app/static/js/bundle.js /root/${xxx}/app/static/js/
+
 rcp app/static/index.html /root/${xxx}/app/static/
 
 # server
