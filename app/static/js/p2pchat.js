@@ -734,7 +734,8 @@ function init () {
 		//  1、pc 对应 一个 peer_id
 		//  2、pc 对应 一个 一个用户，对应一个 maxSendSize
 		// 
-		var peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,iceTransportPolicy: 'all',iceCandidatePoolSize: 50});
+		peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,iceTransportPolicy: 'all',iceCandidatePoolSize: 50});
+		window.peer_connection = peer_connection;
 
 		peers[peer_id] = peer_connection;
 		
