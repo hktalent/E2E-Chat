@@ -415,13 +415,13 @@ input[type=button],#msgList img {
   }
 #loader,#rects{display:none;position: absolute;z-index: 999999999;}
 
-#loader:after {
-    position: absolute;
+#loader{position: absolute;
     left: 50%;
     transform: translateX(-50%);
     top: 50%;
     width: 200px;
-    line-height: 25px;
+    line-height: 25px;}
+#loader:after {
     text-align: center;
     color: lightcoral;
     font-size: .9em;
