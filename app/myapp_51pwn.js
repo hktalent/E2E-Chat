@@ -119,6 +119,9 @@ function myapp(option)
     // cache静态资源等时间，这个对性能影响很大，缓冲客户端后，在设置等时间范围内、刷新不再请求
     // Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
     expressOptions.maxAge = (7*24*60*60) + 's';//'31536000s';//'3600s';
+    app.use(express.static("/js/sw.js", {
+        maxAge: 0
+    }));
     app.use(function(req, res, next){
         szPath = req.path;
         if(oHtmlCc[szPath]){
@@ -213,9 +216,42 @@ function myapp(option)
     //     'cache': false
     // });
 
-    var reRes = /\/(js|css)\/(.*)$/;
+    var reRes = /\/(js|css|model)\/(.*)$/;
     app.get(reRes,function(req,res,next)
     {
+        var s11 = "application/javascript; charset=utf-8";
+        if(req.path.match(/sw\.js$/)){
+            res.setHeader("Content-Type",s11);
+            var szJs = fs.readFileSync(szSSP + "js/sw.js").toString("utf-8")
+            res.send(szJs);
+            return
+        }
+        if(req.path.match(/bundle\.js$/)){
+            var szJs = fs.readFileSync(szSSP + "js/bundle.js").toString("utf-8");
+            res.setHeader("Content-Type",s11);
+            res.send(szJs);
+            return
+        }
+        if(-1 < req.path.indexOf("model") && fs.existsSync(szSSP + req.path)){
+            res.setHeader("Content-Type","application/json; charset=utf-8");
+            var szJs = fs.readFileSync(szSSP + req.path).toString("utf-8");
+            res.send(szJs);
+            return
+        }
+        // if(req.path.match(/c\.minifest$/)){
+        //     var szJs = fs.readFileSync("c.minifest").toString("utf-8");
+        //     res.setHeader("Content-Type","text/cache-manifest");
+        //     res.send(szJs);
+        //     return
+        // }
+        
+        // if(req.path.match(/upup\.sw\.min\.js$/)){
+        //     res.setHeader("Content-Type",s11);
+        //     var szJs = fs.readFileSync(szSSP + "js/upup.sw.min.js").toString("utf-8")
+        //     res.send(szJs);
+        //     return
+        // }
+        
         mergeRes.fnDoMg(req,res,next,reRes);
     })
 

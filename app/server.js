@@ -54,10 +54,6 @@ var oMyapp = new myapp({
     },
     cbkApp:function(app)
     {
-        // app.use(/\/.*/,function(req, rep, next)
-        // {
-        //     next();
-        // })
     },
     cbk4ServerAppIo:function(server,app,io)
     {

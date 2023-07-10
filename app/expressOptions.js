@@ -4,6 +4,7 @@ function setNoCache(res) {
   date.setFullYear(date.getFullYear() - 1);
   res.setHeader("Expires", date.toUTCString());
   res.setHeader("Pragma", "no-cache");
+  res.setHeader("maxAge", "0");
   res.setHeader("Cache-Control", "public, no-cache");
 }
 
@@ -19,7 +20,8 @@ module.exports = {
   etag: true,
   lastModified: true,
   setHeaders: function (res, path, stat) {
-    if (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|json|ttf|woff|woff2|eot|html|json)$/) || path.match(/group[0-9]{1,}-shard[0-9]{1,}of[0-9]{1,}$/)) {
+    isSw = !!path.match(/sw\.js$/)
+    if(!isSw && (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|json|ttf|woff|woff2|eot|html|json)$/) || path.match(/group[0-9]{1,}-shard[0-9]{1,}of[0-9]{1,}$/))) {
       setLongTermCache(res)
     }else{
       setNoCache(res)
