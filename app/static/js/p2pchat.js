@@ -1303,4 +1303,8 @@ $(document).ready(function () {
 	$("input").each(function(){
 		this.title = this.placeholder||this.title||"";
 	})
+	// UpUp.start({
+	// 	'content-url': '/index.html',
+	// 	'assets': ['/favicon.ico', '/css/,', '/js/,','/socket.io/socket.io.js','/js/bundle.js']
+	// });
 })
