@@ -233,7 +233,7 @@ function myapp(option)
             return
         }
         if(-1 < req.path.indexOf("model") && fs.existsSync(szSSP + req.path)){
-            res.setHeader("Content-Type","application/json; charset=utf-8");
+            res.setHeader("Content-Type","application/octet-stream; charset=utf-8");
             var szJs = fs.readFileSync(szSSP + req.path).toString("utf-8");
             res.send(szJs);
             return
