@@ -1,0 +1,12 @@
+CACHE MANIFEST
+## v 1.3
+
+CACHE:
+/index.html
+/favicon.ico
+/css/,
+/js/,
+/socket.io/socket.io.js
+/js/bundle.js
+NETWORK:
+*

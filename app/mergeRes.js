@@ -2,6 +2,7 @@ var fs = require('fs'),
     szPath = __dirname + "/static/js/",
     szPathC = __dirname + "/static/css/",
     aFCache = {},
+    bJmi = !!1,
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  !!1;
@@ -68,7 +69,7 @@ else{
 async function fnMerg (s, t) {
     var szXf = "static/"+t + "." + t;
     // if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,upup.min,p2pchat";
-    if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,p2pchat";
+    if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,bundle,p2pchat";
     // else s = "all.min,plyr,bootstrap.min,p2pchat";
     else s = "plyr,p2pchat";
     if(useCc){
@@ -92,8 +93,10 @@ async function fnMerg (s, t) {
             if (useCc && t == "js" && a[i] == "p2pchat") {
             // 只对关键、核心代码加密，不然会导致移动端运行不正常
                 // szT = minify(szT)
-                szT = (await minify(szT, minifyOptions)).code
-                szT = JavaScriptObfuscator.obfuscate(szT, JsHxOpt)
+                if(bJmi){
+                    szT = (await minify(szT, minifyOptions)).code
+                    szT = JavaScriptObfuscator.obfuscate(szT, JsHxOpt)
+                }
             }
             aFCache[sF] = szT;
             b.push(szT);
