@@ -1037,7 +1037,7 @@ function setup_local_media (callback, errorback) {
 			// ChangeSound(stream)
 			window.stream = stream;
 			local_media_stream = stream;
-			webcam = local_media = fnCreateVid(bNbg);
+			window.webcam = local_media = fnCreateVid(bNbg);
 			localVvId = local_media.id
 			// hidden me、self
 			if (bIsMobile) $("#Pmt" + local_media.id).addClass('d-none'), $("#showme").attr("checked", false);
