@@ -3,7 +3,7 @@ var crypto=require('crypto'),
     serverRootPath = __dirname + "/",
     myapp = require(serverRootPath +'/myapp_51pwn'),
     szSSP = serverRootPath + "static/"
-    nPort = process.env['PORT'] || 2096 || 8443;// 2096
+    nPort = process.env['PORT'] || 2083 || 8443;// 2096
 /* fix 
 brew services start redis
 NODE_DEBUG=true node --trace-deprecation server.js
