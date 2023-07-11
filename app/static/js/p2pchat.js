@@ -86,14 +86,7 @@ function getYourInfo (s) {
 }
 
 function log (...e) {
-	for (var i = 0; i < e.length; i++) {
-		if(e[i])
-		try{
-			// LogMsg(JSON.stringify(e[i]))
-		}catch(e){
-			console.log(e[i])
-		}
-	}
+	console.log.apply(console,arguments);
 }
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(() => {
@@ -442,8 +435,8 @@ function fnMyLogs2 () {
 function fnGetId () { return ("X" + (Math.random() + (++nId))).replace(/\./gmi, "_") }
 
 // create 
-function fnCreateVid (bLocal = false) {
-	var szId = fnGetId(), szCol = "col-4", szCss = bLocal ? '<canvas class="szCol shadow-lg bg-white rounded output_canvas"></canvas>' : '';
+function fnCreateVid (bLocal = false,id = "") {
+	var szId = id||fnGetId(), szCol = "col-4", szCss = bLocal ? '<canvas class="szCol shadow-lg bg-white rounded output_canvas"></canvas>' : '';
 	// https://github.com/bbc/VideoContext/issues/66
 	// autoplay=true :[Error] Unhandled Promise Rejection: AbortError: The operation was aborted. (x2)
 	//  playsinline=true 设置了 playsinline 属性的视频在播放时不会自动全屏 style='margin: 0 5px;'  controls
@@ -522,7 +515,7 @@ function StartVideo () {
 				clearInterval(x101)
 				JoinRoom();
 				initVideoChat();
-				if(window["main"])window["main"]();
+				if(window["main"])setTimeout(async () => {await window["main"]();},3);
 			}
 		}, 33)
 	});
@@ -1037,8 +1030,9 @@ function setup_local_media (callback, errorback) {
 			// ChangeSound(stream)
 			window.stream = stream;
 			local_media_stream = stream;
-			window.webcam = local_media = fnCreateVid(bNbg);
+			window.webcam = local_media = fnCreateVid(bNbg,"webcam");
 			localVvId = local_media.id
+			window.webcam.srcObject = stream;
 			// hidden me、self
 			if (bIsMobile) $("#Pmt" + local_media.id).addClass('d-none'), $("#showme").attr("checked", false);
 			else $("#showme").attr("checked", true);

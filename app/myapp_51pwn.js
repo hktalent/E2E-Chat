@@ -399,8 +399,8 @@ function myapp(option)
             return;
         }
         // if(err)
-        console.log("destroy: " + req.url)
-        console.log(req.headers)
+        // console.log("destroy: " + req.url)
+        // console.log(req.headers)
         // req.connection.destroy();
         next()
     })
