@@ -21,7 +21,7 @@ String.prototype.hashCode = function() {
 	return hash;
 };
   
-var bRunAi = false, // run ai
+var bRunAi = true, // run ai
 	g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = false,
 	local_media = null,
@@ -1026,7 +1026,7 @@ function setup_local_media (callback, errorback) {
 		// chrome not use ://mandatory: {echoCancellation:'system'}
 		// echoCancellation: {exact: false},
 		// fix chrome 不支持facingMode
-		appSet()
+		appSet();
 		navigator.mediaDevices.getUserMedia(g_Constraints).then((stream) => {
 			// ChangeSound(stream)
 			window.stream = stream;
@@ -1176,7 +1176,7 @@ $(document).ready(function () {
 	// 	// alert(3434)
 	// });
 
-	listDivie()
+	listDivie();
 	var doKstart = false;
 	// navigator.mediaDevices.enumerateDevices().then(function(a){console.log(a[0])})
 	var szHs = document.location.hash,
@@ -1189,7 +1189,7 @@ $(document).ready(function () {
 		oclsId = $("#clsId"),
 		ovChat = $(".vChat");
 	if (szHs) {
-		oCnId.val(szHs.substring(1))
+		oCnId.val(szHs.substring(1));
 		StartVideo()
 	}
 	// text chat
@@ -1207,7 +1207,7 @@ $(document).ready(function () {
 		oStartChat.removeAttr("disabled");
 		JoinRoom();
 		// fnTxtChat()
-	})
+	});
 	// video chat
 	oStartChat.click(function () {
 		b_clickJoin=true;
@@ -1221,17 +1221,17 @@ $(document).ready(function () {
 		StartVideo();
 		$(this).attr("disabled", "disabled");
 		oStChat.removeAttr("disabled");
-	})
+	});
 	$("#dspWr").click(function () {
-		oL = $('#logId')
+		oL = $('#logId');
 		this.checked ? oL.show() : oL.hide()
 	})
-	szCltFg = new ClientJS().getFingerprint()
-	init()
+	szCltFg = new ClientJS().getFingerprint();
+	init();
 
-	szLstChannel = getRoomName()
-	oNick = $("#nick")
-	oNick.val(szCltFg)
+	szLstChannel = getRoomName();
+	oNick = $("#nick");
+	oNick.val(szCltFg);
 	oNick.change(function () {
 		if (bIoIsOk) signaling_socket.emit("getNick", szCltFg, $(this).val())
 	});
@@ -1239,8 +1239,8 @@ $(document).ready(function () {
 	oCnId.change(function () {
 		if(doKstart)JoinRoom();// 这里非常神奇和变态，若干没有点按钮开始聊，就先执行，则导致join失败
 		MkQrcd()
-	})
-	initQrcode()
+	});
+	initQrcode();
 	osdMsg.keydown(function (e) {
 		if (e.keyCode == 13) SendMsg(osdMsg.val()),osdMsg.val("")
 	})
@@ -1269,16 +1269,16 @@ $(document).ready(function () {
 	oAutoRm = $("#atRd");
 	oAutoRm.change(function () {
 		bAutoRm = this.checked;
-	})
+	});
 	oMsgBox = $("#msgList");
 	bAutoRm = oAutoRm.prop("checked");
 	oclsId.click(function(){
 		oMsgBox.html("")
 		fnTmArr = []
-	})
+	});
 	$("form").submit(function(e){
 		return false
-	})
+	});
 	fn009();
 	window.addEventListener('resize', fn009);
 	// 微信浏览器 https://www.lixf.cc/2021/03/26/webrtc-in-ios-weixin-browser/
@@ -1288,18 +1288,18 @@ $(document).ready(function () {
 	oUpf = $("#upFile")
 	$("#mId").click(function(){
 		oUpf.click()
-	})
+	});
 	oUpf.change(function(){
 		for(x in this.files) {
 			if(x == "length") break;
 			fnDoBlog(this.files[x],this.files[x].name)
 		}
-	})
+	});
 	$("input").each(function(){
 		this.title = this.placeholder||this.title||"";
-	})
+	});
 	// UpUp.start({
 	// 	'content-url': '/index.html',
 	// 	'assets': ['/favicon.ico', '/css/,', '/js/,','/socket.io/socket.io.js','/js/bundle.js']
 	// });
-})
+});
