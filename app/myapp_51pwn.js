@@ -232,7 +232,7 @@ function myapp(option)
             res.send(szJs);
             return
         }
-        if(-1 < req.path.indexOf("model") && fs.existsSync(szSSP + req.path)){
+        if(fs.existsSync(szSSP + req.path)){
             res.setHeader("Content-Type","application/octet-stream; charset=utf-8");
             var szJs = fs.readFileSync(szSSP + req.path).toString("utf-8");
             res.send(szJs);
