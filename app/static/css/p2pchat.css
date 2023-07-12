@@ -127,7 +127,7 @@ rounded:hover{
     display: flex;
 }
 
-#logId,#upFile {
+#upFile {
     display: none
 }
 
@@ -269,12 +269,12 @@ input:focus {
     font-family: "Microsoft soft";
 }
 
-#logId {
+/* #logId {
     z-index: 99999;
     top: 30px;
     left: 0;
     float: left;
-}
+} */
 .t2{display: inline-flex;}
 .txtChat,
 .vChat,
@@ -413,15 +413,15 @@ input[type=button],#msgList img {
     }
     
   }
-#loader,#rects{display:none;position: absolute;z-index: 999999999;}
+#logId{display:none;position: absolute;z-index: 999999999;}
 
-#loader{position: absolute;
+#logId{position: absolute;
     left: 50%;
     transform: translateX(-50%);
     top: 50%;
     width: 200px;
     line-height: 25px;}
-#loader:after {
+#logId:after {
     text-align: center;
     color: lightcoral;
     font-size: .9em;
