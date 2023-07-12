@@ -431,3 +431,15 @@ main{
     display: auto !important;
     flex: none !important;
 }
+
+.rounded{
+ box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+ border-radius: 10px !important;
+ overflow:hidden !important;
+}
+.rounded:hover{
+    box-shadow: rgba(243, 119, 3, 0.194) 0px 54px 55px, rgba(243, 119, 3, 0.194) 0px -12px 30px, rgba(243, 119, 3, 0.194) 0px 4px 6px, rgba(243, 119, 3, 0.194) 0px 12px 13px, rgba(243, 119, 3, 0.194) 0px -3px 5px;
+}
+div.plyr,div.plyr__video-wrapper{
+    height: 100% !important;
+}
