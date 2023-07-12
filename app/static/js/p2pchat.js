@@ -21,7 +21,7 @@ String.prototype.hashCode = function() {
 	return hash;
 };
   
-var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner,
+var g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = false,
 	local_media = null,
 	szCltFg = "",
@@ -440,7 +440,7 @@ function fnCreateVid (bLocal = false,id = "") {
 	// https://github.com/bbc/VideoContext/issues/66
 	// autoplay=true :[Error] Unhandled Promise Rejection: AbortError: The operation was aborted. (x2)
 	//  playsinline=true 设置了 playsinline 属性的视频在播放时不会自动全屏 style='margin: 0 5px;'  controls
-	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded'  id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape></video></div>");
+	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded'  id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' autoplay class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape></video></div>");
 	// ,{autoplay:true,volume:1}
 	if (!bLocal) new Plyr('#' + szId);
 	ovdio = $("#" + szId);
@@ -515,7 +515,6 @@ function StartVideo () {
 				clearInterval(x101)
 				JoinRoom();
 				initVideoChat();
-				if(window["main"])setTimeout(async () => {await window["main"]();},3);
 			}
 		}, 33)
 	});

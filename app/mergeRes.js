@@ -68,9 +68,7 @@ else{
 }
 async function fnMerg (s, t) {
     var szXf = "static/"+t + "." + t;
-    // if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,upup.min,p2pchat";
-    if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,bundle,p2pchat";
-    // else s = "all.min,plyr,bootstrap.min,p2pchat";
+    if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,p2pchat,bundle";
     else s = "plyr,p2pchat";
     if(useCc){
         if(fs.existsSync(szXf)){
