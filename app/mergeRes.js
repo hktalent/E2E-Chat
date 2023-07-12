@@ -88,13 +88,11 @@ async function fnMerg (s, t) {
     for (; i < a.length; i++) {
         if (fs.existsSync(sF = szPathT + a[i] + szHz)) {
             var szT = String(aFCache[sF] || fs.readFileSync(sF)).toString("utf-8");
-            if (useCc && t == "js" && a[i] == "p2pchat") {
-            // 只对关键、核心代码加密，不然会导致移动端运行不正常
+            if (useCc && bJmi && t == "js" && {"p2pchat":1}[a[i]]) {
+            // 只对关键、核心代码加密，不然会导致移动端运行不正常  "bundle":1, bundle 不能加密，否则脚本报错
                 // szT = minify(szT)
-                if(bJmi){
-                    szT = (await minify(szT, minifyOptions)).code
-                    szT = JavaScriptObfuscator.obfuscate(szT, JsHxOpt)
-                }
+                szT = (await minify(szT, minifyOptions)).code
+                szT = JavaScriptObfuscator.obfuscate(szT, JsHxOpt)
             }
             aFCache[sF] = szT;
             b.push(szT);
