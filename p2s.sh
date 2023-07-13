@@ -13,14 +13,12 @@ rcp app/static/css.css /root/${xxx}/app/static/
 
 rcp app/static/js/sw.js /root/${xxx}/app/static/js/
 rcp app/static/js/bundle.js /root/${xxx}/app/static/js/
-
 rcp app/static/index.html /root/${xxx}/app/static/
 
 # server
 rcp app/p2pchat.js_1 /root/${xxx}/app/p2pchat.js
 rcp app/mergeRes.js /root/${xxx}/app/
 
-# rcp app/myapp_51pwn.js /root/${xxx}/app/
 # rcp app/server.js /root/${xxx}/app/
 # rcp app/expressOptions.js /root/${xxx}/app/
 
