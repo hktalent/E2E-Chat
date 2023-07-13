@@ -21,9 +21,9 @@ String.prototype.hashCode = function() {
 	return hash;
 };
   
-var bRunAi = true, // run ai
+var bRunAi = !!0, // run ai
 	g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
-	IS_SCREEN_STREAMING = false,
+	IS_SCREEN_STREAMING = !!0,
 	local_media = null,
 	szCltFg = "",
 	isChrome = !!navigator.webkitGetUserMedia,
@@ -36,17 +36,17 @@ var bRunAi = true, // run ai
 	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
 	peer_media_elements = {}, /* keep track of our <video>/<audio> tags, indexed by peer_id */
 	g_oYourInfo = {},
-	g_bTxtChat = false,
+	g_bTxtChat = !!0,
 	g_peer_id = "",
-	nLogs = 0, bNbg = false,
+	nLogs = 0, bNbg = !!0,
 	szTOsTp = 'application/octet-stream',
 	szLstChannel = '',
 	nId = 0, bCloseQrcode = true,
 	g_bUseUpInfo = true,// submit current info to server
-	g_bSetup = false,
+	g_bSetup = !!0,
 	szgetYourInfo = '',
 	maxSendSize = 65535,// 64k
-	b_clickJoin = false,
+	b_clickJoin = !!0,
 	sendChannel = null, nCnt = 1;
 
 // 当前时间
@@ -192,11 +192,14 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	var n7 = parseInt($("#clsTm").val()||1)
 	var autoRm = function () {
 		o1.unbind('click')
-		var n6 = n7 * 60
-		fnTmArr.push(function(){
+		var n6 = n7 * 60,ofn01;
+		fnTmArr.push(ofn01=function(){
 			var n5 = (new Date().getTime() - (parseInt(o1.attr("tm") + "") || new Date().getTime())) / 1000;
 			if(n5 >= n6){
-				o1.remove()
+				o1.remove();
+				for(var i = 0; i < fnTmArr.length; i++){
+					if (fnTmArr[i] == ofn01){fnTmArr.splice(i, 1);break;}
+				}
 				return true
 			}
 			o1.find("x").text( " (" + parseInt(n6 - n5) + ")")
@@ -716,20 +719,6 @@ function init () {
 		// ,RtpDataChannels:true,preferSCTP:isFirefox
 		// iceTransportPolicy, iceCandidatePoolSize
 		// chrome 不支持：DtlsSrtpKeyAgreement "DtlsSrtpKeyAgreement": true
-		/*
-			// iceTransportPolicy: 'all',
-			// bundlePolicy: 'max-bundle',
-			// rtcpMuxPolicy: 'require', 
-			// iceCandidatePoolSize: 100,
-			// sdpSemantics: 'unified-plan',
-			// tcpCandidatePolicy: 'disable',
-			// IceTransportsType: 'nohost',// default all
-		*/
-
-		// 每个 ：
-		//  1、pc 对应 一个 peer_id
-		//  2、pc 对应 一个 一个用户，对应一个 maxSendSize
-		// 
 		peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,iceTransportPolicy: 'all',iceCandidatePoolSize: 50});
 		window.peer_connection = peer_connection;
 
@@ -750,29 +739,17 @@ function init () {
 		peer_connection.onicecandidate = function (event) {
 			if (event.candidate == null) { return }
 			if (event.candidate) {
-				// log("event.candidate.candidate = ",event.candidate.candidate);
 				if (event.candidate.candidate === '') {
 					return;
 				}
-				// console.log('onicecandidate == ', event.candidate);
-				// LogMsg("peer_connection.onicecandidate " + peer_id);
-				// log("event.candidate.candidate = ",event.candidate.candidate)
 				var c = parseCandidate(event.candidate.candidate);
-				// if(c.address && c.port){
-					// skip ipv6
-					// if(c.address.length > 16)return;
-					// if(c && c.type && c.type == 'relay')log(`P2P/E2E ip: `,c)
-					signaling_socket.emit('relayICECandidate', {
-						'peer_id': peer_id,
-						'ice_candidate': {
-							'sdpMLineIndex': event.candidate.sdpMLineIndex,
-							'candidate': event.candidate.candidate
-						}
-					});
-					// log("peer_connection.onicecandidate = null;")
-					// type:host、 srflx，都要,not set null
-					// peer_connection.onicecandidate = null;
-				// }
+				signaling_socket.emit('relayICECandidate', {
+					'peer_id': peer_id,
+					'ice_candidate': {
+						'sdpMLineIndex': event.candidate.sdpMLineIndex,
+						'candidate': event.candidate.candidate
+					}
+				});
 			}
 		}
 		// https://stackoverflow.com/questions/55379332/onaddstream-event-not-called
@@ -929,10 +906,80 @@ echoCancellation 是回声消除
 'environment': 后置摄像头
 'left':视频源面向用户但在他们的左边，例如一个对准用户但在他们的左肩上方的摄像机。
 'right': 视频源面向用户但在用户的右边，例如，摄像机对准用户但在他们的右肩上
+640 x 480
 */
-var g_hz = { facingMode: "user" }, g_Constraints = 0,n001 = 3,n002 = 1280,n003 = 720;
+const quickScan = [
+    {
+        "label": "4K(UHD)",
+        "width": 3840,
+        "height": 2160,
+        "ratio": "16:9"
+    },
+    {
+        "label": "1080p(FHD)",
+        "width": 1920,
+        "height": 1080,
+        "ratio": "16:9"
+    },
+    {
+        "label": "UXGA",
+        "width": 1600,
+        "height": 1200,
+        "ratio": "4:3"
+    },
+    {
+        "label": "720p(HD)",
+        "width": 1280,
+        "height": 720,
+        "ratio": "16:9"
+    },
+    {
+        "label": "SVGA",
+        "width": 800,
+        "height": 600,
+        "ratio": "4:3"
+    },
+    {
+        "label": "VGA",
+        "width": 640,
+        "height": 480,
+        "ratio": "4:3"
+    },
+    {
+        "label": "360p(nHD)",
+        "width": 640,
+        "height": 360,
+        "ratio": "16:9"
+    },
+    {
+        "label": "CIF",
+        "width": 352,
+        "height": 288,
+        "ratio": "4:3"
+    },
+    {
+        "label": "QVGA",
+        "width": 320,
+        "height": 240,
+        "ratio": "4:3"
+    },
+    {
+        "label": "QCIF",
+        "width": 176,
+        "height": 144,
+        "ratio": "4:3"
+    },
+    {
+        "label": "QQVGA",
+        "width": 160,
+        "height": 120,
+        "ratio": "4:3"
+    }
 
-// 构建、初始化全局 变量 g_Constraints，必须运行，否则视频聊天无法启动
+];
+var g_hz = { facingMode: "user" }, g_Constraints = 0,n001 = 3,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
+
+// 构建、初始化全局 变量 g_Constraints，必须运行，否则视频聊天无法启动 https://webrtchacks.github.io/WebRTC-Camera-Resolution/
 function appSet (stream) {
 	const audioSource = document.getElementById("audioInputSelect").value;
 	const videoSource = document.getElementById("videoSelect").value;
@@ -956,11 +1003,27 @@ function appSet (stream) {
 		// 	googTypingNoiseDetection: true
 		// }
 	}
-	
+	/*const supports = navigator.mediaDevices.getSupportedConstraints();// safari 16.1.1
+	{
+  "aspectRatio": true,
+  "deviceId": true,
+  "displaySurface": true,
+  "echoCancellation": true,
+  "facingMode": true,
+  "frameRate": true,
+  "groupId": false,
+  "height": true,
+  "sampleRate": false,
+  "sampleSize": false,
+  "volume": true,
+  "width": true
+}*/
 	g_Constraints = {
 		"audio": oT,
 		"video": {
 			deviceId: videoSource ? { exact: videoSource } : undefined,
+			width: {exact: n002},
+            height: {exact: n003},
 			'mandatory': {
 				minWidth: n002,
 				maxWidth: n002,
@@ -972,20 +1035,18 @@ function appSet (stream) {
 				'height': { 'min': n003,ideal: n003,max: n003 },
 			},
 			optional: [ // 对视频Track的可选约束条件
-				{ frameRate: { min: n001,max:n001,ideal:n001 } }
+				{ frameRate: { min: n001,max:n001,ideal:n001 } },
+				{minWidth: n002}
 			]
 		}
 	}
 	if(!!navigator.mozGetUserMedia) {
 		g_Constraints["video"] = {
-			width: n002,
-			height: n003,
+			width: { ideal: n002,exact: n002 },
+			height: { ideal: n003,exact: n003 },
 			frameRate: n001
 		};
-	}	
-	
-	// if (stream) stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
-	// if (local_media_stream) local_media_stream.getVideoTracks()[0].applyConstraints(g_Constraints["video"]);
+	}
 	return g_Constraints
 }
 
@@ -1040,10 +1101,11 @@ function setup_local_media (callback, errorback) {
 			// 触发保存
 			var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false;
 			var fnStartRct = function () {// https://recordrtc.org/
-				var videoOnlyStream = new MediaStream();
+				var videoOnlyStream = null||new MediaStream();
 				stream.getVideoTracks().forEach(function(track) {
 					videoOnlyStream.addTrack(track);
 				});
+				///////////////*/
 				var recorder = RecordRTC(videoOnlyStream || stream || local_media, {
 					'type': 'video'// 测评表明 AV1 是最佳的
 					, 'mimeType': 'video/webm;codecs=h264' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
