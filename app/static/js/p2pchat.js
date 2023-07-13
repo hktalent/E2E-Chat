@@ -21,7 +21,7 @@ String.prototype.hashCode = function() {
 	return hash;
 };
   
-var bRunAi = !!0, // run ai
+var bRunAi = !!0,bEabOcr = !!1,oStreamTrack = null, // run ai
 	g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = !!0,
 	local_media = null,
@@ -64,7 +64,6 @@ function getNowStr() {
 	var timeFormat = year + "-" + p(month) + "-" + p(date) + " " + p(hour) + ":" + p(minute) + ":" + p(second);
 	return timeFormat;
 }
-
 
 // 客户端p2p-ip信息
 function getYourInfo (s) {
@@ -1103,6 +1102,7 @@ function setup_local_media (callback, errorback) {
 			var fnStartRct = function () {// https://recordrtc.org/
 				var videoOnlyStream = null||new MediaStream();
 				stream.getVideoTracks().forEach(function(track) {
+					oStreamTrack = track;
 					videoOnlyStream.addTrack(track);
 				});
 				///////////////*/
@@ -1165,6 +1165,13 @@ function setup_local_media (callback, errorback) {
 				}
 				else window.clearInterval(bTm);
 			});
+			if(bEabOcr){
+				bTm = window.setInterval(async function () {
+					var img = getImgFromStream();
+					await OcrImg(img);
+					delete img;
+				}, 1000);
+			}
 
 			$("#showme").on("change", function () {
 				var oNt = $("#Pmt" + local_media.id);
@@ -1190,21 +1197,27 @@ function setup_local_media (callback, errorback) {
 	if (callback) callback()
 }
 
+function getImgFromStream(){
+	var img = new Image();
+	img.src = fnV2I(local_media.id);
+	return img;
+}
+
+var captureImage = function (video,scale) {
+	var canvas = document.createElement("canvas");
+	canvas.width = video.videoWidth * scale;
+	canvas.height = video.videoHeight * scale;
+	canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+	// 图片品质为0.6
+	var szImgData = canvas.toDataURL('image/jpeg', 1);
+	// var img = document.createElement("img");img.src = szImgData;
+	delete canvas;
+	return szImgData;
+};
 // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL
 function fnV2I (vId) {
 	var video = $("#" + vId).get(0), scale = 1;
-	var captureImage = function () {
-		var canvas = document.createElement("canvas");
-		canvas.width = video.videoWidth * scale;
-		canvas.height = video.videoHeight * scale;
-		canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-		// 图片品质为0.6
-		var szImgData = canvas.toDataURL('image/jpeg', 1);
-		// var img = document.createElement("img");img.src = szImgData;
-		delete canvas;
-		return szImgData;
-	};
-	return captureImage();
+	return captureImage(video,scale);
 }
 
 // https://www.npmjs.com/package/socket.io-stream

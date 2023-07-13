@@ -40,21 +40,9 @@ const pubClient = createClient({ url: "redis://localhost:6379" });
 
 const subClient = pubClient.duplicate();
 
-
 function myapp(option)
 {
     Object.setPrototypeOf(this, EventEmitter.prototype)
-    // if(option.on)
-    // {
-
-    //     var o1 = option.on,k;
-    //     console.log(app)
-    //     console.log(app.eventNames())
-    //     for(k in o1)
-    //     {
-    //         app[k](o1[k]);
-    //     }
-    // }
     var _t = this;
     fnOnLog = option.onLog || function(s)
     {
@@ -158,7 +146,6 @@ function myapp(option)
     app.use(helmet.referrerPolicy({policy:'no-referrer'}));
     app.use(helmet());
     app.disable('x-powered-by');
-
     // app.use(express.limit('4M')),app.use(express.bodyParser());
     // app.use(bodyParser.json({limit: '150mb'}));
     // app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
