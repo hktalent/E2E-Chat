@@ -68,7 +68,8 @@ else{
 }
 async function fnMerg (s, t) {
     var szXf = "static/"+t + "." + t;
-    if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,p2pchat,bundle";
+    // if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,p2pchat,bundle";
+    if (t == "js") s = "stunLists,p2pchat";
     else s = "plyr,p2pchat";
     if(useCc){
         if(fs.existsSync(szXf)){
@@ -89,7 +90,7 @@ async function fnMerg (s, t) {
         if (fs.existsSync(sF = szPathT + a[i] + szHz)) {
             var szT = String(aFCache[sF] || fs.readFileSync(sF)).toString("utf-8");
             if("bundle" == a[i]){
-                szT = szT.replace(/https:\/\/paddlejs\.bj\.bcebos\.com/gm, "");
+                szT = szT.replace(/https:\/\/paddlejs\.[^\/]*/gm, "");
             }
             if (useCc && bJmi && t == "js" && {"p2pchat":1}[a[i]]) {
             // 只对关键、核心代码加密，不然会导致移动端运行不正常  "bundle":1, bundle 不能加密，否则脚本报错
@@ -118,8 +119,8 @@ async function fnMerg (s, t) {
     return g_cache[s];
 }
 // 启动时预处理，提高速度
-fnMerg(",", "js");
-fnMerg(",", "css");
+fnMerg(",.js", "js");
+fnMerg(",.css", "css");
 
 function setLongTermCache (res) {
     const date = new Date();
