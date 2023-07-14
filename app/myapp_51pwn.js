@@ -1,7 +1,10 @@
 process.setMaxListeners(5000);
 var fs = require('fs'),
     spdy = require('spdy'),
+    // brotli = require('brotli'),
     express = require('express'),
+    destroy = require('destroy'),
+    onFinished = require('on-finished'),
     app = express(),
     mime = require('mime'),
     minify = require('html-minifier').minify, 
@@ -44,6 +47,12 @@ const zlib = require('zlib');
 
 var szCjs = "/js/,.js",szCcss = "/css/,.css";
 
+function closeStream(res, stream){
+    onFinished(res, function () {
+        destroy(stream)
+    });
+}
+
 function doPush(res,urlPath){
     var szRfp = urlPath;
     if(szCjs == szRfp)szRfp = "js.js";
@@ -68,7 +77,9 @@ function doPush(res,urlPath){
         // chrome Error: PUSH_PROMISE disabled by other side
         // firfox Error: Got RST: REFUSED_STREAM
         // if("/js/," == urlPath)console.log(o,err)
-        fs.createReadStream(webStaticPath + szRfp,{encoding:"utf-8",autoClose:true}).pipe(zlib.createGzip()).pipe(ss);
+        var ss = fs.createReadStream(webStaticPath + szRfp,{autoClose:true});
+        ss.pipe(zlib.createGzip()).pipe(ss);
+        closeStream(res,ss);
     });
     
     return stream;
@@ -149,31 +160,31 @@ function myapp(option)
         szPath = req.path;
         
         if("" == szPath || "/" == szPath || "/index.html" == szPath){
-            if(req.headers["user-agent"].indexOf("Safari") > -1){
-                // 静态资源
-                var a09 = [ szCjs,
-                szCcss,
-                "/js/client.min.js",
-                "/js/client.min.js.map",
-                "/socket.io/socket.io.js",
-                "/js/jquery.js",
-                "/plyr.svg",
-                "/js/sw.js",
-                "/js/RecordRTC.min.js",
-                "/js/adapter-latest.js",
-                "/js/qrcode.min.js",
-                "/js/plyr.js",
-                "/js/html5-qrcode.min.js",
-                "/js/aes.js",
-                "/js/fix.js",
-                "/js/bundle.js"];
-                for(var i = 0; i < a09.length; i++){
-                    try{
-                        var szFn = a09[i];
-                        doPush(res,szFn);
-                    }catch(e){break;}
-                }
-            }
+            // if(String(req.headers["user-agent"]||"").indexOf("Safari") > -1){
+            //     // 静态资源
+            //     var a09 = [ szCjs,
+            //     szCcss,
+            //     "/js/client.min.js",
+            //     "/js/client.min.js.map",
+            //     "/socket.io/socket.io.js",
+            //     "/js/jquery.js",
+            //     "/plyr.svg",
+            //     "/js/sw.js",
+            //     "/js/RecordRTC.min.js",
+            //     "/js/adapter-latest.js",
+            //     "/js/qrcode.min.js",
+            //     "/js/plyr.js",
+            //     "/js/html5-qrcode.min.js",
+            //     "/js/aes.js",
+            //     "/js/fix.js",
+            //     "/js/bundle.js"];
+            //     for(var i = 0; i < a09.length; i++){
+            //         try{
+            //             var szFn = a09[i];
+            //             doPush(res,szFn);
+            //         }catch(e){break;}
+            //     }
+            // }
 
             var szEn = String(res.getHeader("accept-language") || ""),szFn = "/index.html";
             if(0 == szEn.indexOf("en"))szFn = "/index_en.html";
@@ -191,6 +202,7 @@ function myapp(option)
         // "strategy":// 
         "filter":function(req,res)
         {
+            if(-1 < req.path.indexOf("/model/") && -1 == req.path.indexOf(".json"))return false;
             var s = String(res && res.getHeader('Content-Type') || "");
             if(-1 < s.indexOf("text/"))
             {
@@ -213,9 +225,19 @@ function myapp(option)
     // app.use(express.json());app.use(express.urlencoded());
 
     function doZipSFl(szFl,res){
+        szFl = szFl.replace(/\/+/g,"/")
         res.setHeader("Content-Type",mime.lookup(szFl));
-        res.setHeader('Content-Encoding', 'gzip');
-        fs.createReadStream(szFl,{autoClose:true}).pipe(zlib.createGzip()).pipe(res);
+        var bZip = -1 == szFl.indexOf("/model/") && -1 == szFl.indexOf(".json")
+        // if(bZip)res.setHeader('Content-Encoding', 'gzip');
+        var ss = oHtmlCc[szFl] || fs.readFileSync(szFl);
+        oHtmlCc[szFl] = ss;
+        // var ss = fs.createReadStream(szFl,{autoClose:true});
+        // console.log(szFl)
+        // if(bZip)ss = ss.pipe(zlib.createGzip())
+        // ss.pipe(res);
+        // closeStream(res,ss);
+        res.end(ss);
+        // res.end();
     }
     // 检查user-agent，避免工具、攻击，不合法的ua拒绝访问
     function fnCheckUa(req,res)
@@ -265,8 +287,9 @@ function myapp(option)
     //     'strip': false,
     //     'cache': false
     // });
-
+    var szSSP = webStaticPath;
     var reRes = /\/(js|css|model)\/(.*)$/;
+    app.use(express.static(szSSP, expressOptions));
     app.get(reRes,function(req,res,next)
     {
         var s11 = mime.lookup(req.path);
@@ -336,7 +359,7 @@ function myapp(option)
         res.end();
     });
 
-    var szSSP = webStaticPath;
+    
     // app.set('view engine', 'html');
     // app.engine('html', function(path, options, fn){
     //     // console.log(options);
@@ -426,8 +449,6 @@ function myapp(option)
     //*/ 实际上这里等数据只发送当前连接等客户端一次，因此是可以直接关闭等
     if(option.cbk4ServerAppIo)option.cbk4ServerAppIo(server,app,io);
     
-    app.use(express.static(szSSP, expressOptions));
-
     // 拦截关闭404
     app.use("*",function(req, res, next)
     {

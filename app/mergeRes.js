@@ -92,28 +92,24 @@ async function fnMerg (s, t) {
             if("bundle" == a[i]){
                 szT = szT.replace(/https:\/\/paddlejs\.[^\/]*/gm, "");
             }
-            if (useCc && bJmi && t == "js" && {"p2pchat":1}[a[i]]) {
-            // 只对关键、核心代码加密，不然会导致移动端运行不正常  "bundle":1, bundle 不能加密，否则脚本报错
-                // szT = minify(szT)
-                szT = (await minify(szT, minifyOptions)).code
-                szT = JavaScriptObfuscator.obfuscate(szT, JsHxOpt)
-            }
+            
             aFCache[sF] = szT;
             b.push(szT);
         }
     }
     g_cache[s] = b.join("\n");
+    if (useCc && bJmi && t == "js") {
+        var szTmp1 = g_cache[s];
+        szTmp1 = (await minify(szTmp1, minifyOptions)).code;
+        g_cache[s] = JavaScriptObfuscator.obfuscate(szTmp1, JsHxOpt).toString("utf-8");
+    }
     if ("css" == t) {
         oM = new CleanCSS({})
         o1 = oM.minify(g_cache[s])
         g_cache[s] = o1.styles
     }
     if(useCc){
-        if ("js" == t) {
-            o11 = await minify(g_cache[s], minifyOptions)
-            g_cache[s] = o11.code
-        }
-        fs.writeFileSync(szXf,g_cache[s])
+        fs.writeFileSync(szXf,g_cache[s]);
         if("js" == t)console.log("加密js已经初始化完毕 " + szXf)
     }
     return g_cache[s];
