@@ -253,7 +253,7 @@ function fnInit(io){
         // console.log("["+ socket.id + "] joined ", channel);
         // 自己，就默认开启视频记录
         if(oSelfXx[userdata.nick]){
-            // socket.emit('recodeSelf');
+            socket.emit('recodeSelf');
             try{
                 nCnt01 = Object.keys(channels).length;
                 for(x in channels){
