@@ -147,17 +147,17 @@ function myapp(option)
     }));
     app.use(function(req, res, next){
         szPath = req.path;
-        if(oHtmlCc[szPath]){
-            res.send(oHtmlCc[szPath]);
-            return
-        }
+        
         if("" == szPath || "/" == szPath || "/index.html" == szPath){
             if(req.headers["user-agent"].indexOf("Safari") > -1){
                 // 静态资源
                 var a09 = [ szCjs,
-                szCcss,"/js/client.min.js",
+                szCcss,
+                "/js/client.min.js",
+                "/js/client.min.js.map",
                 "/socket.io/socket.io.js",
                 "/js/jquery.js",
+                "/plyr.svg",
                 "/js/sw.js",
                 "/js/RecordRTC.min.js",
                 "/js/adapter-latest.js",
@@ -212,6 +212,11 @@ function myapp(option)
     // })); 
     // app.use(express.json());app.use(express.urlencoded());
 
+    function doZipSFl(szFl,res){
+        res.setHeader("Content-Type",mime.lookup(szFl));
+        res.setHeader('Content-Encoding', 'gzip');
+        fs.createReadStream(szFl,{autoClose:true}).pipe(zlib.createGzip()).pipe(res);
+    }
     // 检查user-agent，避免工具、攻击，不合法的ua拒绝访问
     function fnCheckUa(req,res)
     {
@@ -264,17 +269,17 @@ function myapp(option)
     var reRes = /\/(js|css|model)\/(.*)$/;
     app.get(reRes,function(req,res,next)
     {
-        var s11 = "application/javascript; charset=utf-8";
+        var s11 = mime.lookup(req.path);
         if(req.path.match(/sw\.js$/)){
-            res.setHeader("Content-Type",s11);
-            var szJs = fs.readFileSync(szSSP + "js/sw.js").toString("utf-8")
-            res.send(szJs);
+            doZipSFl(szSSP + "js/sw.js",res);
+            return
+        }
+        if(req.path.match(/plyr\.svg/)){
+            doZipSFl(szSSP + "plyr.svg",res);
             return
         }
         if(fs.existsSync(szSSP + req.path)){
-            res.setHeader("Content-Type",mime.lookup(req.path));
-            var szJs = fs.readFileSync(szSSP + req.path).toString("utf-8");
-            res.send(szJs);
+            doZipSFl(szSSP + req.path,res);
             return
         }
         
@@ -341,11 +346,11 @@ function myapp(option)
     // 		fn(null, str);
     // 	});
     // });
-    app.get('/', function(req, res){
-        //try{
-            res.sendFile(path.join(path.join(szSSP, 'index.html')));
-        //}catch(e){console.log(e)}
-    });
+    // app.get('/', function(req, res){
+    //     //try{
+    //         res.sendFile(path.join(path.join(szSSP, 'index.html')));
+    //     //}catch(e){console.log(e)}
+    // });
     
     if(option.cbkApp)option.cbkApp(app);
 

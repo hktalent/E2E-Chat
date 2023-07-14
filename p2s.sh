@@ -7,10 +7,12 @@ rcp app/nodemon.json /root/${xxx}/app/
 rcp app/static/index_en.html /root/${xxx}/app/static/
 rcp app/myapp_51pwn.js /root/${xxx}/app/
 
+rcp app/static/plyr.svg /root/${xxx}/app/static/
 # 静态资源，经常需要更新
 rcp app/static/js.js /root/${xxx}/app/static/
 rcp app/static/css.css /root/${xxx}/app/static/
 
+rcp app/static/js/client.min.js.map /root/${xxx}/app/static/js/
 rcp app/static/js/socket.io.js /root/${xxx}/app/static/js/
 rcp app/static/js/plyr.js /root/${xxx}/app/static/js/
 rcp app/static/js/fix.js /root/${xxx}/app/static/js/
@@ -33,6 +35,8 @@ rcp app/mergeRes.js /root/${xxx}/app/
 
 rcp app/server.js /root/${xxx}/app/
 rcp app/expressOptions.js /root/${xxx}/app/
+# rcp app/static/models /root/${xxx}/app/static/
+# rcp app/static/model /root/${xxx}/app/static/
 
 # 静态资源，不需要常更新
 # rcp app/static/js/ie.js /root/${xxx}/app/static/js/
