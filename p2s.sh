@@ -11,6 +11,18 @@ rcp app/myapp_51pwn.js /root/${xxx}/app/
 rcp app/static/js.js /root/${xxx}/app/static/
 rcp app/static/css.css /root/${xxx}/app/static/
 
+rcp app/static/js/socket.io.js /root/${xxx}/app/static/js/
+rcp app/static/js/plyr.js /root/${xxx}/app/static/js/
+rcp app/static/js/fix.js /root/${xxx}/app/static/js/
+rcp app/static/js/aes.js /root/${xxx}/app/static/js/
+rcp app/static/js/html5-qrcode.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/qrcode.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/adapter-latest.js /root/${xxx}/app/static/js/
+rcp app/static/js/RecordRTC.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/jquery.js /root/${xxx}/app/static/js/
+rcp app/static/js/client.min.js /root/${xxx}/app/static/js/
+
+
 rcp app/static/js/sw.js /root/${xxx}/app/static/js/
 rcp app/static/js/bundle.js /root/${xxx}/app/static/js/
 rcp app/static/index.html /root/${xxx}/app/static/
@@ -19,8 +31,8 @@ rcp app/static/index.html /root/${xxx}/app/static/
 rcp app/p2pchat.js_1 /root/${xxx}/app/p2pchat.js
 rcp app/mergeRes.js /root/${xxx}/app/
 
-# rcp app/server.js /root/${xxx}/app/
-# rcp app/expressOptions.js /root/${xxx}/app/
+rcp app/server.js /root/${xxx}/app/
+rcp app/expressOptions.js /root/${xxx}/app/
 
 # 静态资源，不需要常更新
 # rcp app/static/js/ie.js /root/${xxx}/app/static/js/
