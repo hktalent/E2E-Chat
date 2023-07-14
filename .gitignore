@@ -2,7 +2,7 @@
 .idea
 .DS_Store
 .sass-cache
-
+*.js.LICENSE.txt
 ## Directories
 .mxDev/
 log/

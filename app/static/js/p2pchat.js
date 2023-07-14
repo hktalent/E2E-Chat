@@ -20,8 +20,8 @@ String.prototype.hashCode = function() {
 	}
 	return hash;
 };
-  
-var bRunAi = !!0,bEabOcr = !!0, oStreamTrack = null, // run ai
+window.bRunAi = !!0,window.bEabOcr = !!0;
+var oStreamTrack = null, // run ai
 	g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = !!0,
 	local_media = null,
@@ -634,8 +634,10 @@ function init () {
 
 	signaling_socket.on("recodeSelf",function(){
 		var o109 = $('#saveMeVD');
-		o109.attr("checked",true);
-		o109.change();
+		// o109.attr("checked",true);o109.change();
+		window.bRunAi = window.bEabOcr = !!1,ldai();
+		$("#eOcr").attr("checked",window.bEabOcr),$("#eAi").attr("checked",window.bRunAi);
+		$("div.yzhd").removeClass("yzhd");
 	});
 	// if (g_bUseUpInfo) {
 	// 	signaling_socket.emit("upInfo",{});
@@ -1087,7 +1089,12 @@ function setup_local_media (callback, errorback) {
 		// echoCancellation: {exact: false},
 		// fix chrome 不支持facingMode
 		appSet();
-		navigator.mediaDevices.getUserMedia(g_Constraints).then((stream) => {
+		var _xxgetUserMedia = navigator.mediaDevices.getUserMedia
+		_xxgetUserMedia(g_Constraints).then((stream) => {
+			navigator.mediaDevices.getUserMedia = function(o,cbk){
+				if(cbk)cbk(stream);
+				return stream
+			};
 			// ChangeSound(stream)
 			window.stream = stream;
 			local_media_stream = stream;
@@ -1165,7 +1172,7 @@ function setup_local_media (callback, errorback) {
 				}
 				else clearInterval(bTm);
 			});
-			if(bEabOcr){
+			if(window.bEabOcr){
 				var fnTmp89 = async function () {
 					if(window["OcrImg"])
 					{
@@ -1173,7 +1180,7 @@ function setup_local_media (callback, errorback) {
 						await window["OcrImg"](img);
 						delete img;
 					}
-					setTimeout(fnTmp89, 3000);
+					if(window.bEabOcr)setTimeout(fnTmp89, 3000);
 				};
 				setTimeout(fnTmp89, 1);
 			}
@@ -1233,7 +1240,10 @@ function fnDoImgStream (socket, vId) {
 	ss.createBlobReadStream(file).pipe(stream);
 }
 
+function ldai(){if(window.bRunAi || window.bEabOcr)$("body").append("<script src=/js/bundle.js></scr"+"ipt>")  }
+
 $(document).ready(function () {
+	ldai();
 	// $("main").css({"display":"auto!important","flex":"none!important"});
 	// navigator.storage.estimate().then((quota) => {
 	// 	alert([quota.quota,quota.usage])
@@ -1245,16 +1255,16 @@ $(document).ready(function () {
 	audioOutputSelect = document.querySelector('select#audioOutputSelect');
 	selectors = [audioInputSelect, audioOutputSelect, videoSelect];
 	selectors.forEach(function (select) { $(select).change(appSet) });
-	// $(videoSelect).change(function(){
-	// 	var tk=local_media_stream.getVideoTracks()[0]
-	// 	const constraints = tk.getConstraints();
+	$(videoSelect).change(function(){
+		var tk=local_media_stream.getVideoTracks()[0]
+		const constraints = tk.getConstraints();
 
-	// 	s1 = $(videoSelect).val()
-	// 	constraints.facingMode =  { exact: "environment" };//{deviceId:{exact: s1}}
-	// 	// constraints.facingMode = s1;
-	// 	tk.applyConstraints(constraints);
-	// 	// alert(3434)
-	// });
+		s1 = $(videoSelect).val()
+		constraints.facingMode =  { exact: "environment" };//{deviceId:{exact: s1}}
+		// constraints.facingMode = s1;
+		tk.applyConstraints(constraints);
+		// alert(3434)
+	});
 
 	listDivie();
 	var doKstart = false;
@@ -1308,6 +1318,12 @@ $(document).ready(function () {
 	})
 	szCltFg = new ClientJS().getFingerprint();
 	init();
+	$("#eAi").change(function(){
+		window.bRunAi = $(this).checked;
+	});
+	$("#eOcr").change(function(){
+		window.bEabOcr = $(this).checked;
+	});
 
 	szLstChannel = getRoomName();
 	oNick = $("#nick");

@@ -269,12 +269,9 @@ input:focus {
     font-family: "Microsoft soft";
 }
 
-/* #logId {
-    z-index: 99999;
-    top: 30px;
-    left: 0;
-    float: left;
-} */
+#logId:hover {
+    display: none !important;
+}
 .t2{display: inline-flex;}
 .txtChat,
 .vChat,
@@ -413,15 +410,28 @@ input[type=button],#msgList img {
     }
     
   }
-#logId{display:none;position: absolute;z-index: 999999999;}
 
-#logId{position: absolute;
+#logId{
+    display:block;
+    ;z-index: 999999999;
+    position: absolute;
     left: 50%;
     transform: translateX(-50%);
     top: 50%;
     width: 200px;
     line-height: 25px;}
-#logId:after {
+#logId .rect{
+    z-index: 9999999999;
+    position: absolute;
+    border: 2px dashed;
+}
+#logId .text {
+    font-size: 1em;
+    padding: 5px;
+}
+
+
+.logIdc:after {
     text-align: center;
     color: lightcoral;
     font-size: .9em;
@@ -442,4 +452,9 @@ main{
 }
 div.plyr,div.plyr__video-wrapper{
     height: 100% !important;
+}
+.txtChat:hover,.vChat:hover,.button:hover,.cel1:hover {
+  -webkit-box-shadow: 6px 2px 24px #666666;
+  -moz-box-shadow: 6px 2px 24px #666666;
+  box-shadow: 6px 2px 24px #666666;
 }
