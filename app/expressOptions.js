@@ -21,7 +21,7 @@ module.exports = {
   lastModified: true,
   setHeaders: function (res, path, stat) {
     isSw = !!path.match(/sw\.js$/)
-    if(!isSw && (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|json|ttf|woff|woff2|eot|html|json)$/) || path.match(/group[0-9]{1,}-shard[0-9]{1,}of[0-9]{1,}$/))) {
+    if(!isSw && (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|json|ttf|woff|woff2|eot|html|json|svg)$/) || path.match(/group[0-9]{1,}-shard[0-9]{1,}of[0-9]{1,}$/))) {
       setLongTermCache(res)
     }else{
       setNoCache(res)
