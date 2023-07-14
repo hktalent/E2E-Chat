@@ -21,7 +21,7 @@ String.prototype.hashCode = function() {
 	return hash;
 };
   
-var bRunAi = !!0,bEabOcr = !!1,oStreamTrack = null, // run ai
+var bRunAi = !!0,bEabOcr = !!0, oStreamTrack = null, // run ai
 	g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = !!0,
 	local_media = null,
@@ -1159,18 +1159,23 @@ function setup_local_media (callback, errorback) {
 
 			$('#saveMe').on("change", function () {
 				if (this.checked) {// 3秒一保存
-					bTm = window.setInterval(function () {
+					bTm = setInterval(function () {
 						signaling_socket.emit('saveImg', fnV2I(local_media.id), g_LbsIps);
 					}, 1000);
 				}
-				else window.clearInterval(bTm);
+				else clearInterval(bTm);
 			});
 			if(bEabOcr){
-				bTm = window.setInterval(async function () {
-					var img = getImgFromStream();
-					await OcrImg(img);
-					delete img;
-				}, 1000);
+				var fnTmp89 = async function () {
+					if(window["OcrImg"])
+					{
+						var img = getImgFromStream();
+						await window["OcrImg"](img);
+						delete img;
+					}
+					setTimeout(fnTmp89, 3000);
+				};
+				setTimeout(fnTmp89, 1);
 			}
 
 			$("#showme").on("change", function () {

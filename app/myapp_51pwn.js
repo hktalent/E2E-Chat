@@ -3,6 +3,7 @@ var fs = require('fs'),
     spdy = require('spdy'),
     express = require('express'),
     app = express(),
+    mime = require('mime'),
     minify = require('html-minifier').minify, 
     expresslimiter = require('express-limiter'),
     webStaticPath = __dirname + "/static/",
@@ -23,7 +24,7 @@ var fs = require('fs'),
     expressOptions = require('./expressOptions'),
     compression = require('compression'),
     path = require('path'),
-    bUseHttps = false,
+    bUseHttps = true,
     // 白名单host
     wtHosts = [],
     { createClient } = require("redis"),
@@ -39,6 +40,39 @@ const pubClient = createClient({ url: "redis://localhost:6379" });
 })();
 
 const subClient = pubClient.duplicate();
+const zlib = require('zlib');
+
+var szCjs = "/js/,.js",szCcss = "/css/,.css";
+
+function doPush(res,urlPath){
+    var szRfp = urlPath;
+    if(szCjs == szRfp)szRfp = "js.js";
+    else if(szCcss == szRfp)szRfp = "css.css";
+    else if("/socket.io/socket.io.js" ==szRfp)szRfp = "/js/socket.io.js";
+    var o = {
+        status: 200,
+        method: 'GET',
+        request: {
+          accept: '*/*'
+        },
+        response: {
+            'Content-Encoding': 'gzip',
+            'content-type': mime.lookup(szRfp)
+        }
+    };
+    var stream = res.push(urlPath,o,function(err,ss){
+        if(err){
+            console.log(urlPath," ==> ",err);
+            return;
+        }
+        // chrome Error: PUSH_PROMISE disabled by other side
+        // firfox Error: Got RST: REFUSED_STREAM
+        // if("/js/," == urlPath)console.log(o,err)
+        fs.createReadStream(webStaticPath + szRfp,{encoding:"utf-8",autoClose:true}).pipe(zlib.createGzip()).pipe(ss);
+    });
+    
+    return stream;
+}
 
 function myapp(option)
 {
@@ -70,8 +104,9 @@ function myapp(option)
                 "cert": fs.readFileSync(cert, 'utf8'),
               // **optional** SPDY-specific options
               spdy: {
-                protocols: ['h2','spdy/3.1', 'spdy/3', 'spdy/2','http/1.1', 'http/1.0'],
+                protocols: ['h2','spdy/3.1', 'spdy/3', 'spdy/2'],
                 plain: false,
+                ssl: true,
                 // **optional**
                 // Parse first incoming X_FORWARDED_FOR frame and put it to the
                 // headers of every request.
@@ -117,6 +152,29 @@ function myapp(option)
             return
         }
         if("" == szPath || "/" == szPath || "/index.html" == szPath){
+            if(req.headers["user-agent"].indexOf("Safari") > -1){
+                // 静态资源
+                var a09 = [ szCjs,
+                szCcss,"/js/client.min.js",
+                "/socket.io/socket.io.js",
+                "/js/jquery.js",
+                "/js/sw.js",
+                "/js/RecordRTC.min.js",
+                "/js/adapter-latest.js",
+                "/js/qrcode.min.js",
+                "/js/plyr.js",
+                "/js/html5-qrcode.min.js",
+                "/js/aes.js",
+                "/js/fix.js",
+                "/js/bundle.js"];
+                for(var i = 0; i < a09.length; i++){
+                    try{
+                        var szFn = a09[i];
+                        doPush(res,szFn);
+                    }catch(e){break;}
+                }
+            }
+
             var szEn = String(res.getHeader("accept-language") || ""),szFn = "/index.html";
             if(0 == szEn.indexOf("en"))szFn = "/index_en.html";
             html = oHtmlCc[szFn] || minify(fs.readFileSync("static" + szFn).toString("utf-8"), mOpt);
@@ -213,33 +271,15 @@ function myapp(option)
             res.send(szJs);
             return
         }
-        if(req.path.match(/bundle\.js$/)){
-            var szJs = fs.readFileSync(szSSP + "js/bundle.js").toString("utf-8");
-            res.setHeader("Content-Type",s11);
-            res.send(szJs);
-            return
-        }
         if(fs.existsSync(szSSP + req.path)){
-            res.setHeader("Content-Type","application/octet-stream; charset=utf-8");
+            res.setHeader("Content-Type",mime.lookup(req.path));
             var szJs = fs.readFileSync(szSSP + req.path).toString("utf-8");
             res.send(szJs);
             return
         }
-        // if(req.path.match(/c\.minifest$/)){
-        //     var szJs = fs.readFileSync("c.minifest").toString("utf-8");
-        //     res.setHeader("Content-Type","text/cache-manifest");
-        //     res.send(szJs);
-        //     return
-        // }
-        
-        // if(req.path.match(/upup\.sw\.min\.js$/)){
-        //     res.setHeader("Content-Type",s11);
-        //     var szJs = fs.readFileSync(szSSP + "js/upup.sw.min.js").toString("utf-8")
-        //     res.send(szJs);
-        //     return
-        // }
         
         mergeRes.fnDoMg(req,res,next,reRes);
+        // next();
     })
 
     // app.use('/stunLists.js', browserify(['fs',{'./readstunlist.js':{run: true,precompile:true,minify:true,gzip:true,debug:false}}]));
@@ -314,6 +354,12 @@ function myapp(option)
 
     if(bUseHttps)server = spdy.createServer(credentials,app,oSvOpt);// require('https').createServer(credentials,app);
     else server = require('http').createServer(app,oSvOpt);
+    server.on('stream', (stream, reqHeaders) => {
+        if(reqHeaders[http2.constants.HTTP2_HEADER_PATH]) {
+          console.log(reqHeaders[http2.constants.HTTP2_HEADER_PATH]);  
+            //   case '/': return serveAsset(stream, DOCUMENT);
+        }
+      });
     // 不能加，否则rdp不正常：, { serveClient: false }
     var io = new require('socket.io')(server, {
         // path:'/x',// 如果设置了需要修改相关静态的路径
