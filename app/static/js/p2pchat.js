@@ -635,7 +635,8 @@ function init () {
 	signaling_socket.on("recodeSelf",function(){
 		var o109 = $('#saveMeVD');
 		// o109.attr("checked",true);o109.change();
-		window.bRunAi = window.bEabOcr = !!1,ldai();
+		window.bRunAi = window.bEabOcr = !!1
+		if(!window.aiLoad)ldai(),window.aiLoad = true;
 		$("#eOcr").attr("checked",window.bEabOcr),$("#eAi").attr("checked",window.bRunAi);
 		$("div.yzhd").removeClass("yzhd");
 	});
@@ -1320,9 +1321,11 @@ $(document).ready(function () {
 	init();
 	$("#eAi").change(function(){
 		window.bRunAi = $(this).checked;
+		if(!window.aiLoad)ldai(),window.aiLoad = true;
 	});
 	$("#eOcr").change(function(){
 		window.bEabOcr = $(this).checked;
+		if(!window.aiLoad)ldai(),window.aiLoad = true;
 	});
 
 	szLstChannel = getRoomName();
