@@ -1197,7 +1197,7 @@ function fnDoImgStream (socket, vId) {
 	ss.createBlobReadStream(file).pipe(stream);
 }
 
-function ldai(){if(window.bRunAi || window.bEabOcr)$("body").append("<script src=/js/bundle.js></scr"+"ipt>")  }
+function ldai(b){if(window.bRunAi || window.bEabOcr)$("body").append("<script src=/js/" + (b?"ocr":"bundle") +".js></scr"+"ipt>")  }
 
 String.prototype.trim = function(){
     return this.replace(/^\s*|\s*$/gmi,"")
@@ -1261,8 +1261,6 @@ function stopPosInfo(id){
 }
 
 $(document).ready(function () {
-	ldai();
-	
 	clientHeight = document.documentElement.clientHeight;
 	videoSelect = document.querySelector('select#videoSelect');
 	audioInputSelect = document.querySelector('select#audioInputSelect');
@@ -1370,11 +1368,11 @@ $(document).ready(function () {
 	init();
 	$("#eAi").change(function(){
 		window.bRunAi = this.checked;
-		if(!window.aiLoad)ldai(),window.aiLoad = true;
+		if(!window['aiLoad'])ldai(),window.aiLoad = true;
 	});
 	$("#eOcr").change(function(){
 		window.bEabOcr = this.checked;
-		if(!window.aiLoad)ldai(),window.aiLoad = true;
+		if(!window['ocrLoad'])ldai(true),window.ocrLoad = true;
 	});
 
 	szLstChannel = getRoomName();
