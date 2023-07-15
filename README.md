@@ -84,3 +84,6 @@ snyk test
 
 pkill -9 ssh;sc
 ```
+
+翻墙后可以看到做坐标的地址信息
+https://www.openstreetmap.org/search?whereami=1&query=30.67573%2C103.96051

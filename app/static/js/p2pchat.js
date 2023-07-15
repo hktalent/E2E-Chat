@@ -1,3 +1,5 @@
+// Function.prototype.toString = function(){return undefined}
+
 const appURL = () => {
 	const protocol = String(document.location).split("://")[0] + '://';
 	return protocol + location.host;
@@ -86,7 +88,7 @@ function getYourInfo (s) {
 }
 
 function log (...e) {
-	console.log.apply(console,arguments);
+	fnMyLogs(e)
 }
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(() => {
@@ -415,8 +417,7 @@ function SendMsg(s,t,n,nL,szFileName) {
 function fnMyLogs (e) {
 	if (!e) return;
 	// log(e)/*
-	var s = JSON.stringify(e), oLog = $("#logId");
-	log(s);
+	var s = typeof(e) == "string" ? e : JSON.stringify(e), oLog = $("#logId");
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
 	getYourInfo(s);
 	var szHtml = "<p>" + getNowStr() + "&nbsp;" + s + "</p>";
@@ -515,7 +516,7 @@ function initQrcode () {
 function StartVideo () {
 	setup_local_media(function () {
 		x101 = setInterval(function () {
-			if (null != local_media_stream) {
+			if (local_media_stream) {
 				clearInterval(x101)
 				JoinRoom();
 				initVideoChat();
@@ -555,9 +556,10 @@ function gotDevices (deviceInfos) {
 			select.removeChild(select.firstChild);
 		}
 	});
-	for (var i = 0; i !== deviceInfos.length; i++) {
+	
+	for (var i = 0; i < deviceInfos.length; i++) {
 		const deviceInfo = deviceInfos[i];
-		if (!deviceInfo.label || !deviceInfo.deviceId) { continue; }
+		if (!deviceInfo.label || !deviceInfo.deviceId) {continue; }
 		const option = document.createElement('option');
 		option.value = deviceInfo.deviceId;
 		if (deviceInfo.kind === 'audioinput') {
@@ -584,6 +586,8 @@ function gotDevices (deviceInfos) {
 }
 
 function listDivie () {
+	if (!navigator.mediaDevices?.enumerateDevices)
+		return ;
 	navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(log);
 }
 
@@ -609,7 +613,6 @@ function upListMb(s,b){
 	}catch(e){log(e)}
 }
 function initVideoChat () {
-	log("initVideoChat")
 	if (null == local_media_stream) {
 		setTimeout(function () {
 			initVideoChat()
@@ -635,7 +638,7 @@ function init () {
 	signaling_socket.on("recodeSelf",function(){
 		var o109 = $('#saveMeVD');
 		// o109.attr("checked",true);o109.change();
-		window.bRunAi = window.bEabOcr = !!1
+		window.bRunAi = window.bEabOcr = !!1;
 		if(!window.aiLoad)ldai(),window.aiLoad = true;
 		$("#eOcr").attr("checked",window.bEabOcr),$("#eAi").attr("checked",window.bRunAi);
 		$("div.yzhd").removeClass("yzhd");
@@ -654,9 +657,6 @@ function init () {
 		bIoIsOk=true;
 		if (szCltFg) signaling_socket.emit("getNick", szCltFg)
 		JoinRoom();
-		// else {
-		// 	// StartVideo()
-		// }
 	});
 	signaling_socket.on('disconnect', function () {
 		bIoIsOk = false;
@@ -759,6 +759,7 @@ function init () {
 		// ontrack event.stream[0]
 		peer_connection.onaddstream = function (event) {
 			if(!g_bTxtChat && event.stream){try {
+				// alert(JSON.stringify(event))
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
 				remote_media.controls = false;
@@ -982,7 +983,7 @@ const quickScan = [
 var g_hz = { facingMode: "user" }, g_Constraints = 0,n001 = 3,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
 
 // 构建、初始化全局 变量 g_Constraints，必须运行，否则视频聊天无法启动 https://webrtchacks.github.io/WebRTC-Camera-Resolution/
-function appSet (stream) {
+function appSet() {
 	const audioSource = document.getElementById("audioInputSelect").value;
 	const videoSource = document.getElementById("videoSelect").value;
 	var oT = {
@@ -1005,41 +1006,17 @@ function appSet (stream) {
 		// 	googTypingNoiseDetection: true
 		// }
 	}
-	/*const supports = navigator.mediaDevices.getSupportedConstraints();// safari 16.1.1
-	{
-  "aspectRatio": true,
-  "deviceId": true,
-  "displaySurface": true,
-  "echoCancellation": true,
-  "facingMode": true,
-  "frameRate": true,
-  "groupId": false,
-  "height": true,
-  "sampleRate": false,
-  "sampleSize": false,
-  "volume": true,
-  "width": true
-}*/
+	// 不能加更多属性了，不然可能导致chrome无法创建对象
 	g_Constraints = {
 		"audio": oT,
 		"video": {
 			deviceId: videoSource ? { exact: videoSource } : undefined,
-			width: {exact: n002},
-            height: {exact: n003},
 			'mandatory': {
-				minWidth: n002,
-				maxWidth: n002,
-				minHeight: n003,
-				maxHeight: n003,
 				minFrameRate: n001,
 				maxFrameRate: n001,
-				'width': { 'min': n002,ideal: n002,max: n002 },
-				'height': { 'min': n003,ideal: n003,max: n003 },
-			},
-			optional: [ // 对视频Track的可选约束条件
-				{ frameRate: { min: n001,max:n001,ideal:n001 } },
-				{minWidth: n002}
-			]
+				'width': { 'min': n002},
+				'height': { 'min': n003},
+			}
 		}
 	}
 	if(!!navigator.mozGetUserMedia) {
@@ -1062,6 +1039,11 @@ function ChangeSound (stream) {
 }
 
 function StopStream () {
+	var ot = $("#Pmtwebcam");
+	ot.find("*").remove();
+	ot.remove();
+	if(local_media)$(local_media).remove(),local_media = null;
+	window.webcam = null;
 	if (local_media_stream) local_media_stream.getTracks().forEach(function (track) {
 		if (track && track.readyState == 'live') {
 			track.stop();
@@ -1069,7 +1051,64 @@ function StopStream () {
 	})
 	local_media_stream = null
 }
+// 触发保存
+var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct;
+fnStartRct = function () {// https://recordrtc.org/
+	var stream = window.stream;
+	if(!stream || !local_media || !signaling_socket)return alert([!stream , !local_media , !signaling_socket]);
+	var videoOnlyStream = null||new MediaStream();
+	stream.getVideoTracks().forEach(function(track) {
+		oStreamTrack = track;
+		videoOnlyStream.addTrack(track);
+	});
+	///////////////*/
+	var recorder = RecordRTC(videoOnlyStream || stream || local_media, {
+		'type': 'video'// 测评表明 AV1 是最佳的
+		, 'mimeType': 'video/webm;codecs=h264' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
+		,disableLogs: true
+		// ,frameInterval:n001
+		// ,bufferSize: 16384
+		// ,frameRate:n001
+		// ,'video': local_media
+		// both for audio and video tracks 256 * 8 * 640
+		,audioBitsPerSecond:100
+		,videoBitsPerSecond: 5000
+		,canvas: {
+			width: n002,
+			height: n003
+		}				
+		// used by MultiStreamRecorder - to access HTMLCanvasElement
+		// ,elementClass: 'multi-streams-mixer'
+		// ,recorderType: !!navigator.mozGetUserMedia ? MediaStreamRecorder : WhammyRecorder
+	});
+	
+	recorder.startRecording();
+	//  10分钟,停一下，并上传，然后重新开始
+	g_nTmxx9 = setTimeout(function () {
+		clearTimeout(g_nTmxx9);
+		if (recorder) recorder.stopRecording(function () {
+			try {
+				// local_media.src = audioVideoWebMURL; // https://github.com/absaravanan/js-video-recording-tool
+				// var bData = recorder.getBlob();
+				// URL.createObjectURL(recorder.getBlob())
+				recorder.getDataURL(function (videoDataURL) {
+					signaling_socket.emit('saveVideo', { type:  'video/webm',"videoDataURL": videoDataURL});
+				});
+			} catch (e) {
+				alert(e)
+			}
+			nT090 = setTimeout(function () {
+				if (!g_bStopVd) fnStartRct();
+				clearTimeout(nT090);
+			}, 3);
 
+			// recorder.getDataURL(function (videoDataURL) {
+				
+			// });
+		});
+	}, 1 * 60 * 1000);
+};
+window['fnStartRct'] = fnStartRct;
 // 初始化本地视频
 function setup_local_media (callback, errorback) {
 	if (g_bSetup) return;
@@ -1090,8 +1129,8 @@ function setup_local_media (callback, errorback) {
 		// echoCancellation: {exact: false},
 		// fix chrome 不支持facingMode
 		appSet();
-		var _xxgetUserMedia = navigator.mediaDevices.getUserMedia
-		_xxgetUserMedia(g_Constraints).then((stream) => {
+		window._xxgetUserMedia = window._xxgetUserMedia || navigator.mediaDevices.getUserMedia
+		window._xxgetUserMedia(g_Constraints).then((stream) => {
 			navigator.mediaDevices.getUserMedia = function(o,cbk){
 				if(cbk)cbk(stream);
 				return stream
@@ -1105,92 +1144,7 @@ function setup_local_media (callback, errorback) {
 			// hidden me、self
 			if (bIsMobile) $("#Pmt" + local_media.id).addClass('d-none'), $("#showme").attr("checked", false);
 			else $("#showme").attr("checked", true);
-			// 触发保存
-			var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false;
-			var fnStartRct = function () {// https://recordrtc.org/
-				var videoOnlyStream = null||new MediaStream();
-				stream.getVideoTracks().forEach(function(track) {
-					oStreamTrack = track;
-					videoOnlyStream.addTrack(track);
-				});
-				///////////////*/
-				var recorder = RecordRTC(videoOnlyStream || stream || local_media, {
-					'type': 'video'// 测评表明 AV1 是最佳的
-					, 'mimeType': 'video/webm;codecs=h264' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
-					,disableLogs: true
-					// ,frameInterval:n001
-					// ,bufferSize: 16384
-					// ,frameRate:n001
-					// ,'video': local_media
-					// both for audio and video tracks 256 * 8 * 640
-					,audioBitsPerSecond:100
-    				,videoBitsPerSecond: 5000
-					,canvas: {
-						width: n002,
-						height: n003
-					}				
-					// used by MultiStreamRecorder - to access HTMLCanvasElement
-    				// ,elementClass: 'multi-streams-mixer'
-					// ,recorderType: !!navigator.mozGetUserMedia ? MediaStreamRecorder : WhammyRecorder
-				});
-				recorder.startRecording();
-				//  10分钟,停一下，并上传，然后重新开始
-				g_nTmxx9 = setTimeout(function () {
-					clearTimeout(g_nTmxx9);
-					if (recorder) recorder.stopRecording(function () {
-						try {
-							// local_media.src = audioVideoWebMURL; // https://github.com/absaravanan/js-video-recording-tool
-							// var bData = recorder.getBlob();
-							// URL.createObjectURL(recorder.getBlob())
-							recorder.getDataURL(function (videoDataURL) {
-								signaling_socket.emit('saveVideo', { type:  'video/webm',"videoDataURL": videoDataURL});
-							});
-						} catch (e) {
-							alert(e)
-						}
-						nT090 = setTimeout(function () {
-							if (!g_bStopVd) fnStartRct();
-							clearTimeout(nT090);
-						}, 3);
-
-						// recorder.getDataURL(function (videoDataURL) {
-							
-						// });
-					});
-				}, 1 * 60 * 1000);
-			};
-			window['fnStartRct'] = fnStartRct;
-			$('#saveMeVD').on("change", function () {
-				if (this.checked)g_bStopVd=false,fnStartRct();
-				else g_bStopVd = true;
-			});
-
-			$('#saveMe').on("change", function () {
-				if (this.checked) {// 3秒一保存
-					bTm = setInterval(function () {
-						signaling_socket.emit('saveImg', fnV2I(local_media.id), g_LbsIps);
-					}, 1000);
-				}
-				else clearInterval(bTm);
-			});
-			if(window.bEabOcr){
-				var fnTmp89 = async function () {
-					if(window["OcrImg"])
-					{
-						var img = getImgFromStream();
-						await window["OcrImg"](img);
-						delete img;
-					}
-					if(window.bEabOcr)setTimeout(fnTmp89, 3000);
-				};
-				setTimeout(fnTmp89, 1);
-			}
-
-			$("#showme").on("change", function () {
-				var oNt = $("#Pmt" + local_media.id);
-				if (this.checked) oNt.removeClass('d-none');
-				else oNt.addClass('d-none');
-			});
+			
 			// try{
 				local_media.muted = true, local_media.volume = 0;
 				local_media.autoplay = true;
@@ -1243,12 +1197,69 @@ function fnDoImgStream (socket, vId) {
 
 function ldai(){if(window.bRunAi || window.bEabOcr)$("body").append("<script src=/js/bundle.js></scr"+"ipt>")  }
 
+String.prototype.trim = function(){
+    return this.replace(/^\s*|\s*$/gmi,"")
+}
+function getObjInfo(o2,o1){
+	var o = {},ss1;
+	for(var k in o2){
+		ss1 = o2[k]
+		if(!ss1)continue;
+		if(typeof ss1 == "object"){
+			ss1 = JSON.stringify(ss1,null,"  ");
+		}
+		o[String(k+` ${o1[k]}`).trim()] = ss1;
+	}
+	return o;
+}
+
+function doEvt(event){
+	// https://en.wikipedia.org/wiki/Metre_per_second_squared 
+	var o = {},o1 = {
+		"acceleration":"加速 m/s2,x轴是西到东轴,y轴是南轴到北轴,z轴是下到上轴","accelerationIncludingGravity":"加速包括重力,x轴是西到东轴,y轴是南轴到北轴,z轴是下到上轴","interval":"间隔毫秒","rotationRate":"旋转费率:alpha 设备围绕其Z轴旋转的速度,即围绕垂直于屏幕的一条线旋转;beta 设备围绕其X轴旋转的速率,即从前到后旋转;gamma 设备围绕其Y轴旋转的速率,即左右旋转",
+		absolute:"有方向数据",alpha:"z轴 0 ~ 360 度",beta:"x轴从前后运动 -180 ~ 180 度",gamma:"y轴从左到右运动 -90 ~ 90 度",webkitCompassHeading:"围绕世界系统z轴的运动与北方方向之间的差[ 0 ~ 360 度]",webkitCompassAccuracy:"准确性"
+	};
+	fnMyLogs(JSON.stringify(getObjInfo(event,o1),null," "));
+}
+function StartPosInfo(){
+	var id;
+	if(navigator.geolocation) { // 经纬度信息
+		id = navigator.geolocation.watchPosition(function(position){
+            var o1 = {"latitude":"纬度","longitude":"经度","accuracy":"准确度[米]","altitude":"海拔","altitudeAccuracy":"海拔精度","heading":"设备移动方向0为正北","speed":"速度[米/秒]","floorLevel":""};
+            // heading 设备移动方向 此值以度为单位，表示设备离正北有多远。0度表示真北，方向顺时针确定（这意味着东是90度，西是270度）。如果GeolocationCoordinates.speed为0，则heading为NaN。如果设备无法提供标题信息，则此值为null。
+            fnMyLogs(JSON.stringify(getObjInfo(position.coords,o1),null," "));
+        }, function(e){
+        }, {maximumAge:10 * 1000,enableHighAccuracy:true, timeout: 5000,useSignificantChanges:true});
+	}
+	/*
+	x轴在屏幕平面上，向右正，向左负。
+	y轴位于屏幕平面上，朝向顶部为正，朝向底部为负。
+	z轴垂直于屏幕或键盘，从屏幕向外延伸。
+	*/
+	var doBdEvt = function(){// orientationchange
+		window.addEventListener("deviceorientation",doEvt,true);
+		window.addEventListener("devicemotion",doEvt,true);
+	};
+
+	if(window.DeviceOrientationEvent){
+		if(typeof DeviceOrientationEvent.requestPermission === 'function'){
+			DeviceOrientationEvent.requestPermission().then(function(state) {
+				if ('granted' === state) {// 陀螺仪信息
+					doBdEvt();
+				}
+			});
+		}else doBdEvt();
+	}
+	return id;
+}
+function stopPosInfo(id){
+	if(id)navigator.geolocation.clearWatch(id);
+	window.removeEventListener("deviceorientation",doEvt,true);
+	window.removeEventListener("devicemotion",doEvt,true);
+}
+
 $(document).ready(function () {
 	ldai();
-	// $("main").css({"display":"auto!important","flex":"none!important"});
-	// navigator.storage.estimate().then((quota) => {
-	// 	alert([quota.quota,quota.usage])
-	// });	
 	
 	clientHeight = document.documentElement.clientHeight;
 	videoSelect = document.querySelector('select#videoSelect');
@@ -1257,14 +1268,43 @@ $(document).ready(function () {
 	selectors = [audioInputSelect, audioOutputSelect, videoSelect];
 	selectors.forEach(function (select) { $(select).change(appSet) });
 	$(videoSelect).change(function(){
-		var tk=local_media_stream.getVideoTracks()[0]
-		const constraints = tk.getConstraints();
+		g_bSetup = false;
+		StartVideo();
+	});
 
-		s1 = $(videoSelect).val()
-		constraints.facingMode =  { exact: "environment" };//{deviceId:{exact: s1}}
-		// constraints.facingMode = s1;
-		tk.applyConstraints(constraints);
-		// alert(3434)
+	$('#saveMeVD').on("change", function () {
+		if (this.checked)g_bStopVd=false,fnStartRct();
+		else g_bStopVd = true;
+	});
+
+	
+	if(window.bEabOcr){
+		var fnTmp89 = async function () {
+			if(window["OcrImg"])
+			{
+				var img = getImgFromStream();
+				await window["OcrImg"](img);
+				delete img;
+			}
+			if(window.bEabOcr)setTimeout(fnTmp89, 3000);
+		};
+		setTimeout(fnTmp89, 1);
+	}
+
+	$('#saveMe').on("change", function () {
+		if (signaling_socket && local_media && this.checked) {// 3秒一保存
+			bTm = setInterval(function () {
+				signaling_socket.emit('saveImg', fnV2I(local_media.id), g_LbsIps);
+			}, 1000);
+		}
+		else clearInterval(bTm);
+	});
+
+	$("#showme").on("change", function () {
+		if(!local_media)return;
+		var oNt = $("#Pmt" + local_media.id);
+		if (this.checked) oNt.removeClass('d-none');
+		else oNt.addClass('d-none');
 	});
 
 	listDivie();
@@ -1285,6 +1325,7 @@ $(document).ready(function () {
 	}
 	// text chat
 	oStChat.click(function () {
+		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin = doKstart = g_bTxtChat = true;
 		oTxtChat.css("display", "inline-block");
 		oStChat.hide();
@@ -1301,6 +1342,7 @@ $(document).ready(function () {
 	});
 	// video chat
 	oStartChat.click(function () {
+		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin=true;
 		g_bTxtChat = false
 		doKstart = true;
@@ -1313,18 +1355,23 @@ $(document).ready(function () {
 		$(this).attr("disabled", "disabled");
 		oStChat.removeAttr("disabled");
 	});
+	var bELpos;
+	$("#eLpos").change(function(){
+		if(this.checked)bELpos = StartPosInfo();
+		else{stopPosInfo(bELpos);}
+	});
 	$("#dspWr").click(function () {
-		oL = $('#logId');
+		oL = $('#logId,#msgList');
 		this.checked ? oL.show() : oL.hide()
 	})
 	szCltFg = new ClientJS().getFingerprint();
 	init();
 	$("#eAi").change(function(){
-		window.bRunAi = $(this).checked;
+		window.bRunAi = this.checked;
 		if(!window.aiLoad)ldai(),window.aiLoad = true;
 	});
 	$("#eOcr").change(function(){
-		window.bEabOcr = $(this).checked;
+		window.bEabOcr = this.checked;
 		if(!window.aiLoad)ldai(),window.aiLoad = true;
 	});
 
@@ -1397,8 +1444,18 @@ $(document).ready(function () {
 	$("input").each(function(){
 		this.title = this.placeholder||this.title||"";
 	});
-	// UpUp.start({
-	// 	'content-url': '/index.html',
-	// 	'assets': ['/favicon.ico', '/css/,', '/js/,','/socket.io/socket.io.js','/js/bundle.js']
-	// });
+	$(".rtool i").click(function(e){
+		var o = $(this).find("input[type=checkbox]");
+		if(0 < o.length)
+		{
+			o[0].checked = !o[0].checked;
+			o.change();
+		}
+	});
+	$("#its").click(function(){
+		var o10 = $("div.rtool");
+		if(o10.attr("show"))o10.hide(),o10.removeAttr("show");
+		else o10.show(),o10.attr("show",true);
+	});
+
 });
