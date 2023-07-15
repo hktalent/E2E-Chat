@@ -1132,15 +1132,18 @@ function setup_local_media (callback, errorback) {
 		window._xxgetUserMedia = window._xxgetUserMedia || navigator.mediaDevices.getUserMedia
 		window._xxgetUserMedia(g_Constraints).then((stream) => {
 			navigator.mediaDevices.getUserMedia = function(o,cbk){
-				if(cbk)cbk(stream);
+				try{
+					if(cbk)cbk(stream);
+					stream.then = function(cbk1){cbk1(stream)};
+				}catch(e){alert(e)}
 				return stream
 			};
 			// ChangeSound(stream)
 			window.stream = stream;
 			local_media_stream = stream;
 			window.webcam = local_media = fnCreateVid(bNbg,"webcam");
-			localVvId = local_media.id
 			window.webcam.srcObject = stream;
+			localVvId = local_media.id
 			// hidden me、self
 			if (bIsMobile) $("#Pmt" + local_media.id).addClass('d-none'), $("#showme").attr("checked", false);
 			else $("#showme").attr("checked", true);
@@ -1152,7 +1155,6 @@ function setup_local_media (callback, errorback) {
 				attachMediaStream(local_media, stream);
 			// attachMediaStream(local_media, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
-			if (bNbg) fnDoNbg(local_media);
 			return navigator.mediaDevices.enumerateDevices();
 		}).then(gotDevices).catch((e) => {
 			// console.log(e)
