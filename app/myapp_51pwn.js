@@ -202,7 +202,7 @@ function myapp(option)
         // "strategy":// 
         "filter":function(req,res)
         {
-            if(-1 < req.path.indexOf("/model/") && -1 == req.path.indexOf(".json"))return false;
+            if(-1 < req.path.indexOf("/model") && -1 == req.path.indexOf(".json"))return false;
             var s = String(res && res.getHeader('Content-Type') || "");
             if(-1 < s.indexOf("text/"))
             {
@@ -227,7 +227,7 @@ function myapp(option)
     function doZipSFl(szFl,res){
         szFl = szFl.replace(/\/+/g,"/")
         res.setHeader("Content-Type",mime.lookup(szFl));
-        var bZip = -1 == szFl.indexOf("/model/") && -1 == szFl.indexOf(".json")
+        var bZip = -1 == szFl.indexOf("/model") && -1 == szFl.indexOf(".json")
         // if(bZip)res.setHeader('Content-Encoding', 'gzip');
         var ss = oHtmlCc[szFl] || fs.readFileSync(szFl);
         oHtmlCc[szFl] = ss;
