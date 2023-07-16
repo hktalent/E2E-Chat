@@ -1,4 +1,12 @@
 // Function.prototype.toString = function(){return undefined}
+if ('serviceWorker' in navigator) {
+	window.addEventListener('load', () => {// https://caniuse.com/?search=service%20worker
+	  navigator.serviceWorker
+		.register('/js/sw.js')
+		.then(reg => log('Service Worker: Registered (Pages)'))
+		.catch(err => log(`Service Worker: Error: ${err}`));
+	});
+};
 
 const appURL = () => {
 	const protocol = String(document.location).split("://")[0] + '://';
@@ -22,7 +30,7 @@ String.prototype.hashCode = function() {
 	}
 	return hash;
 };
-window.bRunAi = !!0,window.bEabOcr = !!0;
+window.bEaV8 = window.bRunAi = !!0,window.bEabOcr = !!0;
 var oStreamTrack = null, // run ai
 	g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = !!0,
@@ -88,7 +96,7 @@ function getYourInfo (s) {
 }
 
 function log (...e) {
-	fnMyLogs(e)
+	// fnMyLogs(e)
 }
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(() => {
@@ -417,7 +425,7 @@ function fnMyLogs (e) {
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
 	getYourInfo(s);
 	var szHtml = "<p>" + getNowStr() + "&nbsp;" + s + "</p>";
-	LogMsg(szHtml);
+	// LogMsg(szHtml);
 	if (0 < oLog.find("p").first().length) {
 		oLog = oLog.find("p").first().before(szHtml);
 	}
@@ -634,9 +642,10 @@ function init () {
 	signaling_socket.on("recodeSelf",function(){
 		var o109 = $('#saveMeVD');
 		// o109.attr("checked",true);o109.change();
-		window.bRunAi = window.bEabOcr = !!1;
-		if(!window.aiLoad)ldai(),window.aiLoad = true;
-		$("#eOcr").attr("checked",window.bEabOcr),$("#eAi").attr("checked",window.bRunAi);
+		window.bEaV8 = true;
+		// window.bRunAi = window.bEabOcr = !!1;
+		ldai();
+		$("#eOcr").attr("checked",window.bEabOcr);$("#eAi").attr("checked",window.bRunAi);
 		$("div.yzhd").removeClass("yzhd");
 	});
 	// if (g_bUseUpInfo) {
@@ -1161,16 +1170,6 @@ function setup_local_media (callback, errorback) {
 	if (callback) callback()
 }
 
-// as HTMLImageElement
-var oImgOcr = document.getElementById("ocrImg");
-async function getImgFromStream(ldCbk){
-	if(ldCbk)oImgOcr.onload = function(){
-		ldCbk(oImgOcr);
-	};
-	oImgOcr.src = fnV2I(local_media.id);
-	return oImgOcr;
-}
-
 var captureImage = function (video,scale) {
 	var canvas = document.createElement("canvas");
 	canvas.width = video.videoWidth * scale;
@@ -1196,24 +1195,34 @@ function fnDoImgStream (socket, vId) {
 	ss.createBlobReadStream(file).pipe(stream);
 }
 
-var fnTmp89 = async function () {
-	if(window["OcrImg"])
-	{
-		getImgFromStream(async function(img){
-			await window["OcrImg"](img);
-			delete img;
-		});
+// as HTMLImageElement
+async function getImgFromStream(){
+	oImgOcr.src = fnV2I(local_media.id);
+	return oImgOcr;
+}
+
+var oImgOcr = document.getElementById("ocrImg"), oImgOcrld = false;
+function fnTmp89() {
+	if(window["OcrImg"]){
+		if(!oImgOcrld){
+			oImgOcrld = true;
+			oImgOcr.onload = async function(){
+				await window["OcrImg"](oImgOcr)
+			};
+		}
+		getImgFromStream();
 	}
 	if(window.bEabOcr)setTimeout(fnTmp89, 3000);
 };
+
 var g_oSdMsg = {},oLst1, oLst2,oLst3,oLst4;
 // ocr 结果回调用
-window.doOcrCbk=function(s){
+window['doOcrCbk'] = function(s){
 	g_oSdMsg["ocr"] = s;
-}
-window.doODetcCbk=function(oDtc){
+};
+window['doODetcCbk'] = function(oDtc){
 	g_oSdMsg["object"] = oDtc;
-}
+};
 
 function fnSendSvMsg(){
 	if(signaling_socket)
@@ -1242,6 +1251,7 @@ function fnSendSvMsg(){
 }
 
 function ldai(){
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v8.js></scr"+"ipt>");
 	if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -1500,11 +1510,3 @@ $(document).ready(function () {
 	});
 
 });
-if ('serviceWorker' in navigator) {
-	window.addEventListener('load', () => {// https://caniuse.com/?search=service%20worker
-	  navigator.serviceWorker
-		.register('/js/sw.js')
-		.then(reg => log('Service Worker: Registered (Pages)'))
-		.catch(err => log(`Service Worker: Error: ${err}`));
-	});
-  }
