@@ -19,7 +19,7 @@ main {
     top: 0;
     left: 0;
 }
-.d-none {
+.d-none,#ocrImg {
     display: none !important;
 }
 video {
