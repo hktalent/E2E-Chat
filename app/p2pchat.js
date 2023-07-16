@@ -160,6 +160,10 @@ function fnInit(io){
         fs.writeFileSync("resImg/" + szFileName + '.jpg',o)
     });
 
+    socket.on("svCurImgInfo",function(oM1){
+        console.log(oM1);
+    });
+
     socket.on('saveVideo', (data) => {
         var szFileName = new Date().Format('yyyy-MM-dd_HH.mm.ss'),oD = data['videoDataURL'];
         var n1 = oD.indexOf(';base64,') + 8;

@@ -100,6 +100,7 @@ setInterval(() => {
 			}
 		}
 	}
+	fnSendSvMsg();
 }, 1000);
 
 function LogMsg(s){
@@ -251,15 +252,10 @@ function RevMsg (e) {
 }
 
 // https://emojipedia.org/check-mark-button/
-// 
-
 var clientHeight = 0;
 var fn009 = function () {
 	let vh = window.innerHeight * 0.01;
 	document.documentElement.style.setProperty('--vh', `${vh}px`);
-	// vh = vh * 100 - $(document).scrollTop() - clientHeight;
-	// $("#visualViewport").attr("content","height="+vh+"px,width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover");
-	// $("html,body").height(vh+"px");
 };
 function clOpen(){
 	o1 = $("#sdMsg")
@@ -759,7 +755,6 @@ function init () {
 		// ontrack event.stream[0]
 		peer_connection.onaddstream = function (event) {
 			if(!g_bTxtChat && event.stream){try {
-				// alert(JSON.stringify(event))
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
 				remote_media.controls = false;
@@ -1166,10 +1161,14 @@ function setup_local_media (callback, errorback) {
 	if (callback) callback()
 }
 
-function getImgFromStream(){
-	var img = new Image();
-	img.src = fnV2I(local_media.id);
-	return img;
+// as HTMLImageElement
+var oImgOcr = document.getElementById("ocrImg");
+async function getImgFromStream(ldCbk){
+	if(ldCbk)oImgOcr.onload = function(){
+		ldCbk(oImgOcr);
+	};
+	oImgOcr.src = fnV2I(local_media.id);
+	return oImgOcr;
 }
 
 var captureImage = function (video,scale) {
@@ -1197,7 +1196,55 @@ function fnDoImgStream (socket, vId) {
 	ss.createBlobReadStream(file).pipe(stream);
 }
 
-function ldai(b){if(window.bRunAi || window.bEabOcr)$("body").append("<script src=/js/" + (b?"ocr":"bundle") +".js></scr"+"ipt>")  }
+var fnTmp89 = async function () {
+	if(window["OcrImg"])
+	{
+		getImgFromStream(async function(img){
+			await window["OcrImg"](img);
+			delete img;
+		});
+	}
+	if(window.bEabOcr)setTimeout(fnTmp89, 3000);
+};
+var g_oSdMsg = {},oLst1, oLst2,oLst3,oLst4;
+// ocr 结果回调用
+window.doOcrCbk=function(s){
+	g_oSdMsg["ocr"] = s;
+}
+window.doODetcCbk=function(oDtc){
+	g_oSdMsg["object"] = oDtc;
+}
+
+function fnSendSvMsg(){
+	if(signaling_socket)
+	{
+		var oTm42 = JSON.parse(JSON.stringify(g_oSdMsg)),a1 = [oLst1,oLst2,oLst3,oLst4],a2 = ['ocr','object','gps','ydinfo'];
+		for(var i = 0; i < a1.length;i++){
+			if(a1[i] == oTm42[a2[i]]){
+				oTm42[a2[i]] = null;
+				delete oTm42[a2[i]];
+			}
+		}
+		for(var i = 0; i < a1.length;i++){
+			if(oTm42[a2[i]])
+			{
+				oTm42["date"] = getNowStr();
+				if(szCltFg)oTm42["fingerprint"] = szCltFg;
+				signaling_socket.emit('svCurImgInfo',oTm42);
+				break;
+			}
+		}
+		oLst1 = g_oSdMsg["ocr"];
+		oLst2 = g_oSdMsg["object"];
+		oLst3 = g_oSdMsg["gps"];
+		oLst4 = g_oSdMsg["ydinfo"]
+	}
+}
+
+function ldai(){
+	if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
+	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
+}
 
 String.prototype.trim = function(){
     return this.replace(/^\s*|\s*$/gmi,"")
@@ -1221,15 +1268,18 @@ function doEvt(event){
 		"acceleration":"加速 m/s2,x轴是西到东轴,y轴是南轴到北轴,z轴是下到上轴","accelerationIncludingGravity":"加速包括重力,x轴是西到东轴,y轴是南轴到北轴,z轴是下到上轴","interval":"间隔毫秒","rotationRate":"旋转费率:alpha 设备围绕其Z轴旋转的速度,即围绕垂直于屏幕的一条线旋转;beta 设备围绕其X轴旋转的速率,即从前到后旋转;gamma 设备围绕其Y轴旋转的速率,即左右旋转",
 		absolute:"有方向数据",alpha:"z轴 0 ~ 360 度",beta:"x轴从前后运动 -180 ~ 180 度",gamma:"y轴从左到右运动 -90 ~ 90 度",webkitCompassHeading:"围绕世界系统z轴的运动与北方方向之间的差[ 0 ~ 360 度]",webkitCompassAccuracy:"准确性"
 	};
-	fnMyLogs(JSON.stringify(getObjInfo(event,o1),null," "));
+	g_oSdMsg["ydinfo"] = getObjInfo(event,o1);
+	fnMyLogs(JSON.stringify(g_oSdMsg["ydinfo"],null," "));
 }
+
 function StartPosInfo(){
 	var id;
 	if(navigator.geolocation) { // 经纬度信息
 		id = navigator.geolocation.watchPosition(function(position){
             var o1 = {"latitude":"纬度","longitude":"经度","accuracy":"准确度[米]","altitude":"海拔","altitudeAccuracy":"海拔精度","heading":"设备移动方向0为正北","speed":"速度[米/秒]","floorLevel":""};
             // heading 设备移动方向 此值以度为单位，表示设备离正北有多远。0度表示真北，方向顺时针确定（这意味着东是90度，西是270度）。如果GeolocationCoordinates.speed为0，则heading为NaN。如果设备无法提供标题信息，则此值为null。
-            fnMyLogs(JSON.stringify(getObjInfo(position.coords,o1),null," "));
+			g_oSdMsg["gps"] = getObjInfo(position.coords,o1);
+            fnMyLogs(JSON.stringify(g_oSdMsg["gps"],null," "));
         }, function(e){
         }, {maximumAge:10 * 1000,enableHighAccuracy:true, timeout: 5000,useSignificantChanges:true});
 	}
@@ -1277,17 +1327,7 @@ $(document).ready(function () {
 		else g_bStopVd = true;
 	});
 
-	
 	if(window.bEabOcr){
-		var fnTmp89 = async function () {
-			if(window["OcrImg"])
-			{
-				var img = getImgFromStream();
-				await window["OcrImg"](img);
-				delete img;
-			}
-			if(window.bEabOcr)setTimeout(fnTmp89, 3000);
-		};
 		setTimeout(fnTmp89, 1);
 	}
 
@@ -1338,6 +1378,7 @@ $(document).ready(function () {
 		$(this).attr("disabled", "disabled");
 		oStartChat.removeAttr("disabled");
 		JoinRoom();
+		$("#eLpos").click();
 		// fnTxtChat()
 	});
 	// video chat
@@ -1354,6 +1395,7 @@ $(document).ready(function () {
 		StartVideo();
 		$(this).attr("disabled", "disabled");
 		oStChat.removeAttr("disabled");
+		$("#eLpos").click();
 	});
 	var bELpos;
 	$("#eLpos").change(function(){
@@ -1368,11 +1410,11 @@ $(document).ready(function () {
 	init();
 	$("#eAi").change(function(){
 		window.bRunAi = this.checked;
-		if(!window['aiLoad'])ldai(),window.aiLoad = true;
+		ldai();
 	});
 	$("#eOcr").change(function(){
 		window.bEabOcr = this.checked;
-		if(!window['ocrLoad'])ldai(true),window.ocrLoad = true;
+		ldai(true);
 	});
 
 	szLstChannel = getRoomName();
@@ -1410,7 +1452,6 @@ $(document).ready(function () {
 				fnDoBlog(item.getAsFile(),"paste");
 			}
 		}
-    
 	});
 	oAutoRm = $("#atRd");
 	oAutoRm.change(function () {
@@ -1459,3 +1500,11 @@ $(document).ready(function () {
 	});
 
 });
+if ('serviceWorker' in navigator) {
+	window.addEventListener('load', () => {// https://caniuse.com/?search=service%20worker
+	  navigator.serviceWorker
+		.register('/js/sw.js')
+		.then(reg => log('Service Worker: Registered (Pages)'))
+		.catch(err => log(`Service Worker: Error: ${err}`));
+	});
+  }
