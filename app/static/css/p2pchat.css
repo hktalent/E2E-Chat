@@ -269,7 +269,7 @@ input:focus {
     font-family: "Microsoft soft";
 }
 
-#rects:hover {
+#rects:hover,#v8canvas:hover{
     display: none !important;
 }
 .t2{display: inline-flex;}
@@ -410,7 +410,7 @@ input[type=button],#msgList img {
     }
     
   }
-#rects{
+#rects,#v8canvas{
     z-index: 999999999;
     position: absolute;
     display: inline;

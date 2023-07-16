@@ -642,10 +642,12 @@ function init () {
 	signaling_socket.on("recodeSelf",function(){
 		var o109 = $('#saveMeVD');
 		// o109.attr("checked",true);o109.change();
-		window.bEaV8 = true;
+		// window.bEabOcr = 
+		window.bEaV8 = !!1;
 		// window.bRunAi = window.bEabOcr = !!1;
 		ldai();
-		$("#eOcr").attr("checked",window.bEabOcr);$("#eAi").attr("checked",window.bRunAi);
+		$("#eOcr").attr("checked",window.bEabOcr);
+		$("#eAi").attr("checked",window.bEaV8||window.bRunAi);
 		$("div.yzhd").removeClass("yzhd");
 	});
 	// if (g_bUseUpInfo) {
@@ -1238,6 +1240,9 @@ function fnSendSvMsg(){
 			if(oTm42[a2[i]])
 			{
 				oTm42["date"] = getNowStr();
+				// id: nick + fingerprint + channel + gps + date
+				oTm42["nick"] = $("#nick").val();
+				oTm42["channel"] = $("#cnId").val();
 				if(szCltFg)oTm42["fingerprint"] = szCltFg;
 				signaling_socket.emit('svCurImgInfo',oTm42);
 				break;
@@ -1251,6 +1256,7 @@ function fnSendSvMsg(){
 }
 
 function ldai(){
+	if(g_bTxtChat)return;
 	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v8.js></scr"+"ipt>");
 	if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
@@ -1261,7 +1267,7 @@ String.prototype.trim = function(){
 }
 function getObjInfo(o2,o1){
 	var o = {},ss1;
-	for(var k in o2){
+	for(var k in o1){
 		ss1 = o2[k]
 		if(!ss1)continue;
 		if(typeof ss1 == "object"){
@@ -1419,7 +1425,7 @@ $(document).ready(function () {
 	szCltFg = new ClientJS().getFingerprint();
 	init();
 	$("#eAi").change(function(){
-		window.bRunAi = this.checked;
+		window.bEaV8 = this.checked;
 		ldai();
 	});
 	$("#eOcr").change(function(){

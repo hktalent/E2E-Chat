@@ -20,6 +20,7 @@ rcp app/static/index.html /root/${xxx}/app/static/
 
 rcp app/static/js/bundle.js /root/${xxx}/app/static/js/
 rcp app/static/js/ocr.js /root/${xxx}/app/static/js/
+rcp app/static/js/v8.js /root/${xxx}/app/static/js/
 
 rcp app/static/js/client.min.js.map /root/${xxx}/app/static/js/
 rcp app/static/js/socket.io.js /root/${xxx}/app/static/js/
@@ -42,6 +43,11 @@ rcp app/p2pchat.js_1 /root/${xxx}/app/p2pchat.js
 
 rcp app/server.js /root/${xxx}/app/
 rcp app/expressOptions.js /root/${xxx}/app/
+
+
+# rcp app/static/model/yolov8n_web_model /root/${xxx}/app/static/model/
+# rcp app/static/model/yolov8n-seg_web_model /root/${xxx}/app/static/model/
+
 # rcp app/static/models /root/${xxx}/app/static/
 # rcp app/static/model /root/${xxx}/app/static/
 
