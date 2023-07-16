@@ -14,6 +14,12 @@
 - 默认 1 分钟自动销毁聊天内容，特别注意，苹果手机目前测试发现，如果浏览器在后台后，计时器会被系统暂停，重新打开后计时器会继续
 
 # /usr/local/etc/turnserver.conf
+
+https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js
+https://github.com/tensorflow/tfjs-models
+https://tensorflow.google.cn/js/models?hl=zh-cn
+https://storage.googleapis.com/tfjs-models/demos/face-landmarks-detection/index.html?model=mediapipe_face_mesh
+
 ```
 # cat /usr/local/etc/turnserver.conf|grep -Ev '^#|^\s*$'
 listening-device=eth0
