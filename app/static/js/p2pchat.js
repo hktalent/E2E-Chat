@@ -997,6 +997,7 @@ function appSet() {
 		noiseSuppression: true,
 		echoCancellation: true, //{ exact: true },//'system',
 		autoGainControl: false,
+		suppressLocalAudioPlayback: true,
 		sampleRate: { max: 48000, min: 48000 },
 		channelCount: { max: 2, min: 1 },
 		volume: 1.0
