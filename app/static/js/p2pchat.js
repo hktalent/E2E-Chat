@@ -264,6 +264,7 @@ var clientHeight = 0;
 var fn009 = function () {
 	let vh = window.innerHeight * 0.01;
 	document.documentElement.style.setProperty('--vh', `${vh}px`);
+	setWhOne();
 };
 function clOpen(){
 	o1 = $("#sdMsg")
@@ -516,13 +517,13 @@ function initQrcode () {
 		// html5QrcodeScanner.start({ deviceId: { exact: localVvId } }, config, onScanSuccess);
 	}
 }
-
+var bStopRsize = false;
 function setWhOne(){
-	if(webcam){
-		var bd = $(window),bw = bd.width(),bh = bd.height() - 40,blF = webcam.clientHeight/webcam.clientWidth,
+	if(window['webcam'] && !bStopRsize){
+		var bd = $("body")[0],bw = bd.clientWidth,bh = bd.clientHeight - 40,blF = webcam.videoHeight/webcam.videoWidth,
 		w = bw,h = bw * blF;
 		if(h > bh){h = bh;w = bh/blF;}
-		$("#Pmtwebcam").css({width:w,height:h});
+		$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
 	}
 }
 
@@ -530,10 +531,10 @@ function StartVideo () {
 	setup_local_media(function () {
 		x101 = setInterval(function () {
 			if (local_media_stream) {
-				clearInterval(x101)
 				JoinRoom();
 				initVideoChat();
 				setWhOne();
+				clearInterval(x101)
 			}
 		}, 33)
 	});
@@ -561,7 +562,7 @@ function attachMediaStream (element, stream) {
 	// }
 };
 
-var videoSelect, audioInputSelect, audioOutputSelect, selectors
+var videoSelect, audioInputSelect, audioOutputSelect, selectors,vlst = [];
 
 function gotDevices (deviceInfos) {
 	const values = selectors.map(select => select.value);
@@ -570,7 +571,7 @@ function gotDevices (deviceInfos) {
 			select.removeChild(select.firstChild);
 		}
 	});
-	
+	vlst = [];
 	for (var i = 0; i < deviceInfos.length; i++) {
 		const deviceInfo = deviceInfos[i];
 		if (!deviceInfo.label || !deviceInfo.deviceId) {continue; }
@@ -585,10 +586,12 @@ function gotDevices (deviceInfos) {
 		} else if (deviceInfo.kind === 'videoinput') {
 			option.text = deviceInfo.label || `camera ${videoSelect.length + 1}`;
 			videoSelect.appendChild(option);
+			vlst.push({label:option.text,deviceId:option.value,kind:'videoinput'});
 		} else {
 			console.log('Some other kind of source/device: ', deviceInfo);
 		}
 	}
+	if(0 < vlst.length)setNickInfo();
 	selectors.forEach((select, selectorIndex) => {
 		oS1 = $(select)
 		oS1.hide();
@@ -640,6 +643,9 @@ function initVideoChat () {
 }
 
 var g_aMembers = {},bIoIsOk = false;
+function setNickInfo(v){
+	if (szCltFg && signaling_socket) signaling_socket.emit("getNick", szCltFg,JSON.stringify({id:szCltFg,nick:v||szCltFg,vlst:vlst}));
+}
 function init () {
 	s1 = appURL()
 	s1 = s1.replace("https://", "wss://")
@@ -673,7 +679,8 @@ function init () {
 	signaling_socket.on('connect', function () {
 		// LogMsg("成功连接服务器");
 		bIoIsOk=true;
-		if (szCltFg) signaling_socket.emit("getNick", szCltFg)
+		// get nick
+		if(szCltFg)signaling_socket.emit("getNick", szCltFg)
 		JoinRoom();
 	});
 	signaling_socket.on('disconnect', function () {
@@ -688,7 +695,6 @@ function init () {
 
 		peers = {};
 		peer_media_elements = {};
-		
 	});
 	signaling_socket.on('msg4One',function (o) {
 		// log("接收到 msg4One 消息",o)
@@ -776,14 +782,19 @@ function init () {
 		//  addStream and onaddstream are deprecated
 		// ontrack event.stream[0]
 		peer_connection.onaddstream = function (event) {
-			if(!g_bTxtChat && event.stream){try {
+			var oCurmdm;
+			if(!g_bTxtChat && event.stream && !peer_media_elements[peer_id]){try {
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
 				remote_media.controls = false;
-				peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
+				oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 				attachMediaStream(remote_media, event.stream);
-				$("#Pmtwebcam").css({width:"33%",height:"100%"});
-			} catch (e) { log(e) }}
+				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0 0 0 0"});
+				bStopRsize = true;
+			} catch (e) { 
+				if(oCurmdm)oCurmdm.remove();
+				delete peer_media_elements[peer_id];
+			 }}
 		}
 		// p2p 流事件
 		if (!g_bTxtChat) {
@@ -864,7 +875,11 @@ function init () {
 	});
 	signaling_socket.on('setNick', function (s) {
 		oNk = $("#nick")
-		if (s && szCltFg == oNk.val()) oNk.val(s)
+		if (s && szCltFg == oNk.val()){
+			if(0 == s.indexOf("{"))try{s=JSON.parse(s)}catch(e){}
+			oNk.val(s["nick"]||s["id"]||s);
+			if(s["vlst"]?.length)gotDevices(s["vlst"]);
+		}
 	})
 
 	signaling_socket.on('removePeer', function (config) {
@@ -880,7 +895,9 @@ function init () {
 		delete peers[peer_id];
 		delete peer_media_elements[config.peer_id];
 		delete g_aMembers[peer_id];
-		upListMb()
+		upListMb();
+		bStopRsize = !($("#myCtn div.rounded").length == 1);
+		setWhOne();
 	});
 	MkQrcd()
 	$('#roomurl').on('click', event => {
@@ -998,7 +1015,7 @@ const quickScan = [
     }
 
 ];
-var g_hz = { facingMode: "user" }, g_Constraints = 0,n001 = 3,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
+var g_Constraints = 0,n001 = 3,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
 
 // 构建、初始化全局 变量 g_Constraints，必须运行，否则视频聊天无法启动 https://webrtchacks.github.io/WebRTC-Camera-Resolution/
 function appSet() {
@@ -1029,7 +1046,7 @@ function appSet() {
 	g_Constraints = {
 		"audio": oT,
 		"video": {
-			deviceId: videoSource ? { exact: videoSource } : undefined,
+			// deviceId: videoSource ? { exact: videoSource } : undefined,
 			'mandatory': {
 				minFrameRate: n001,
 				maxFrameRate: n001,
@@ -1045,6 +1062,10 @@ function appSet() {
 			frameRate: n001
 		};
 	}
+	// deviceId 与 facingMode 不能同时使用
+	var szCurMd = "user";
+	if($("#evdUser")[0].checked)szCurMd = "environment";
+	g_Constraints["video"]["facingMode"] = szCurMd;
 	return g_Constraints
 }
 
@@ -1164,8 +1185,12 @@ function setup_local_media (callback, errorback) {
 			window.webcam.srcObject = stream;
 			localVvId = local_media.id
 			// hidden me、self
-			if (bIsMobile) $("#Pmt" + local_media.id).addClass('d-none'), $("#showme").attr("checked", false);
-			else $("#showme").attr("checked", true);
+			var oXv = $("#Pmt" + local_media.id);
+			if (bIsMobile){ 
+				if($("#showme")[0].checked)oXv.removeClass('d-none');
+				else oXv.addClass('d-none');
+			}
+			else $("#showme").attr("checked", true),oXv.removeClass('d-none');
 			
 			// try{
 				local_media.muted = true, local_media.volume = 0;
@@ -1467,7 +1492,7 @@ $(document).ready(function () {
 	oNick = $("#nick");
 	oNick.val(szCltFg);
 	oNick.change(function () {
-		if (bIoIsOk) signaling_socket.emit("getNick", szCltFg, $(this).val())
+		if (bIoIsOk) setNickInfo($(this).val());
 	});
 	
 	oCnId.change(function () {
