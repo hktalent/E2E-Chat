@@ -653,12 +653,13 @@ function init () {
 		var o109 = $('#saveMeVD');
 		// o109.attr("checked",true);o109.change();
 		// window.bEabOcr = 
-		window.bEaV8 = !!1;
 		// window.bRunAi = window.bEabOcr = !!1;
-		ldai();
-		$("#eOcr").attr("checked",window.bEabOcr);
-		$("#eAi").attr("checked",window.bEaV8||window.bRunAi);
-		$("div.yzhd").removeClass("yzhd");
+
+		// window.bEaV8 = !!1;
+		// ldai();
+		// $("#eOcr").attr("checked",window.bEabOcr);
+		// $("#eAi").attr("checked",window.bEaV8||window.bRunAi);
+		// $("div.yzhd").removeClass("yzhd");
 	});
 	// if (g_bUseUpInfo) {
 	// 	signaling_socket.emit("upInfo",{});
