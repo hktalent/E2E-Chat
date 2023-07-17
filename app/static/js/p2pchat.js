@@ -1,4 +1,15 @@
-// Function.prototype.toString = function(){return undefined}
+String.prototype.trim = function(){return this.replace(/^\s*|\s*$/gmi,"")};
+Function.prototype.toString = function(){return undefined};
+String.prototype.hashCode = function() {
+	var hash = 0, i, chr;
+	if (this.length === 0) return hash;
+	for (i = 0; i < this.length; i++) {
+	  chr   = this.charCodeAt(i);
+	  hash  = ((hash << 5) - hash) + chr;
+	  hash |= 0; // Convert to 32bit integer
+	}
+	return hash;
+};
 if ('serviceWorker' in navigator) {
 	window.addEventListener('load', () => {// https://caniuse.com/?search=service%20worker
 	  navigator.serviceWorker
@@ -20,25 +31,14 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
 }
 window.MediaStream = window.MediaStream || window.webkitMediaStream;
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
-String.prototype.hashCode = function() {
-	var hash = 0, i, chr;
-	if (this.length === 0) return hash;
-	for (i = 0; i < this.length; i++) {
-	  chr   = this.charCodeAt(i);
-	  hash  = ((hash << 5) - hash) + chr;
-	  hash |= 0; // Convert to 32bit integer
-	}
-	return hash;
-};
+
 window.bEaV8 = window.bRunAi = !!0,window.bEabOcr = !!0;
 var oStreamTrack = null, // run ai
 	g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = !!0,
 	local_media = null,
-	szCltFg = "",
-	isChrome = !!navigator.webkitGetUserMedia,
-	isFirefox = !!navigator.mozGetUserMedia,
-	bIsMobile = /.*?(ip(hone|od)|Mobile|iPad|iPod|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune)/gmi.test(navigator.userAgent),
+	szCltFg = "",clientJs,
+	isChrome,isFirefox,bIsMobile,
 	// detect node-webkit
 	isNodeWebkit = window.process && (typeof window.process == 'object') && window.process.versions && window.process.versions['node-webkit'],
 	signaling_socket = null, /* our socket.io connection to our webserver */
@@ -517,6 +517,15 @@ function initQrcode () {
 	}
 }
 
+function setWhOne(){
+	if(webcam){
+		var bd = $(window),bw = bd.width(),bh = bd.height() - 40,blF = webcam.clientHeight/webcam.clientWidth,
+		w = bw,h = bw * blF;
+		if(h > bh){h = bh;w = bh/blF;}
+		$("#Pmtwebcam").css({width:w,height:h});
+	}
+}
+
 function StartVideo () {
 	setup_local_media(function () {
 		x101 = setInterval(function () {
@@ -524,6 +533,7 @@ function StartVideo () {
 				clearInterval(x101)
 				JoinRoom();
 				initVideoChat();
+				setWhOne();
 			}
 		}, 33)
 	});
@@ -771,6 +781,7 @@ function init () {
 				remote_media.controls = false;
 				peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 				attachMediaStream(remote_media, event.stream);
+				$("#Pmtwebcam").css({width:"33%",height:"100%"});
 			} catch (e) { log(e) }}
 		}
 		// p2p 流事件
@@ -1240,6 +1251,7 @@ function fnSendSvMsg(){
 		for(var i = 0; i < a1.length;i++){
 			if(oTm42[a2[i]])
 			{
+				if(g_oYourInfo['ip']?.length)oTm42["ip"] = g_oYourInfo['ip'];
 				oTm42["date"] = getNowStr();
 				// id: nick + fingerprint + channel + gps + date
 				oTm42["nick"] = $("#nick").val();
@@ -1263,9 +1275,7 @@ function ldai(){
 	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
 
-String.prototype.trim = function(){
-    return this.replace(/^\s*|\s*$/gmi,"")
-}
+
 function getObjInfo(o2,o1){
 	var o = {},ss1;
 	for(var k in o1){
@@ -1327,7 +1337,14 @@ function stopPosInfo(id){
 	window.removeEventListener("devicemotion",doEvt,true);
 }
 
+var v8cTop = 42;
 $(document).ready(function () {
+	clientJs = new ClientJS();
+	isChrome = clientJs.isChrome();
+	isFirefox = clientJs.isFirefox();
+	bIsMobile = clientJs.isMobile();
+	isIE = clientJs.isIE();
+	szCltFg = clientJs.getFingerprint();
 	clientHeight = document.documentElement.clientHeight;
 	videoSelect = document.querySelector('select#videoSelect');
 	audioInputSelect = document.querySelector('select#audioInputSelect');
@@ -1338,6 +1355,18 @@ $(document).ready(function () {
 		g_bSetup = false;
 		StartVideo();
 	});
+	if(bIsMobile)
+	{
+		window.addEventListener("orientationchange", function(event) {
+			var n = event.orientation ||(screen.orientation && screen.orientation.angle);
+			if(-90 == n || 90 == n){
+				setWhOne();
+				v8cTop = 42 * 3;
+			}else{
+				v8cTop = 42;
+			}
+		});
+	}
 
 	$('#saveMeVD').on("change", function () {
 		if (this.checked)g_bStopVd=false,fnStartRct();
@@ -1423,7 +1452,6 @@ $(document).ready(function () {
 		oL = $('#logId,#msgList');
 		this.checked ? oL.show() : oL.hide()
 	})
-	szCltFg = new ClientJS().getFingerprint();
 	init();
 	$("#eAi").change(function(){
 		window.bEaV8 = this.checked;
