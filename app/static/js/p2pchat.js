@@ -1064,7 +1064,7 @@ function appSet() {
 	}
 	// deviceId 与 facingMode 不能同时使用
 	var szCurMd = "user";
-	if($("#evdUser")[0].checked)szCurMd = "environment";
+	if($("#evdUser").prop("checked"))szCurMd = "environment";
 	g_Constraints["video"]["facingMode"] = szCurMd;
 	return g_Constraints
 }
@@ -1187,7 +1187,7 @@ function setup_local_media (callback, errorback) {
 			// hidden me、self
 			var oXv = $("#Pmt" + local_media.id);
 			if (bIsMobile){ 
-				if($("#showme")[0].checked)oXv.removeClass('d-none');
+				if($("#showme").prop("checked"))oXv.removeClass('d-none');
 				else oXv.addClass('d-none');
 			}
 			else $("#showme").attr("checked", true),oXv.removeClass('d-none');
