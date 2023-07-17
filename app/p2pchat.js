@@ -177,10 +177,15 @@ function fnInit(io){
         if(s){
             if(!s2){
                 db.get(s).then(function(s1){
-                    s1 && socket.emit("setNick",s1);
+                    if(s1){
+                        if(typeof s1 != "string")s1 = JSON.parse(s1);
+                        console.log("setNick: ",s1)
+                        socket.emit("setNick",s1);
+                    }
                 }).catch(function(e){})
             }else{
-                db.put(s,s2)
+                console.log("getNick: ",s2)
+                db.put(s,String(s2))
             }
         }
     })
