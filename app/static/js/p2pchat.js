@@ -1185,12 +1185,15 @@ function setup_local_media (callback, errorback) {
 			window.webcam.srcObject = stream;
 			localVvId = local_media.id
 			// hidden me、self
-			var oXv = $("#Pmt" + local_media.id);
+			var oXv = $("#Pmt" + local_media.id),oCps = $("div.compass-circle");
 			if (bIsMobile){ 
 				if($("#showme").prop("checked"))oXv.removeClass('d-none');
 				else oXv.addClass('d-none');
+				oCps.css("display","block");
+			} else {
+				oCps.css("display","none");
+				$("#showme").attr("checked", true),oXv.removeClass('d-none');
 			}
-			else $("#showme").attr("checked", true),oXv.removeClass('d-none');
 			
 			// try{
 				local_media.muted = true, local_media.volume = 0;
@@ -1328,6 +1331,7 @@ let pointDegree;
 function doGps(e) {
 	var compass = e.webkitCompassHeading || Math.abs(e.alpha - 360),compassCircle = document.querySelector(".compass-circle"),myPoint = document.querySelector(".my-point");
 	compassCircle.style.transform = `translate(-50%, -50%) rotate(${-compass}deg)`;
+	$("div.compass-circle").css("display","block");
 
 	// ±15 degree
 	if (
