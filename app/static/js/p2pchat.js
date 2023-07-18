@@ -1047,12 +1047,12 @@ function appSet() {
 		"audio": oT,
 		"video": {
 			// deviceId: videoSource ? { exact: videoSource } : undefined,
-			'mandatory': {
+			// 'mandatory': {// chrome 不支持
 				minFrameRate: n001,
 				maxFrameRate: n001,
 				'width': { 'min': n002},
 				'height': { 'min': n003},
-			}
+			// }
 		}
 	}
 	if(!!navigator.mozGetUserMedia) {
