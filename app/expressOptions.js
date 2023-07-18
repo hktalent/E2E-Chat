@@ -20,8 +20,8 @@ module.exports = {
   etag: true,
   lastModified: true,
   setHeaders: function (res, path, stat) {
-    isSw = !!path.match(/sw\.js$/)
-    if(!isSw && (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|json|ttf|woff|woff2|eot|html|json|svg)$/) || path.match(/group[0-9]{1,}-shard[0-9]{1,}of[0-9]{1,}$/))) {
+    // isSw = !!path.match(/sw\.js$/) !isSw && 
+    if((path.match(/\/(js|css)\//) || path.match(/model|(socket\.io\.js)/))) {
       setLongTermCache(res)
     }else{
       setNoCache(res)

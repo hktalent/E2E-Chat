@@ -22,6 +22,7 @@ rcp app/static/js/bundle.js /root/${xxx}/app/static/js/
 rcp app/static/js/ocr.js /root/${xxx}/app/static/js/
 rcp app/static/js/v8.js /root/${xxx}/app/static/js/
 
+rcp app/static/js/sw.js /root/${xxx}/app/static/js/
 rcp app/static/js/client.min.js.map /root/${xxx}/app/static/js/
 rcp app/static/js/socket.io.js /root/${xxx}/app/static/js/
 rcp app/static/js/plyr.js /root/${xxx}/app/static/js/
@@ -35,7 +36,6 @@ rcp app/static/js/jquery.js /root/${xxx}/app/static/js/
 rcp app/static/js/client.min.js /root/${xxx}/app/static/js/
 
 
-rcp app/static/js/sw.js /root/${xxx}/app/static/js/
 
 # server
 rcp app/p2pchat.js_1 /root/${xxx}/app/p2pchat.js
