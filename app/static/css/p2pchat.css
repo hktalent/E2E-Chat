@@ -492,6 +492,7 @@ i{
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
     margin: auto;
     z-index: -1;
+    zoom: 0.7;
   }
 
   .compass > .arrow {
