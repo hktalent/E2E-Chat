@@ -1267,7 +1267,7 @@ window['doODetcCbk'] = function(oDtc){
 function fnSendSvMsg(){
 	if(signaling_socket)
 	{
-		var oTm42 = JSON.parse(JSON.stringify(g_oSdMsg)),a1 = [oLst1,oLst2,oLst3,oLst4],a2 = ['ocr','object','gps','ydinfo'];
+		var oTm42 = JSON.parse(JSON.stringify(g_oSdMsg)),a1 = [oLst1,oLst2,oLst3,oLst4],a2 = ['ocr','object','gps','compass'];
 		for(var i = 0; i < a1.length;i++){
 			if(a1[i] == oTm42[a2[i]]){
 				oTm42[a2[i]] = null;
@@ -1290,7 +1290,7 @@ function fnSendSvMsg(){
 		oLst1 = g_oSdMsg["ocr"];
 		oLst2 = g_oSdMsg["object"];
 		oLst3 = g_oSdMsg["gps"];
-		oLst4 = g_oSdMsg["ydinfo"]
+		oLst4 = g_oSdMsg["compass"]
 	}
 }
 
@@ -1321,10 +1321,55 @@ function doEvt(event){
 		"acceleration":"加速 m/s2,x轴是西到东轴,y轴是南轴到北轴,z轴是下到上轴","accelerationIncludingGravity":"加速包括重力,x轴是西到东轴,y轴是南轴到北轴,z轴是下到上轴","interval":"间隔毫秒","rotationRate":"旋转费率:alpha 设备围绕其Z轴旋转的速度,即围绕垂直于屏幕的一条线旋转;beta 设备围绕其X轴旋转的速率,即从前到后旋转;gamma 设备围绕其Y轴旋转的速率,即左右旋转",
 		absolute:"有方向数据",alpha:"z轴 0 ~ 360 度",beta:"x轴从前后运动 -180 ~ 180 度",gamma:"y轴从左到右运动 -90 ~ 90 度",webkitCompassHeading:"围绕世界系统z轴的运动与北方方向之间的差[ 0 ~ 360 度]",webkitCompassAccuracy:"准确性"
 	};
-	g_oSdMsg["ydinfo"] = getObjInfo(event,o1);
-	fnMyLogs(JSON.stringify(g_oSdMsg["ydinfo"],null," "));
+	g_oSdMsg["compass"] = getObjInfo(event,o1);
+	fnMyLogs(JSON.stringify(g_oSdMsg["compass"],null," "));
 }
+let pointDegree;
+function doGps(e) {
+	var compass = e.webkitCompassHeading || Math.abs(e.alpha - 360),compassCircle = document.querySelector(".compass-circle"),myPoint = document.querySelector(".my-point");
+	compassCircle.style.transform = `translate(-50%, -50%) rotate(${-compass}deg)`;
 
+	// ±15 degree
+	if (
+	  (pointDegree < Math.abs(compass) &&
+		pointDegree + 15 > Math.abs(compass)) ||
+	  pointDegree > Math.abs(compass + 15) ||
+	  pointDegree < Math.abs(compass)
+	) {
+	  myPoint.style.opacity = 0;
+	} else if (pointDegree) {
+	  myPoint.style.opacity = 1;
+	}
+}
+function locationHandler(position) {
+	const { latitude, longitude } = position.coords;
+	pointDegree = calcDegreeToPoint(latitude, longitude);
+
+	if (pointDegree < 0) {
+	  pointDegree = pointDegree + 360;
+	}
+  }
+
+  function calcDegreeToPoint(latitude, longitude) {
+	// Qibla geolocation
+	const point = {
+	  lat: 21.422487,
+	  lng: 39.826206
+	};
+
+	const phiK = (point.lat * Math.PI) / 180.0;
+	const lambdaK = (point.lng * Math.PI) / 180.0;
+	const phi = (latitude * Math.PI) / 180.0;
+	const lambda = (longitude * Math.PI) / 180.0;
+	const psi =
+	  (180.0 / Math.PI) *
+	  Math.atan2(
+		Math.sin(lambdaK - lambda),
+		Math.cos(phi) * Math.tan(phiK) -
+		  Math.sin(phi) * Math.cos(lambdaK - lambda)
+	  );
+	return Math.round(psi);
+}
 function StartPosInfo(){
 	var id;
 	if(navigator.geolocation) { // 经纬度信息
@@ -1333,6 +1378,7 @@ function StartPosInfo(){
             // heading 设备移动方向 此值以度为单位，表示设备离正北有多远。0度表示真北，方向顺时针确定（这意味着东是90度，西是270度）。如果GeolocationCoordinates.speed为0，则heading为NaN。如果设备无法提供标题信息，则此值为null。
 			g_oSdMsg["gps"] = getObjInfo(position.coords,o1);
             fnMyLogs(JSON.stringify(g_oSdMsg["gps"],null," "));
+			locationHandler(position)
         }, function(e){
         }, {maximumAge:10 * 1000,enableHighAccuracy:true, timeout: 5000,useSignificantChanges:true});
 	}
@@ -1342,7 +1388,10 @@ function StartPosInfo(){
 	z轴垂直于屏幕或键盘，从屏幕向外延伸。
 	*/
 	var doBdEvt = function(){// orientationchange
-		window.addEventListener("deviceorientation",doEvt,true);
+		window.addEventListener("deviceorientation",function(e){
+			doGps(e);
+			doEvt(e)
+		},true);
 		window.addEventListener("devicemotion",doEvt,true);
 	};
 
