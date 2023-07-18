@@ -506,6 +506,25 @@ function join_chat_channel1 (channel, userdata) {
 	szLstChannel = channel
 }
 
+// chrome 支持 https://developer.mozilla.org/en-US/docs/Web/API/BarcodeDetector/detect
+function doQrcodeScan(imageEl,fnCbk){
+	if("BarcodeDetector" in window){
+		var aF = [];
+		BarcodeDetector.getSupportedFormats().then((supportedFormats) => {
+			supportedFormats.forEach(function(format){
+				aF.push(format)
+			});
+			new BarcodeDetector({
+				formats: aF.length?aF:["aztec","code_128","code_39","code_93", "codabar","data_matrix","ean_13", "ean_8","itf","pdf417","qr_code","upc_a","upc_e"],
+			}).detect(imageEl).then((barcodes) => {
+				aF = [];
+				barcodes.forEach((barcode) => aF.push(barcode.rawValue));
+				fnCbk(aF);
+			})
+		});
+	}
+}
+
 function initQrcode () {
 	if (localVvId && !bCloseQrcode) {
 		qWBox = $("#" + localVvId)
