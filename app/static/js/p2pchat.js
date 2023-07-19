@@ -1435,6 +1435,22 @@ function stopPosInfo(id){
 	window.removeEventListener("devicemotion",doEvt,true);
 }
 
+function initBox(){
+	location.search.substring(1).split("&").forEach(function (item) {
+		item = item.split("=");
+		var o = document.getElementById(item[0]);
+		if(o){
+			if(o.type == "checkbox")o.checked = "true" == String(item[1]).toLowerCase(),o.click();
+			else if(o.type == "button")
+			(function(o){
+				setTimeout(() => {
+					o.click();
+				}, 333);
+			})(o)
+			else o.value = decodeURIComponent(item[1]);
+		}
+	});
+}
 var v8cTop = 42;
 $(document).ready(function () {
 	clientJs = new ClientJS();
@@ -1503,10 +1519,6 @@ $(document).ready(function () {
 		oMyCtn = $("#myCtn"),
 		oclsId = $("#clsId"),
 		ovChat = $(".vChat");
-	if (szHs) {
-		oCnId.val(szHs.substring(1));
-		StartVideo()
-	}
 	// text chat
 	oStChat.click(function () {
 		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
@@ -1540,6 +1552,7 @@ $(document).ready(function () {
 		$(this).attr("disabled", "disabled");
 		oStChat.removeAttr("disabled");
 		$("#eLpos").click();
+		ldai();
 	});
 	var bELpos;
 	$("#eLpos").change(function(){
@@ -1641,5 +1654,9 @@ $(document).ready(function () {
 		if(o10.attr("show"))o10.hide(),o10.removeAttr("show");
 		else o10.show(),o10.attr("show",true);
 	});
-
+	if (szHs) {
+		oCnId.val(szHs.substring(1));
+		StartVideo()
+	}
+	initBox();
 });
