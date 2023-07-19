@@ -1426,7 +1426,9 @@ $(document).ready(function () {
 		g_bSetup = false;
 		StartVideo();
 	});
-	
+	$('#uIps').on("change", function () {
+		bEaIpfs = this.checked;	
+	});
 	$('#saveMeVD').on("change", function () {
 		if (this.checked)g_bStopVd=false,fnStartRct();
 		else g_bStopVd = true;
