@@ -8,9 +8,6 @@ rcp app/package.json /root/${xxx}/app/
 rcp app/nodemon.json /root/${xxx}/app/
 rcp app/static/index_en.html /root/${xxx}/app/static/
 
-rcp app/mergeRes.js /root/${xxx}/app/
-rcp app/myapp_51pwn.js /root/${xxx}/app/
-
 rcp app/static/plyr.svg /root/${xxx}/app/static/
 # 静态资源，经常需要更新
 rcp app/static/js.js /root/${xxx}/app/static/
@@ -39,8 +36,8 @@ rcp app/static/js/client.min.js /root/${xxx}/app/static/js/
 
 # server
 rcp app/p2pchat.js_1 /root/${xxx}/app/p2pchat.js
-
-
+rcp app/mergeRes.js /root/${xxx}/app/
+rcp app/myapp_51pwn.js /root/${xxx}/app/
 rcp app/server.js /root/${xxx}/app/
 rcp app/expressOptions.js /root/${xxx}/app/
 
@@ -52,6 +49,7 @@ rcp app/expressOptions.js /root/${xxx}/app/
 # rcp app/static/model /root/${xxx}/app/static/
 
 # 静态资源，不需要常更新
+# rcp app/static/css/b.png /root/${xxx}/app/static/css/b.png
 # rcp app/static/js/ie.js /root/${xxx}/app/static/js/
 # rcp app/static/js/kindle.js /root/${xxx}/app/static/js/
 # rcp app/static/js/test.js /root/${xxx}/app/static/js/

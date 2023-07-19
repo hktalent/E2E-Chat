@@ -485,7 +485,7 @@ i{
 .compass {
     position: absolute;
     left: calc(50% - 160px);
-    top: 135px;;
+    top: 185px;;
     width: 320px;
     height: 320px;
     border-radius: 50%;
