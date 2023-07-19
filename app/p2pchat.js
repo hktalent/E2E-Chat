@@ -161,7 +161,11 @@ function fnInit(io){
     });
 
     socket.on("svCurImgInfo",function(oM1){
-        console.log(oM1);
+        // console.log(oM1);
+    });
+    socket.on("ocerror",function(s){
+        console.error(s);
+        // process.stdout.write(s);
     });
 
     socket.on('saveVideo', (data) => {
