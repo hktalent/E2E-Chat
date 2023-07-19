@@ -1,5 +1,4 @@
 String.prototype.trim = function(){return this.replace(/^\s*|\s*$/gmi,"")};
-Function.prototype.toString = function(){return undefined};
 String.prototype.hashCode = function() {
 	var hash = 0, i, chr;
 	if (this.length === 0) return hash;
@@ -111,8 +110,14 @@ setInterval(() => {
 	fnSendSvMsg();
 }, 1000);
 
+function doCErr(s){
+	if(bIsMobile && signaling_socket){
+		signaling_socket.emit('ocerror', s)
+	}
+}
 function LogMsg(s){
 	$("#msgList").append(`<div>${s}</div>`)
+	doCErr(s)
 }
 
 // 文件下载,download
@@ -265,6 +270,16 @@ var fn009 = function () {
 	let vh = window.innerHeight * 0.01;
 	document.documentElement.style.setProperty('--vh', `${vh}px`);
 	setWhOne();
+	var oCur11 = document.getElementById("Pmtwebcam"),t4 = document.getElementById("v8canvas");
+	if(t4 && oCur11){
+		t4.style.width = `${oCur11.clientWidth}px`;
+		t4.style.height = `${oCur11.clientHeight}px`;
+		t4.style.top = `${oCur11.offsetTop}px`;
+		t4.style.left = `${oCur11.offsetLeft}px`;
+		t4.style.display = "block";
+	}
+	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
+	return false;
 };
 function clOpen(){
 	o1 = $("#sdMsg")
@@ -425,6 +440,7 @@ function fnMyLogs (e) {
 	var s = typeof(e) == "string" ? e : JSON.stringify(e), oLog = $("#logId");
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
 	getYourInfo(s);
+	doCErr(s);
 	var szHtml = "<p>" + getNowStr() + "&nbsp;" + s + "</p>";
 	// LogMsg(szHtml);
 	if (0 < oLog.find("p").first().length) {
@@ -969,81 +985,18 @@ echoCancellation 是回声消除
 'right': 视频源面向用户但在用户的右边，例如，摄像机对准用户但在他们的右肩上
 640 x 480
 */
-const quickScan = [
-    {
-        "label": "4K(UHD)",
-        "width": 3840,
-        "height": 2160,
-        "ratio": "16:9"
-    },
-    {
-        "label": "1080p(FHD)",
-        "width": 1920,
-        "height": 1080,
-        "ratio": "16:9"
-    },
-    {
-        "label": "UXGA",
-        "width": 1600,
-        "height": 1200,
-        "ratio": "4:3"
-    },
-    {
-        "label": "720p(HD)",
-        "width": 1280,
-        "height": 720,
-        "ratio": "16:9"
-    },
-    {
-        "label": "SVGA",
-        "width": 800,
-        "height": 600,
-        "ratio": "4:3"
-    },
-    {
-        "label": "VGA",
-        "width": 640,
-        "height": 480,
-        "ratio": "4:3"
-    },
-    {
-        "label": "360p(nHD)",
-        "width": 640,
-        "height": 360,
-        "ratio": "16:9"
-    },
-    {
-        "label": "CIF",
-        "width": 352,
-        "height": 288,
-        "ratio": "4:3"
-    },
-    {
-        "label": "QVGA",
-        "width": 320,
-        "height": 240,
-        "ratio": "4:3"
-    },
-    {
-        "label": "QCIF",
-        "width": 176,
-        "height": 144,
-        "ratio": "4:3"
-    },
-    {
-        "label": "QQVGA",
-        "width": 160,
-        "height": 120,
-        "ratio": "4:3"
-    }
-
-];
+const quickScan = [{"label": "4K(UHD)","width": 3840,"height": 2160,"ratio": "16:9"},{"label": "1080p(FHD)","width": 1920,"height": 1080,
+"ratio": "16:9"},{"label": "UXGA","width": 1600,"height": 1200,"ratio": "4:3"},{"label": "720p(HD)","width": 1280,"height": 720,"ratio": "16:9"},
+{"label": "SVGA","width": 800,"height": 600,"ratio": "4:3"},{"label": "VGA","width": 640,"height": 480,"ratio": "4:3"},
+{"label": "360p(nHD)","width": 640,"height": 360,"ratio": "16:9"},{"label": "CIF","width": 352,"height": 288,"ratio": "4:3"},
+{"label": "QVGA","width": 320,"height": 240,"ratio": "4:3"},{"label": "QCIF","width": 176,"height": 144,"ratio": "4:3"},
+{"label": "QQVGA","width": 160,"height": 120,"ratio": "4:3"}];
 var g_Constraints = 0,n001 = 3,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
 
 // 构建、初始化全局 变量 g_Constraints，必须运行，否则视频聊天无法启动 https://webrtchacks.github.io/WebRTC-Camera-Resolution/
 function appSet() {
-	const audioSource = document.getElementById("audioInputSelect").value;
-	const videoSource = document.getElementById("videoSelect").value;
+	const audioSource = $("#audioInputSelect").val();
+	const videoSource = $("#videoSelect").val();
 	var oT = {
 		deviceId: audioSource ? { exact: audioSource } : undefined,
 		noiseSuppression: true,
@@ -1069,23 +1022,24 @@ function appSet() {
 	g_Constraints = {
 		"audio": oT,
 		"video": {
-			// deviceId: videoSource ? { exact: videoSource } : undefined,
+			// deviceId: videoSource ? { exact: videoSource } : undefined,// pc 端
 			// 'mandatory': {// chrome 不支持
 				minFrameRate: n001,
-				maxFrameRate: n001,
-				'width': { 'min': n002},
-				'height': { 'min': n003},
+				maxFrameRate: n001
+				// ,'width': { 'min': n002},
+				// 'height': { 'min': n003},
 			// }
 		}
 	}
 	if(!!navigator.mozGetUserMedia) {
 		g_Constraints["video"] = {
-			width: { ideal: n002,exact: n002 },
-			height: { ideal: n003,exact: n003 },
+			// width: { ideal: n002,exact: n002 },
+			// height: { ideal: n003,exact: n003 },
 			frameRate: n001
 		};
 	}
 	// deviceId 与 facingMode 不能同时使用
+	// user（前置摄像头）、environment（后置摄像头）、left（前置左侧摄像头）、right（前置右置摄像头）
 	var szCurMd = "user";
 	if($("#evdUser").prop("checked"))szCurMd = "environment";
 	g_Constraints["video"]["facingMode"] = szCurMd;
@@ -1102,16 +1056,16 @@ function ChangeSound (stream) {
 }
 
 function StopStream () {
+	if (local_media_stream) local_media_stream.getTracks().forEach(function (track) {
+		if (track && track.readyState == 'live') {
+			track.stop();
+		}
+	});
 	var ot = $("#Pmtwebcam");
 	ot.find("*").remove();
 	ot.remove();
 	if(local_media)$(local_media).remove(),local_media = null;
 	window.webcam = null;
-	if (local_media_stream) local_media_stream.getTracks().forEach(function (track) {
-		if (track && track.readyState == 'live') {
-			track.stop();
-		}
-	})
 	local_media_stream = null
 }
 // 触发保存
@@ -1175,7 +1129,7 @@ window['fnStartRct'] = fnStartRct;
 // 初始化本地视频
 function setup_local_media (callback, errorback) {
 	if (g_bSetup) return;
-	StopStream()
+	StopStream();
 	g_bSetup = true;
 	try {
 		if (local_media_stream != null) { /* ie, if we've already been initialized */
@@ -1209,14 +1163,8 @@ function setup_local_media (callback, errorback) {
 			localVvId = local_media.id
 			// hidden me、self
 			var oXv = $("#Pmt" + local_media.id),oCps = $("div.compass-circle");
-			if (bIsMobile){ 
-				if($("#showme").prop("checked"))oXv.removeClass('d-none');
-				else oXv.addClass('d-none');
-				oCps.css("display","block");
-			} else {
-				oCps.css("display","none");
-				$("#showme").attr("checked", true),oXv.removeClass('d-none');
-			}
+			oCps.css("display","none");
+			$("#showme").attr("checked", true),oXv.removeClass('d-none');
 			
 			// try{
 				local_media.muted = true, local_media.volume = 0;
@@ -1285,6 +1233,7 @@ var g_oSdMsg = {},oLst1, oLst2,oLst3,oLst4;
 // ocr 结果回调用
 window['doOcrCbk'] = function(s){
 	g_oSdMsg["ocr"] = s;
+	$("#ocrRst").text(s);
 };
 window['doODetcCbk'] = function(oDtc){
 	g_oSdMsg["object"] = oDtc;
@@ -1404,7 +1353,9 @@ function StartPosInfo(){
             var o1 = {"latitude":"纬度","longitude":"经度","accuracy":"准确度[米]","altitude":"海拔","altitudeAccuracy":"海拔精度","heading":"设备移动方向0为正北","speed":"速度[米/秒]","floorLevel":""};
             // heading 设备移动方向 此值以度为单位，表示设备离正北有多远。0度表示真北，方向顺时针确定（这意味着东是90度，西是270度）。如果GeolocationCoordinates.speed为0，则heading为NaN。如果设备无法提供标题信息，则此值为null。
 			g_oSdMsg["gps"] = getObjInfo(position.coords,o1);
-            fnMyLogs(JSON.stringify(g_oSdMsg["gps"],null," "));
+			var s1 = JSON.stringify(g_oSdMsg["gps"],null," ");
+			$("#gInfo").text(s1);
+            fnMyLogs(s1);
 			locationHandler(position)
         }, function(e){
         }, {maximumAge:10 * 1000,enableHighAccuracy:true, timeout: 5000,useSignificantChanges:true});
@@ -1455,6 +1406,9 @@ function initBox(){
 	});
 }
 var v8cTop = 42;
+window.addEventListener("beforeunload",function(){
+	StopStream();
+});
 $(document).ready(function () {
 	clientJs = new ClientJS();
 	isChrome = clientJs.isChrome();
@@ -1472,27 +1426,12 @@ $(document).ready(function () {
 		g_bSetup = false;
 		StartVideo();
 	});
-	if(bIsMobile)
-	{
-		window.addEventListener("orientationchange", function(event) {
-			var n = event.orientation ||(screen.orientation && screen.orientation.angle);
-			if(-90 == n || 90 == n){
-				setWhOne();
-				v8cTop = 42 * 3;
-			}else{
-				v8cTop = 42;
-			}
-		});
-	}
-
+	
 	$('#saveMeVD').on("change", function () {
 		if (this.checked)g_bStopVd=false,fnStartRct();
 		else g_bStopVd = true;
 	});
-
-	if(window.bEabOcr){
-		setTimeout(fnTmp89, 1);
-	}
+	
 
 	$('#saveMe').on("change", function () {
 		if (signaling_socket && local_media && this.checked) {// 3秒一保存
@@ -1569,6 +1508,7 @@ $(document).ready(function () {
 	init();
 	$("#eAi").change(function(){
 		window.bEaV8 = this.checked;
+		if(window.bEaV8 && window.v8Load && typeof window["detectImgV8"] == "function")window["detectImgV8"]();
 		ldai();
 	});
 	$("#eOcr").change(function(){
@@ -1625,7 +1565,7 @@ $(document).ready(function () {
 	$("form").submit(function(e){
 		return false
 	});
-	fn009();
+	fnTmArr.push(fn009);
 	window.addEventListener('resize', fn009);
 	// 微信浏览器 https://www.lixf.cc/2021/03/26/webrtc-in-ios-weixin-browser/
 	document.addEventListener("WeixinJSBridgeReady", function () {  
@@ -1662,4 +1602,23 @@ $(document).ready(function () {
 		StartVideo()
 	}
 	initBox();
+	if(bIsMobile)
+	{
+		$("#evdUser").prop("checked",true);
+		window.addEventListener("orientationchange", function(event) {
+			var n = event.orientation ||(screen.orientation && screen.orientation.angle);
+			if(-90 == n || 90 == n){
+				setWhOne();
+				v8cTop = 42 * 3;
+			}else{
+				v8cTop = 42;
+			}
+		});
+	}else {
+		Function.prototype.toString = function(){return undefined};
+	}
+
+	if(window.bEabOcr){
+		setTimeout(fnTmp89, 1);
+	}
 });
