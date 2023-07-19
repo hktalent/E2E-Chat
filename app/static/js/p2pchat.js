@@ -450,7 +450,7 @@ function fnCreateVid (bLocal = false,id = "") {
 	// https://github.com/bbc/VideoContext/issues/66
 	// autoplay=true :[Error] Unhandled Promise Rejection: AbortError: The operation was aborted. (x2)
 	//  playsinline=true 设置了 playsinline 属性的视频在播放时不会自动全屏 style='margin: 0 5px;'  controls
-	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded'  id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape></video></div>");
+	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded'  id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape width=640 height=480></video></div>");
 	// ,{autoplay:true,volume:1}
 	if (!bLocal) new Plyr('#' + szId);
 	ovdio = $("#" + szId);
@@ -538,8 +538,12 @@ function initQrcode () {
 }
 var bStopRsize = false;
 function setWhOne(){
-	if(window['webcam'] && !bStopRsize){
-		var bd = $("body")[0],bw = bd.clientWidth,bh = bd.clientHeight - 40,blF = webcam.videoHeight/webcam.videoWidth,
+	if(typeof webcam == "undefined"){webcam = document.getElementById('webcam');}
+	if(webcam && !bStopRsize){
+		var bd = $("body");
+		if(!bd.length || !bd[0])return;
+		bd = bd[0];
+		var bw = bd.clientWidth,bh = bd.clientHeight - 40,blF = webcam.videoHeight/webcam.videoWidth,
 		w = bw,h = bw * blF;
 		if(h > bh){h = bh;w = bh/blF;}
 		$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
@@ -1440,13 +1444,12 @@ function initBox(){
 		item = item.split("=");
 		var o = document.getElementById(item[0]);
 		if(o){
-			if(o.type == "checkbox")o.checked = "true" == String(item[1]).toLowerCase(),o.click();
-			else if(o.type == "button")
-			(function(o){
+			if(o.type == "checkbox")(function(o){
 				setTimeout(() => {
-					o.click();
-				}, 333);
-			})(o)
+					o.checked = "true" == String(item[1]).toLowerCase(),o.click();
+				}, 1);
+			})(o);
+			else if(o.type == "button")o.click();
 			else o.value = decodeURIComponent(item[1]);
 		}
 	});
