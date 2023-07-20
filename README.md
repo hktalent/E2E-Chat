@@ -2,6 +2,8 @@
 端对端（E2E）、点对点(P2P)加密聊天系统
 不受任何国家、政府、组织、机构监管，安全可靠、隐秘
 
+https://127.0.0.1:2083/?eAi=true&cnId=51pwn&startChat=1
+
 # 新特性
 - VIP 支持 AI 视频中对象检测
 - 允许上传图片、其他文件
@@ -14,6 +16,12 @@
 - 默认 1 分钟自动销毁聊天内容，特别注意，苹果手机目前测试发现，如果浏览器在后台后，计时器会被系统暂停，重新打开后计时器会继续
 - 增加参数控制前端 https://chat.51pwn.com:2083/?eAi=true&cnId=51pwn&startChat=1
 
+# more
+```
+ 优化png
+ brew install optipng jpegoptim
+ optipng $HOME/MyWork/E2E_chat/app/static/css/b.png
+```
 # /usr/local/etc/turnserver.conf
 
 https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js
