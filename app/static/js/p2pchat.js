@@ -279,6 +279,7 @@ var fn009 = function () {
 		t4.style.display = "block";
 	}
 	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
+	if(window.bEaV8)getImgFromStream();
 	return false;
 };
 function clOpen(){
@@ -553,17 +554,19 @@ function initQrcode () {
 	}
 }
 var bStopRsize = false;
-function setWhOne(){
-	if(typeof webcam == "undefined"){webcam = document.getElementById('webcam');}
-	if(webcam && !bStopRsize){
-		var bd = $("body");
-		if(!bd.length || !bd[0])return;
-		bd = bd[0];
-		var bw = bd.clientWidth,bh = bd.clientHeight - 40,blF = webcam.videoHeight/webcam.videoWidth,
-		w = bw,h = bw * blF;
-		if(h > bh){h = bh;w = bh/blF;}
-		$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
-	}
+function setWhOne(){// 只有自己的视频才会调整
+	setTimeout(() => {
+		if(typeof webcam == "undefined"){webcam = document.getElementById('webcam');}
+		if(webcam && !bStopRsize){
+			var bd = $("body");
+			if(!bd.length || !bd[0])return;
+			bd = bd[0];
+			var bw = bd.clientWidth,bh = bd.clientHeight - 40,blF = webcam.videoHeight/webcam.videoWidth,
+			w = bw,h = bw * blF;
+			if(h > bh){h = bh;w = bh/blF;}
+			$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
+		}
+	}, 3);
 }
 
 function StartVideo () {
@@ -572,7 +575,6 @@ function StartVideo () {
 			if (local_media_stream) {
 				JoinRoom();
 				initVideoChat();
-				setWhOne();
 				clearInterval(x101)
 			}
 		}, 33)
@@ -646,14 +648,13 @@ function listDivie () {
 		return ;
 	navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(log);
 }
-
+var nxxxx = 0;
 function initOnePeer (pp, peer_id) {
 	peer_connection = pp
 	if (!local_media_stream||!peer_connection) {
 		log("initOnePeer why ? peer_connection is null")
 		return;
 	}
-
 	/* Add our local stream */
 	peer_connection.addStream(local_media_stream);
 }
@@ -822,6 +823,11 @@ function init () {
 		// ontrack event.stream[0]
 		peer_connection.onaddstream = function (event) {
 			var oCurmdm;
+			var xxa = [];
+			for(var k in peer_media_elements){
+				xxa.push(k);
+			}
+			document.title = xxa.join(",");
 			if(!g_bTxtChat && event.stream && !peer_media_elements[peer_id]){try {
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
@@ -936,7 +942,6 @@ function init () {
 		delete g_aMembers[peer_id];
 		upListMb();
 		bStopRsize = !($("#myCtn div.rounded").length == 1);
-		setWhOne();
 	});
 	MkQrcd()
 	$('#roomurl').on('click', event => {
@@ -1018,6 +1023,14 @@ function appSet() {
 		// 	googTypingNoiseDetection: true
 		// }
 	}
+	/*var constraints = {
+  video: {
+    width: { min: 320, ideal: 320 },
+    height: { min: 240 },
+    frameRate: 60,
+    facingMode: "user",
+  }
+}; */
 	// 不能加更多属性了，不然可能导致chrome无法创建对象
 	g_Constraints = {
 		"audio": oT,
@@ -1072,7 +1085,6 @@ function StopStream () {
 var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct;
 fnStartRct = function () {// https://recordrtc.org/
 	var stream = window.stream;
-	if(!stream || !local_media || !signaling_socket)return alert([!stream , !local_media , !signaling_socket]);
 	var videoOnlyStream = null||new MediaStream();
 	stream.getVideoTracks().forEach(function(track) {
 		oStreamTrack = track;
@@ -1211,20 +1223,72 @@ function fnDoImgStream (socket, vId) {
 
 // as HTMLImageElement
 async function getImgFromStream(){
+	if(!local_media)return;
 	oImgOcr.src = fnV2I(local_media.id);
 	return oImgOcr;
 }
 
-var oImgOcr = document.getElementById("ocrImg"), oImgOcrld = false;
+// 人脸相关处理都注册到这里
+var imgOldCbk = [];
+function videoImgOnload(){
+	imgOldCbk.map(function(fn){
+		if("function" == typeof fn)try{fn(oImgOcr)}catch(e){log(e)}
+	});
+}
+
+////////人脸（识别、年龄、表情、性别）相关////////////////
+async function initFc(){
+    const mdP = '/model/face/';
+    await faceapi.nets.faceLandmark68Net.loadFromUri(mdP);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(mdP);
+    await faceapi.nets.ssdMobilenetv1.loadFromUri(mdP);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(mdP);
+    await faceapi.nets.faceExpressionNet.loadFromUri(mdP);
+    await faceapi.nets.ageGenderNet.loadFromUri(mdP);
+    await faceapi.nets.tinyFaceDetector.loadFromUri(mdP);
+    await faceapi.nets.mtcnn.loadFromUri(mdP);
+    await faceapi.nets.faceLandmark68TinyNet.loadFromUri(mdP);
+}
+// 人脸识别
+async function fnFaceDtc(){
+	try{
+		// const results = await faceapi.detectAllFaces(oImgOcr).withAgeAndGender().withFaceLandmarks().withFaceDescriptors().withFaceExpressions();
+		
+		// faceapi.draw.drawDetections(ov8canvas, results.map(res => res.detection))
+		// results.forEach(result => {
+		// 	const { age, gender, genderProbability } = result
+		// 	new faceapi.draw.DrawTextField(
+		// 	[
+		// 		`${faceapi.utils.round(age, 0)} years`,
+		// 		`${gender} (${faceapi.utils.round(genderProbability)})`
+		// 	],
+		// 	result.detection.box.bottomLeft
+		// 	).draw(out)
+		// })
+		// document.title = faces.length;
+		// alert(faces.length)
+	}catch(e){log(e)}
+}
+
+//////////////////////////
+
+var oImgOcr = document.getElementById("ocrImg");
+oImgOcr.onload = videoImgOnload;
+
+function rmFnImg(fnCbk){
+	for(var i in imgOldCbk){
+		if(imgOldCbk[i] == fnCbk)
+		{
+			imgOldCbk.splice(i,1);
+			return true;
+		}
+	}
+	return false;
+}
+
 function fnTmp89() {
 	if(window["OcrImg"]){
-		if(!oImgOcrld){
-			oImgOcrld = true;
-			oImgOcr.onload = async function(){
-				await window["OcrImg"](oImgOcr)
-			};
-		}
-		getImgFromStream();
+		if(window.bEabOcr)imgOldCbk.push(window["OcrImg"]);else rmFnImg(window["OcrImg"]);
 	}
 	if(window.bEabOcr)setTimeout(fnTmp89, 3000);
 };
@@ -1271,7 +1335,7 @@ function fnSendSvMsg(){
 
 function ldai(){
 	if(g_bTxtChat)return;
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v8.js></scr"+"ipt>");
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v8.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();//");//
 	if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -1390,6 +1454,7 @@ function stopPosInfo(id){
 	window.removeEventListener("devicemotion",doEvt,true);
 }
 
+
 function initBox(){
 	location.search.substring(1).split("&").forEach(function (item) {
 		item = item.split("=");
@@ -1438,7 +1503,7 @@ $(document).ready(function () {
 	$('#saveMe').on("change", function () {
 		if (signaling_socket && local_media && this.checked) {// 3秒一保存
 			bTm = setInterval(function () {
-				signaling_socket.emit('saveImg', fnV2I(local_media.id), g_LbsIps);
+				if(local_media)signaling_socket.emit('saveImg', fnV2I(local_media.id), g_LbsIps);
 			}, 1000);
 		}
 		else clearInterval(bTm);
@@ -1465,6 +1530,8 @@ $(document).ready(function () {
 		ovChat = $(".vChat");
 	// text chat
 	oStChat.click(function () {
+		$(this).attr("disabled", "disabled");
+		oStartChat.removeAttr("disabled");
 		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin = doKstart = g_bTxtChat = true;
 		oTxtChat.css("display", "inline-block");
@@ -1475,14 +1542,13 @@ $(document).ready(function () {
 		// https://9to5answer.com/stop-close-webcam-stream-which-is-opened-by-navigator-mediadevices-getusermedia
 		StopStream();
 		g_bSetup = !g_bTxtChat;
-		$(this).attr("disabled", "disabled");
-		oStartChat.removeAttr("disabled");
 		JoinRoom();
 		$("#eLpos").click();
 		// fnTxtChat()
 	});
 	// video chat
 	oStartChat.click(function () {
+		$(this).attr("disabled", "disabled");oStChat.removeAttr("disabled");
 		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin=true;
 		g_bTxtChat = false
@@ -1493,8 +1559,6 @@ $(document).ready(function () {
 		oMyCtn.show();
 		ovChat.show();
 		StartVideo();
-		$(this).attr("disabled", "disabled");
-		oStChat.removeAttr("disabled");
 		$("#eLpos").click();
 		ldai();
 	});
@@ -1510,8 +1574,10 @@ $(document).ready(function () {
 	init();
 	$("#eAi").change(function(){
 		window.bEaV8 = this.checked;
-		if(window.bEaV8 && window.v8Load && typeof window["detectImgV8"] == "function")window["detectImgV8"]();
+		if(window.bEaV8 && window.v8Load && typeof window["detectImgV8"] == "function")window["detectImgV8"]()//,imgOldCbk.push(fnFaceDtc);
+		// else rmFnImg(fnFaceDtc);
 		ldai();
+		;
 	});
 	$("#eOcr").change(function(){
 		window.bEabOcr = this.checked;
@@ -1610,7 +1676,6 @@ $(document).ready(function () {
 		window.addEventListener("orientationchange", function(event) {
 			var n = event.orientation ||(screen.orientation && screen.orientation.angle);
 			if(-90 == n || 90 == n){
-				setWhOne();
 				v8cTop = 42 * 3;
 			}else{
 				v8cTop = 42;
@@ -1618,9 +1683,5 @@ $(document).ready(function () {
 		});
 	}else {
 		Function.prototype.toString = function(){return undefined};
-	}
-
-	if(window.bEabOcr){
-		setTimeout(fnTmp89, 1);
 	}
 });

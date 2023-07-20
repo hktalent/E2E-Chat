@@ -38,9 +38,9 @@ var minifyOptions = {
 
 var JsHxOpt = {
     compact: true,      // 压缩代码到一行
-    domainLock: ["chat.51pwn.com"],     // 限制混淆代码运行的域名,调试阶段绝对不能开启
+    // domainLock: ["chat.51pwn.com"],     // 限制混淆代码运行的域名,调试阶段绝对不能开启
     controlFlowFlattening: true,  // 是否开启平展控制流。此选项对性能的影响最大为运行速度降低1.5倍。 使用controlFlowFlatteningThreshold设置将受控制流展平影响的节点的百分比。平展控制流是源代码的结构转换，让代码变得难以阅读。
-    debugProtection: true, // 如果您打开开发人员工具，会冻结您的浏览器，不允许调试.使用该选项，几乎不可能使用开发人员工具的调试器功能（基于WebKit和Mozilla Firefox的浏览器上）
+    // debugProtection: true, // 如果您打开开发人员工具，会冻结您的浏览器，不允许调试.使用该选项，几乎不可能使用开发人员工具的调试器功能（基于WebKit和Mozilla Firefox的浏览器上）
     // deadCodeInjection: true, // 使用此选项，将随机废代码块添加到混淆代码中。 该选项显著增加混淆代码的大小（最大200%），如果对混淆代码大小不敏感的时候启用该选项。开启该选项将强制启用stringArray选项
     debugProtectionInterval: 33, // 如果设置为true，则会在“控制台”选项卡上使用一个间隔来强制调试模式，这使得使用开发人员工具的其他功能更加困难。 启用了debugProtection，才可以使用。
     disableConsoleOutput: true,     // 通过将它们替换为空函数，禁用console.log，console.info，console.error，console.warn，console.debug，console.exception和console.trace的使用。
