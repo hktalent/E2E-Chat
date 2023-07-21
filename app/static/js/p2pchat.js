@@ -1238,7 +1238,7 @@ function fnDoImgStream (socket, vId) {
 // as HTMLImageElement
 async function getImgFromStream(){
 	if(!local_media)return;
-	oImgOcr.src = szImageData = fnV2I(local_media.id);
+	// oImgOcr.src = szImageData = fnV2I(local_media.id);
 	return oImgOcr;
 }
 
