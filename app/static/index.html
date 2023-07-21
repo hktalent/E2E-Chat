@@ -55,19 +55,21 @@
 		<i><select id="audioInputSelect"></select></i>
 		<i><select id="audioOutputSelect"></select></i>
 		<i><input type="checkbox" class="btn btn-secondary" aria-label="Show Me Video" id="showme"><span>Show Me</i>
-		<i><input type="checkbox" class="btn btn-secondary" title="save jpg to server" id="saveMe"><span>Save JPG</span></i>
-		<i><input type="checkbox" class="btn btn-secondary" title="save Me video to server" id="saveMeVD"><span>Save Video</span></i>
-		<i><input type="checkbox" class="btn btn-secondary" title="enable AI" id="eAi"><span>detect Object</span></i>
-		<i><input type="checkbox" class="btn btn-secondary" title="enable OCR" id="eOcr"><span>OCR</span></i>
-		<i><input type="checkbox" class="btn btn-secondary" title="enable 前置摄像头 facingMode: user" id="evdUser"><span>facingMode environment</span></i>
-		<i title="运动信息：经度、海拔"><input type="checkbox" class="btn btn-secondary" id="eLpos"><span>motion info</span></i>
+		<i><input type="checkbox" class="btn btn-secondary" placeholder="save jpg to server" id="saveMe"><span>Save JPG</span></i>
+		<i><input type="checkbox" class="btn btn-secondary" placeholder="save Me video to server" id="saveMeVD"><span>Save Video</span></i>
+
+		<i><input type="checkbox" class="btn btn-secondary" placeholder="More precise model, but slower initialization" id="ux8"><span>Use X Model</span></i>
+		<i><input type="checkbox" class="btn btn-secondary" placeholder="enable AI" id="eAi"><span>Detect Object</span></i>
+		<i><input type="checkbox" class="btn btn-secondary" placeholder="enable OCR" id="eOcr"><span>OCR</span></i>
+		<i><input type="checkbox" class="btn btn-secondary" placeholder="enable front camera" id="evdUser"><span>Use front camera</span></i>
+		<i title="运动信息：经度、海拔"><input type="checkbox" class="btn btn-secondary" id="eLpos"><span>Motion info</span></i>
 		<!-- <i><input type="checkbox" id="uIps" class="btn btn-warning"><span>use IPFS</span></i> -->
 
 		<i><input type="checkbox" id="dspWr" class="btn btn-warning" title="Warning"><span id="warnId">Warning</span></i>
 		
 		
 <br>
-		<i>GPS: <span id="gInfo"></span></i>
+		<i>state: <span id="gInfo"></span></i>
 		<i id="ocrRst"></i>
 	</div>
 	<div id="intro" class="message overflow-x-hide overflow-y-hide shadow">

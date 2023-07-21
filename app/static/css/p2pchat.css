@@ -466,7 +466,16 @@ i{
     width: 100%;
     display: block;
     cursor: pointer;
+    
 }
+i a{
+    font-size: 1rem;
+    margin: 0 5pt 0 5pt;
+    color: #ccc;
+    text-decoration: none;
+    display: block;
+}
+i a:hover{box-shadow: 6px 2px 24px #c37ae5;}
 .rtool{
     display: none;
     color: #9eea6a;
