@@ -467,7 +467,7 @@ function fnCreateVid (bLocal = false,id = "") {
 	// https://github.com/bbc/VideoContext/issues/66
 	// autoplay=true :[Error] Unhandled Promise Rejection: AbortError: The operation was aborted. (x2)
 	//  playsinline=true 设置了 playsinline 属性的视频在播放时不会自动全屏 style='margin: 0 5px;'  controls
-	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded'  id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape width=640 height=480></video></div>");
+	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded'  id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape width=640 height=480 type=video/webm;codecs=h264></video></div>");
 	// ,{autoplay:true,volume:1}
 	if (!bLocal) new Plyr('#' + szId);
 	ovdio = $("#" + szId);
@@ -827,7 +827,6 @@ function init () {
 			for(var k in peer_media_elements){
 				xxa.push(k);
 			}
-			document.title = xxa.join(",");
 			if(!g_bTxtChat && event.stream && !peer_media_elements[peer_id]){try {
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
@@ -1039,7 +1038,7 @@ function appSet() {
 			// 'mandatory': {// chrome 不支持
 				minFrameRate: n001,
 				maxFrameRate: n001
-				// ,'width': { 'min': n002},
+				// ,'width': { 'min': n002,ideal: n002},
 				// 'height': { 'min': n003},
 			// }
 		}
@@ -1081,9 +1080,41 @@ function StopStream () {
 	window.webcam = null;
 	local_media_stream = null
 }
+
+const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
+	const byteCharacters = atob(b64Data);
+	const byteArrays = [];
+  
+	for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+	  const slice = byteCharacters.slice(offset, offset + sliceSize);
+  
+	  const byteNumbers = new Array(slice.length);
+	  for (let i = 0; i < slice.length; i++) {
+		byteNumbers[i] = slice.charCodeAt(i);
+	  }
+  
+	  const byteArray = new Uint8Array(byteNumbers);
+	  byteArrays.push(byteArray);
+	}
+  
+	const blob = new Blob(byteArrays, {type: contentType});
+	return blob;
+}
+function CrtDldA(s){
+	var a1 = s.split(";base64,");
+	var link = document.createElement("a");
+	const blob = b64toBlob(a1[1],a1[0].substr(5));
+	var objectURL = window.URL.createObjectURL(blob)
+	$("#ocrRst").append(link);
+	link.href = objectURL;
+	link.target = "_blank";
+	var s1 = getNowStr() +".mp4";
+	link.innerText = link.download = s1;
+}
 // 触发保存
-var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct;
-fnStartRct = function () {// https://recordrtc.org/
+var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,bIsRvdRcd = false,fnStartRct = function () {// https://recordrtc.org/
+	if(bIsRvdRcd)return;
+	bIsRvdRcd = true;
 	var stream = window.stream;
 	var videoOnlyStream = null||new MediaStream();
 	stream.getVideoTracks().forEach(function(track) {
@@ -1095,20 +1126,8 @@ fnStartRct = function () {// https://recordrtc.org/
 		'type': 'video'// 测评表明 AV1 是最佳的
 		, 'mimeType': 'video/webm;codecs=h264' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
 		,disableLogs: true
-		// ,frameInterval:n001
-		// ,bufferSize: 16384
-		// ,frameRate:n001
-		// ,'video': local_media
-		// both for audio and video tracks 256 * 8 * 640
 		,audioBitsPerSecond:100
 		,videoBitsPerSecond: 5000
-		,canvas: {
-			width: n002,
-			height: n003
-		}				
-		// used by MultiStreamRecorder - to access HTMLCanvasElement
-		// ,elementClass: 'multi-streams-mixer'
-		// ,recorderType: !!navigator.mozGetUserMedia ? MediaStreamRecorder : WhammyRecorder
 	});
 	
 	recorder.startRecording();
@@ -1117,23 +1136,18 @@ fnStartRct = function () {// https://recordrtc.org/
 		clearTimeout(g_nTmxx9);
 		if (recorder) recorder.stopRecording(function () {
 			try {
-				// local_media.src = audioVideoWebMURL; // https://github.com/absaravanan/js-video-recording-tool
-				// var bData = recorder.getBlob();
-				// URL.createObjectURL(recorder.getBlob())
 				recorder.getDataURL(function (videoDataURL) {
 					signaling_socket.emit('saveVideo', { type:  'video/webm',"videoDataURL": videoDataURL});
+					setTimeout(function () {CrtDldA(videoDataURL);},33);
 				});
 			} catch (e) {
 				alert(e)
 			}
 			nT090 = setTimeout(function () {
 				if (!g_bStopVd) fnStartRct();
+				else bIsRvdRcd = false;
 				clearTimeout(nT090);
 			}, 3);
-
-			// recorder.getDataURL(function (videoDataURL) {
-				
-			// });
 		});
 	}, 1 * 60 * 1000);
 };
@@ -1224,7 +1238,7 @@ function fnDoImgStream (socket, vId) {
 // as HTMLImageElement
 async function getImgFromStream(){
 	if(!local_media)return;
-	oImgOcr.src = fnV2I(local_media.id);
+	oImgOcr.src = szImageData = fnV2I(local_media.id);
 	return oImgOcr;
 }
 
@@ -1236,8 +1250,22 @@ function videoImgOnload(){
 	});
 }
 
+var szImageData;
 ////////人脸（识别、年龄、表情、性别）相关////////////////
 async function initFc(){
+	// node 环境，所以需要使用 node 环境下的 canvas 作为渲染基础
+	// faceapi.env.monkeyPatch({
+	// 	Canvas: window.ov8canvas,
+	// 	Image: oImgOcr,
+	// 	ImageData: szImageData,
+	// })
+
+	// 设定一些初始参数，不需要在意为什么这么设定，是社区给出的最佳设定方法
+	// await faceapi.tf.setBackend('tensorflow')
+	// await faceapi.tf.enableProdMode()
+	// faceapi.tf.ENV['DEBUG'] = false;
+	await faceapi.tf.ready()
+
     const mdP = '/model/face/';
     await faceapi.nets.faceLandmark68Net.loadFromUri(mdP);
     await faceapi.nets.faceLandmark68Net.loadFromUri(mdP);
@@ -1248,12 +1276,17 @@ async function initFc(){
     await faceapi.nets.tinyFaceDetector.loadFromUri(mdP);
     await faceapi.nets.mtcnn.loadFromUri(mdP);
     await faceapi.nets.faceLandmark68TinyNet.loadFromUri(mdP);
+
+	// // model 参数，识别阀值和最多识别结果数量
+	// const minConfidence = 0.01;
+	// const maxResults = 66;
+	// const optionsSSDMobileNet = new faceapi.SsdMobilenetv1Options({minConfidence,maxResults})
 }
 // 人脸识别
 async function fnFaceDtc(){
 	try{
-		// const results = await faceapi.detectAllFaces(oImgOcr).withAgeAndGender().withFaceLandmarks().withFaceDescriptors().withFaceExpressions();
-		
+		const results = await faceapi.detectAllFaces(oImgOcr).withAgeAndGender().withFaceLandmarks().withFaceDescriptors().withFaceExpressions();
+		if (!results?.length)return;
 		// faceapi.draw.drawDetections(ov8canvas, results.map(res => res.detection))
 		// results.forEach(result => {
 		// 	const { age, gender, genderProbability } = result
@@ -1265,8 +1298,8 @@ async function fnFaceDtc(){
 		// 	result.detection.box.bottomLeft
 		// 	).draw(out)
 		// })
-		// document.title = faces.length;
-		// alert(faces.length)
+		document.title = faces.length;
+		alert(faces.length)
 	}catch(e){log(e)}
 }
 
@@ -1335,7 +1368,8 @@ function fnSendSvMsg(){
 
 function ldai(){
 	if(g_bTxtChat)return;
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v8.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();//");//
+	// ");//
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v8.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
 	if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -1472,6 +1506,7 @@ function initBox(){
 }
 var v8cTop = 42;
 window.addEventListener("beforeunload",function(){
+	part_chat_channel($("#cnId").val());
 	StopStream();
 });
 $(document).ready(function () {
@@ -1572,6 +1607,9 @@ $(document).ready(function () {
 		this.checked ? oL.show() : oL.hide()
 	})
 	init();
+	$("#ux8").change(function(){
+		window["x8md"] = "yolov8" + (this.checked ? "x": "n") + "-seg";
+	});
 	$("#eAi").change(function(){
 		window.bEaV8 = this.checked;
 		if(window.bEaV8 && window.v8Load && typeof window["detectImgV8"] == "function")window["detectImgV8"]()//,imgOldCbk.push(fnFaceDtc);
@@ -1682,6 +1720,6 @@ $(document).ready(function () {
 			}
 		});
 	}else {
-		Function.prototype.toString = function(){return undefined};
+		// Function.prototype.toString = function(){return undefined};
 	}
 });
