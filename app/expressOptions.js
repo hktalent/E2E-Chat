@@ -20,8 +20,8 @@ module.exports = {
   etag: true,
   lastModified: true,
   setHeaders: function (res, path, stat) {
-    // isSw = !!path.match(/sw\.js$/) !isSw && 
-    if((path.match(/\/(js|css)\//) || path.match(/model|(socket\.io\.js)/))) {
+    var isSw = !!path.match(/sw\.js$/);
+    if(!isSw && (path.match(/\/(js|css)\//) || path.match(/model|(socket\.io\.js)/))) {
       setLongTermCache(res)
     }else{
       setNoCache(res)
