@@ -42,8 +42,13 @@ rcp app/server.js /root/${xxx}/app/
 rcp app/expressOptions.js /root/${xxx}/app/
 
 
+# rcp app/static/model/tfjs-backend-wasm-threaded-simd.wasm /root/${xxx}/app/static/model/
+# rcp app/static/model/tfjs-backend-wasm-simd.wasm /root/${xxx}/app/static/model/
+# rcp app/static/model/tfjs-backend-wasm.wasm /root/${xxx}/app/static/model/
+
 # rcp app/static/model/yolov8n_web_model /root/${xxx}/app/static/model/
 # rcp app/static/model/yolov8n-seg_web_model /root/${xxx}/app/static/model/
+# rcp app/static/model/yolov8x-seg_web_model /root/${xxx}/app/static/model/
 
 # rcp app/static/models /root/${xxx}/app/static/
 # rcp app/static/model /root/${xxx}/app/static/
