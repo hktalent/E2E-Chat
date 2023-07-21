@@ -41,7 +41,7 @@ rcp app/myapp_51pwn.js /root/${xxx}/app/
 rcp app/server.js /root/${xxx}/app/
 rcp app/expressOptions.js /root/${xxx}/app/
 
-
+# rcp app/static/favicon.ico /root/${xxx}/app/static/
 # rcp app/static/model/tfjs-backend-wasm-threaded-simd.wasm /root/${xxx}/app/static/model/
 # rcp app/static/model/tfjs-backend-wasm-simd.wasm /root/${xxx}/app/static/model/
 # rcp app/static/model/tfjs-backend-wasm.wasm /root/${xxx}/app/static/model/
