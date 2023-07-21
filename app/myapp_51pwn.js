@@ -301,8 +301,13 @@ function myapp(option)
             doZipSFl(szSSP + "plyr.svg",res);
             return
         }
-        if(fs.existsSync(szSSP + req.path)){
-            doZipSFl(szSSP + req.path,res);
+        var aj = "/js/client.min.js,/js/jquery.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/aes.js,/js/fix.js,/js/kindle.js,/js/ie.js,/js/v8.js".split(",");
+        var s7 = req.path.substring(4);
+        var n12 = parseInt(s7.substring(0,s7.length - 3));
+        // console.log([n12,aj[n12]])
+        if(aj[n12] && fs.existsSync(szSSP + aj[n12])){
+            expressOptions.setLongTermCache(res);
+            doZipSFl(szSSP + aj[n12],res);
             return
         }
         
