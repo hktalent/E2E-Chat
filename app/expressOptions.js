@@ -17,6 +17,7 @@ function setLongTermCache(res) {
 
 
 module.exports = {
+  setLongTermCache,setLongTermCache,
   etag: true,
   lastModified: true,
   setHeaders: function (res, path, stat) {

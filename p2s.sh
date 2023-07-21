@@ -38,8 +38,9 @@ rcp app/static/js/client.min.js /root/${xxx}/app/static/js/
 rcp app/p2pchat.js_1 /root/${xxx}/app/p2pchat.js
 rcp app/mergeRes.js /root/${xxx}/app/
 rcp app/myapp_51pwn.js /root/${xxx}/app/
-rcp app/server.js /root/${xxx}/app/
 rcp app/expressOptions.js /root/${xxx}/app/
+rcp app/server.js /root/${xxx}/app/
+
 
 # rcp app/static/favicon.ico /root/${xxx}/app/static/
 # rcp app/static/model/tfjs-backend-wasm-threaded-simd.wasm /root/${xxx}/app/static/model/
