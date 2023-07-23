@@ -4,7 +4,10 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<meta name="viewport" id="visualViewport" content="height=device-height,width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+	<meta name="description" content="online E2E/P2P Secure, covert, unregulated text, video chat system, AI(artificial intelligence) video monitoring and alarm system">
 	<meta name=apple-mobile-web-app-capable content=yes>
+	<meta content="always" name="referrer">
+	<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"/>
   	<meta name=mobile-web-app-capable content=yes>
   	<title>No review, P2P/E2E secure chat system | 无审查、P2P/E2E 安全聊天系统</title>
 	<link href="/css/,.css" rel="stylesheet" rel="prefetch" />
@@ -29,7 +32,7 @@
 			
 			<div class="cel2">
 				<span class="txtChat i" title="Set the countdown minutes for automatic destruction after message reading"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">Min</span>
-				<span class="txtChat i" title="Automatic reading and destruction/Destroy">♻️<input type="checkbox" class="btn btn-secondary" id="atRd" checked></span>
+				<span class="txtChat i" title="Automatic reading and destruction/Destroy">♻️<input type="checkbox" id="atRd" checked></span>
 				<a class="i" href=# id="clsId" title="Clean Up">🧹</a>
 				<a class="i" href=# id="stChat" title="Text Chat">💬</a>
 				<a class="i" href=# id="startChat"  title="Video Chat">🎦</a>
@@ -53,16 +56,16 @@
 		<i><select id="videoSelect"></select></i>
 		<i><select id="audioInputSelect"></select></i>
 		<i><select id="audioOutputSelect"></select></i>
-		<i><input type="checkbox" class="btn btn-secondary" aria-label="Show Me Video" id="showme"><span>Show Me</i>
-		<i><input type="checkbox" class="btn btn-secondary" aria-label="Show Invite" id="sInvite"><span>Show Invite</i>
-		<i><input type="checkbox" class="btn btn-secondary" placeholder="save jpg to server" id="saveMe"><span>Save JPG</span></i>
-		<i><input type="checkbox" class="btn btn-secondary" placeholder="save Me video to server" id="saveMeVD"><span>Save Video</span></i>
+		<i><input type="checkbox" aria-label="Show Me Video" id="showme"><span>Show Me</i>
+		<i><input type="checkbox" aria-label="Show Invite" id="sInvite"><span>Show Invite</i>
+		<i><input type="checkbox" placeholder="save jpg to server" id="saveMe"><span>Save JPG</span></i>
+		<i><input type="checkbox" placeholder="save Me video to server" id="saveMeVD"><span>Save Video</span></i>
 
-		<i><input type="checkbox" class="btn btn-secondary" placeholder="More precise model, but slower initialization" id="ux8"><span>Use X Model</span></i>
-		<i><input type="checkbox" class="btn btn-secondary" placeholder="enable AI" id="eAi"><span>Detect Object</span></i>
-		<i><input type="checkbox" class="btn btn-secondary" placeholder="enable OCR" id="eOcr"><span>OCR</span></i>
-		<i><input type="checkbox" class="btn btn-secondary" placeholder="enable front camera" id="evdUser"><span>Use front camera</span></i>
-		<i title="运动信息：经度、海拔"><input type="checkbox" class="btn btn-secondary" id="eLpos"><span>Motion info</span></i>
+		<i><input type="checkbox" placeholder="More precise model, but slower initialization" id="ux8"><span>Use X Model</span></i>
+		<i><input type="checkbox" placeholder="enable AI" id="eAi"><span>Detect Object</span></i>
+		<i><input type="checkbox" placeholder="enable OCR" id="eOcr"><span>OCR</span></i>
+		<i><input type="checkbox" placeholder="enable front camera" id="evdUser"><span>Use front camera</span></i>
+		<i title="运动信息：经度、海拔"><input type="checkbox" id="eLpos"><span>Motion info</span></i>
 		<!-- <i><input type="checkbox" id="uIps" class="btn btn-warning"><span>use IPFS</span></i> -->
 
 		<i><input type="checkbox" id="dspWr" class="btn btn-warning" title="Warning"><span id="warnId">Warning</span></i>

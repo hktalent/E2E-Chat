@@ -562,28 +562,31 @@ function initQrcode () {
 var bStopRsize = false;
 function setWhOne(){// 只有自己的视频才会调整
 	setTimeout(() => {
+		bStopRsize = _$("video").length > 1;
 		if(typeof webcam == "undefined"){webcam = document.getElementById('webcam');}
 		if(webcam && !bStopRsize){
 			var bd = $("body");
 			if(!bd.length || !bd[0])return;
 			bd = bd[0];
-			var bw = bd.clientWidth,bh = bd.clientHeight - 40,blF = webcam.videoHeight/webcam.videoWidth,
+			var bw = bd.clientWidth,bh = bd.clientHeight - 80,blF = webcam.videoHeight/webcam.videoWidth,
 			w = bw,h = bw * blF;
 			if(h > bh){h = bh;w = bh/blF;}
-			$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
+			_$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
 		}
 	}, 3);
 }
 
 function StartVideo () {
+	var bCbkDo = false;
 	setup_local_media(function () {
-		x101 = setInterval(function () {
-			if (local_media_stream) {
-				JoinRoom();
-				initVideoChat();
-				clearInterval(x101)
-			}
-		}, 33)
+		if(bCbkDo)return;
+		if (local_media_stream) {
+			var bO = b_clickJoin;
+			b_clickJoin = bCbkDo = true;
+			JoinRoom();
+			initVideoChat();
+			b_clickJoin = bO;
+		}
 	});
 }
 
@@ -838,7 +841,6 @@ function init () {
 				oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 				attachMediaStream(remote_media, event.stream);
 				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0 0 0 0"});
-				bStopRsize = true;
 			} catch (e) { 
 				if(oCurmdm)oCurmdm.remove();
 				delete peer_media_elements[peer_id];
@@ -1172,10 +1174,6 @@ function setup_local_media (callback, errorback) {
 	StopStream();
 	g_bSetup = true;
 	try {
-		if (local_media_stream != null) { /* ie, if we've already been initialized */
-			if (callback) callback();
-			return;
-		}
 		// 消除回音：echoCancellation: false,echoCancellationType: "browser" 
 		// https://bugs.chromium.org/p/chromium/issues/detail?id=853196
 		// https://groups.google.com/forum/#!topic/discuss-webrtc/YOTGRlvh-3s
@@ -1213,6 +1211,7 @@ function setup_local_media (callback, errorback) {
 				attachMediaStream(local_media, stream);
 			// attachMediaStream(local_media, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
+			if (callback) callback();
 			return navigator.mediaDevices.enumerateDevices();
 		}).then(gotDevices).catch((e) => {
 			// console.log(e)
@@ -1747,6 +1746,7 @@ $(document).ready(function () {
 		fnShT1(this.checked);
 	}).prop("checked"));
 	initBox();
+	$("div.rtool input[type=checkbox]").addClass("btn btn-secondary");
 	if(bIsMobile)
 	{
 		$("#evdUser").prop("checked",true);
