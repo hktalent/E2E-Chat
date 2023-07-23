@@ -18,18 +18,10 @@ if ('serviceWorker' in navigator) {
 	});
 };
 
-const _$ = $,appURL = () => {
+const appURL = () => {
 	const protocol = String(document.location).split("://")[0] + '://';
 	return protocol + location.host;
 };
-var g_oCc = [];
-$ = function (s) {
-	if("string" == typeof s){
-		g_oCc[s] = g_oCc[s] || _$(s);
-		return g_oCc[s];
-	}
-	return _$(s);
-}
 const getRoomName = () => {// return $("#cnId").val();
 	return "Pwn"+String($("#cnId").val()).hashCode();
 }
@@ -553,8 +545,9 @@ function initQrcode () {
 }
 var bStopRsize = false;
 function setWhOne(){// 只有自己的视频才会调整
-	var x7 = setTimeout(() => {
-		bStopRsize = _$("video").size() > 1;
+	setTimeout(() => {
+		bStopRsize = $("video").length > 1;
+		$("#ocrRst").text($("video").length);
 		if(typeof webcam == "undefined"){webcam = document.getElementById('webcam');}
 		if(webcam && !bStopRsize){
 			var bd = $("body");
@@ -563,7 +556,7 @@ function setWhOne(){// 只有自己的视频才会调整
 			var bw = bd.clientWidth,bh = bd.clientHeight - 80,blF = webcam.videoHeight/webcam.videoWidth,
 			w = bw,h = bw * blF;
 			if(h > bh){h = bh;w = bh/blF;}
-			_$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
+			$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
 			var oCur11 = document.getElementById("Pmtwebcam"),t4 = document.getElementById("v8canvas");
 			if(t4 && oCur11){
 				t4.style.width = `${oCur11.clientWidth}px`;
@@ -573,7 +566,6 @@ function setWhOne(){// 只有自己的视频才会调整
 				t4.style.display = "block";
 			}
 		}
-		clearTimeout(x7);
 	}, 3);
 }
 
