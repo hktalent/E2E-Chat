@@ -24,22 +24,20 @@
 <body>
 	<main>
 		<div class="row1">
-			<div class="cel1 i"><input type="text" value="" placeholder="频道 | Channel | room name | 暗号 | 聊天室名字" id="cnId" results=10></div>
-			<div class="cel1 i"><input type="text" placeholder="昵称 | nick" id="nick" value="" results=10></div>
+			<div class="cel1 i"><input type="text" value="" placeholder="Channel | room name | 频道 | 暗号 | 聊天室名字" id="cnId" results=10></div>
+			<div class="cel1 i"><input type="text" placeholder="nick | 昵称" id="nick" value="" results=10></div>
 			
-			<div class="cel1">
-				<span class="txtChat i" title="Set the countdown minutes for automatic destruction after message reading;设定消息阅读后自动销毁的倒计时分钟数"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">Minute</span>
-				<span class="txtChat i">Destroy<input type="checkbox" class="btn btn-secondary" title="Automatic reading and destruction 自动阅读、销毁" id="atRd" checked></span>
-			</div>
-			<div class="cel1">
-				<input type="button" id="clsId" value="CleanUp" class="button txtChat">
-				<input type="button" id="stChat" value="TextChat" class="button">
-				<input type="button" id="startChat" value="VideoChat" class="button">
-				<input type="button" id="its" value="↕" title="show tools" class="button">
+			<div class="cel2">
+				<span class="txtChat i" title="Set the countdown minutes for automatic destruction after message reading"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">Min</span>
+				<span class="txtChat i" title="Automatic reading and destruction/Destroy">♻️<input type="checkbox" class="btn btn-secondary" id="atRd" checked></span>
+				<a class="i" href=# id="clsId" title="Clean Up">🧹</a>
+				<a class="i" href=# id="stChat" title="Text Chat">💬</a>
+				<a class="i" href=# id="startChat"  title="Video Chat">🎦</a>
+				<a class="i" href=# id="its" title="show tools">↕</a>
 			</div>
 		</div>
 		<div class="row" id="myCtn"><div id="rects" class="rects"></div></div>
-		<div class="txtChat" id="qmI">Member: <w id="otherP"></w></div>
+		<div class="row txtChat" id="qmI">👥: <w id="otherP"></w></div>
 		<div id="logId" class="logIdc"></div>
 		<div class="msgbox txtChat" id="msgList"></div>
 	</main>
@@ -55,6 +53,7 @@
 		<i><select id="audioInputSelect"></select></i>
 		<i><select id="audioOutputSelect"></select></i>
 		<i><input type="checkbox" class="btn btn-secondary" aria-label="Show Me Video" id="showme"><span>Show Me</i>
+		<i><input type="checkbox" class="btn btn-secondary" aria-label="Show Invite" id="sInvite"><span>Show Invite</i>
 		<i><input type="checkbox" class="btn btn-secondary" placeholder="save jpg to server" id="saveMe"><span>Save JPG</span></i>
 		<i><input type="checkbox" class="btn btn-secondary" placeholder="save Me video to server" id="saveMeVD"><span>Save Video</span></i>
 
@@ -74,7 +73,7 @@
 	</div>
 	<div id="intro" class="message overflow-x-hide overflow-y-hide shadow">
 		<a href="#" id="closebtn">&times;</a>
-		Invite friends
+		Invite Friends
 		<i id="roomurl" data-toggle="tooltip" title="click copy"></i>
 		<i id="myQrcode"></i>
 		<div id="tooManyParticipants" class="message">Too many people may affect performance</div>

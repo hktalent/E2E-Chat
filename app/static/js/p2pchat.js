@@ -942,7 +942,6 @@ function init () {
 		upListMb();
 		bStopRsize = !($("#myCtn div.rounded").length == 1);
 	});
-	MkQrcd()
 	$('#roomurl').on('click', event => {
 		let range, selection;
 		selection = window.getSelection();
@@ -950,9 +949,11 @@ function init () {
 		range.selectNodeContents(event.target);
 		selection.removeAllRanges();
 		selection.addRange(range);
+		document.execCommand("copy");
 	});
 	$('#closebtn').on('click', () => {
-		document.getElementById('intro').style.display = 'none';
+		$('#intro').hide();
+		$("#sInvite").prop("checked",false);
 	});
 }
 
@@ -966,7 +967,15 @@ function stopPc01(pc){
 
 // 构建二维码
 function MkQrcd () {
-	var szCurUrl = document.location.href.split("#")[0] + "#" + getRoomName();
+	var aP = [];
+	$("input[type=checkbox],input[type=text]").map(function (i) {
+		if(this.type == "checkbox"){this.checked && aP.push(this.id + "=true")}
+		else aP.push(this.id + "=" + encodeURIComponent(this.value));
+	});
+	if($("#stChat").attr("disabled"))aP.push("startChat=1");
+	else if($("#startChat").attr("disabled"))aP.push("stChat=1");
+
+	var szCurUrl = document.location.href.split("#")[0] + "?" + aP.join("&");
 	document.getElementById('roomurl').textContent = szCurUrl;
 	o1 = document.getElementById("myQrcode")
 	o1.innerHTML = ""
@@ -1499,7 +1508,7 @@ function initBox(){
 					o.checked = "true" == String(item[1]).toLowerCase(),o.click();
 				}, 1);
 			})(o);
-			else if(o.type == "button")o.click();
+			else if(o.tagName == "A")o.click();
 			else o.value = decodeURIComponent(item[1]);
 		}
 	});
@@ -1631,7 +1640,6 @@ $(document).ready(function () {
 	
 	oCnId.change(function () {
 		if(doKstart)JoinRoom();// 这里非常神奇和变态，若干没有点按钮开始聊，就先执行，则导致join失败
-		MkQrcd()
 	});
 	initQrcode();
 	osdMsg.keydown(function (e) {
@@ -1707,6 +1715,13 @@ $(document).ready(function () {
 		oCnId.val(szHs.substring(1));
 		StartVideo()
 	}
+	$("#roomurl").bind("mouseover", MkQrcd);
+	var t2 = $("#intro"),fnShT1 = function(x){x?t2.show():t2.hide();};
+	fnShT1($("#sInvite").change(function(){
+		
+		MkQrcd();
+		fnShT1(this.checked);
+	}).prop("checked"));
 	initBox();
 	if(bIsMobile)
 	{
