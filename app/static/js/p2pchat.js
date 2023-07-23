@@ -547,7 +547,6 @@ var bStopRsize = false;
 function setWhOne(){// 只有自己的视频才会调整
 	setTimeout(() => {
 		bStopRsize = $("video").length > 1;
-		$("#ocrRst").text($("video").length);
 		if(typeof webcam == "undefined"){webcam = document.getElementById('webcam');}
 		if(webcam && !bStopRsize){
 			var bd = $("body");
