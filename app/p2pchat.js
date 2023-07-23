@@ -176,7 +176,6 @@ function fnInit(io){
         fs.writeFileSync("resImg/" + szFileName + '.mp4',o)
         
     });
-    
     socket.on("getNick",function(s,s2){
         if(s){
             if(!s2){

@@ -18,10 +18,18 @@ if ('serviceWorker' in navigator) {
 	});
 };
 
-const appURL = () => {
+const _$ = $,appURL = () => {
 	const protocol = String(document.location).split("://")[0] + '://';
 	return protocol + location.host;
 };
+var g_oCc = [];
+$ = function (s) {
+	if("string" == typeof s){
+		g_oCc[s] = g_oCc[s] || _$(s);
+		return g_oCc[s];
+	}
+	return _$(s);
+}
 const getRoomName = () => {// return $("#cnId").val();
 	return "Pwn"+String($("#cnId").val()).hashCode();
 }
@@ -46,7 +54,6 @@ var oStreamTrack = null, // run ai
 	peer_media_elements = {}, /* keep track of our <video>/<audio> tags, indexed by peer_id */
 	g_oYourInfo = {},
 	g_bTxtChat = !!0,
-	g_peer_id = "",
 	nLogs = 0, bNbg = !!0,
 	szTOsTp = 'application/octet-stream',
 	szLstChannel = '',
@@ -265,8 +272,9 @@ function RevMsg (e) {
 }
 
 // https://emojipedia.org/check-mark-button/
-var clientHeight = 0;
+var clientHeight = 0,fDoPlay = !!0;
 var fn009 = function () {
+	if(fDoPlay && "function" == typeof fnPlay)fnPlay();
 	let vh = window.innerHeight * 0.01;
 	document.documentElement.style.setProperty('--vh', `${vh}px`);
 	setWhOne();
@@ -759,23 +767,18 @@ function init () {
 
 	signaling_socket.on('addPeer', function (config) {
 		var peer_id = config.peer_id;
-		if(!config.should_create_offer){
-			try{
-				var oSd = $("#Roln")[0];
-				oSd.muted = false;
-				oSd.pause();
-				oSd.currentTime = 0;
-				setTimeout(() => {
-					oSd.play()
-				}, 100)
-			}catch(e){}// safari 会报错 https://juejin.cn/post/6844903741838082062
-			// LogMsg(`昵称: ${config.userdata.nick} 上线了`);// 后期这里优化为名字闪烁
-		}
-		// LogMsg(`当前共 (${config.nOnline}) 人在线`);
 		if(config.userdata && config.userdata.nick){
 			g_aMembers[peer_id] = {nick:config.userdata.nick};
 			upListMb()
 		}
+		if (peer_id in peers)return;
+		if(!config.should_create_offer){
+				fDoPlay = true;
+			// safari 会报错 https://juejin.cn/post/6844903741838082062
+			// LogMsg(`昵称: ${config.userdata.nick} 上线了`);// 后期这里优化为名字闪烁
+		}
+		// LogMsg(`当前共 (${config.nOnline}) 人在线`);
+		
 		// 对方下线后，再次重新连接上来，但是会导致 setRemoteDescription 错误
 		// if (peer_id in peers) {
 		// 	log("Already connected to peer " + peer_id);
@@ -798,6 +801,7 @@ function init () {
 			if (peer_connection.iceGatheringState !== 'complete') {
 				return;
 			}
+			
 			g_aMembers[peer_id]["pc"]=peer_connection;
 		}
 		
@@ -821,12 +825,14 @@ function init () {
 		// https://stackoverflow.com/questions/55379332/onaddstream-event-not-called
 		//  addStream and onaddstream are deprecated
 		// ontrack event.stream[0]
+		var xxGet = function(o,a,prefix){
+			for(var k in o){
+				a.push(prefix+k + ":" + o[k]);
+			}
+			return a;
+		}
 		peer_connection.onaddstream = function (event) {
 			var oCurmdm;
-			var xxa = [];
-			for(var k in peer_media_elements){
-				xxa.push(k);
-			}
 			if(!g_bTxtChat && event.stream && !peer_media_elements[peer_id]){try {
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
@@ -958,8 +964,9 @@ function init () {
 }
 
 function stopPc01(pc){
+	if(!pc)return;
 	for (k in pc){
-		if (k.indexOf("on") == 0) {
+		if (String(k).indexOf("on") == 0) {
 			pc[k] = null;
 		}
 	}
@@ -970,10 +977,10 @@ function MkQrcd () {
 	var aP = [];
 	$("input[type=checkbox],input[type=text]").map(function (i) {
 		if(this.type == "checkbox"){this.checked && aP.push(this.id + "=true")}
-		else aP.push(this.id + "=" + encodeURIComponent(this.value));
+		else if(this.id != "nick") aP.push(this.id + "=" + encodeURIComponent(this.value));
 	});
-	if($("#stChat").attr("disabled"))aP.push("startChat=1");
-	else if($("#startChat").attr("disabled"))aP.push("stChat=1");
+	if($("#stChat").css("display")!="none")aP.push("startChat=1");
+	else if($("#startChat").css("display")!="none")aP.push("stChat=1");
 
 	var szCurUrl = document.location.href.split("#")[0] + "?" + aP.join("&");
 	document.getElementById('roomurl').textContent = szCurUrl;
@@ -1574,8 +1581,6 @@ $(document).ready(function () {
 		ovChat = $(".vChat");
 	// text chat
 	oStChat.click(function () {
-		$(this).attr("disabled", "disabled");
-		oStartChat.removeAttr("disabled");
 		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin = doKstart = g_bTxtChat = true;
 		oTxtChat.css("display", "inline-block");
@@ -1591,8 +1596,25 @@ $(document).ready(function () {
 		// fnTxtChat()
 	});
 	// video chat
-	oStartChat.click(function () {
-		$(this).attr("disabled", "disabled");oStChat.removeAttr("disabled");
+	oStartChat.click(function (e) {
+		/*
+		https://webkit.org/blog/7734/auto-play-policy-changes-for-macos/
+		https://www.crifan.com/safari_js_code_unhandled_promise_rejection_notallowederror_the_request_is_not_allowed_by_the_user_agent_or_the_platform_in_the_current_context/
+		https://www.coder.work/article/794000
+		https://webkit.org/blog/6784/new-video-policies-for-ios/
+		https://stackoverflow.com/questions/52298195/safari-ios-audio-refusing-to-play-with-error
+		*/
+		var oPl = $("#Roln")[0];
+		oPl.volume = 0.01;
+		oPl.play();
+		fnPlay = function () {
+			if(fDoPlay){
+				oPl.volume=1;
+				oPl.play();
+				fDoPlay = !!0;
+			}
+			return false
+		};
 		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin=true;
 		g_bTxtChat = false
@@ -1718,7 +1740,6 @@ $(document).ready(function () {
 	$("#roomurl").bind("mouseover", MkQrcd);
 	var t2 = $("#intro"),fnShT1 = function(x){x?t2.show():t2.hide();};
 	fnShT1($("#sInvite").change(function(){
-		
 		MkQrcd();
 		fnShT1(this.checked);
 	}).prop("checked"));
