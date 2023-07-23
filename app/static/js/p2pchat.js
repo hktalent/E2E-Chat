@@ -276,14 +276,6 @@ var fn009 = function () {
 	let vh = window.innerHeight * 0.01;
 	document.documentElement.style.setProperty('--vh', `${vh}px`);
 	setWhOne();
-	var oCur11 = document.getElementById("Pmtwebcam"),t4 = document.getElementById("v8canvas");
-	if(t4 && oCur11){
-		t4.style.width = `${oCur11.clientWidth}px`;
-		t4.style.height = `${oCur11.clientHeight}px`;
-		t4.style.top = `${oCur11.offsetTop}px`;
-		t4.style.left = `${oCur11.offsetLeft}px`;
-		t4.style.display = "block";
-	}
 	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
 	if(window.bEaV8)getImgFromStream();
 	return false;
@@ -561,7 +553,7 @@ function initQrcode () {
 }
 var bStopRsize = false;
 function setWhOne(){// 只有自己的视频才会调整
-	setTimeout(() => {
+	var x7 = setTimeout(() => {
 		bStopRsize = _$("video").length > 1;
 		if(typeof webcam == "undefined"){webcam = document.getElementById('webcam');}
 		if(webcam && !bStopRsize){
@@ -572,7 +564,16 @@ function setWhOne(){// 只有自己的视频才会调整
 			w = bw,h = bw * blF;
 			if(h > bh){h = bh;w = bh/blF;}
 			_$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
+			var oCur11 = document.getElementById("Pmtwebcam"),t4 = document.getElementById("v8canvas");
+			if(t4 && oCur11){
+				t4.style.width = `${oCur11.clientWidth}px`;
+				t4.style.height = `${oCur11.clientHeight}px`;
+				t4.style.top = `${oCur11.offsetTop}px`;
+				t4.style.left = `${oCur11.offsetLeft}px`;
+				t4.style.display = "block";
+			}
 		}
+		clearTimeout(x7);
 	}, 3);
 }
 
@@ -1603,6 +1604,7 @@ $(document).ready(function () {
 		g_bSetup = !g_bTxtChat;
 		JoinRoom();
 		$("#eLpos").click();
+		$("main").height($("body").height() - $("footer").height() - $("header").height() - 20);
 		// fnTxtChat()
 	});
 	// video chat
