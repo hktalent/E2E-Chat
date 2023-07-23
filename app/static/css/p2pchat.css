@@ -9,9 +9,12 @@ body {
     width:  100%;
 }
 
+header,main{
+    width: 100vw;
+    padding: 0;
+    margin: 0;
+}
 main {
-    width:  100%;
-    height: auto;
     padding: 0 10px 0 10px;
     z-index: 9999;
     flex:1;
@@ -19,6 +22,7 @@ main {
     top: 0;
     left: 0;
 }
+
 .d-none,#ocrImg {
     display: none !important;
 }
@@ -28,6 +32,9 @@ video {
     object-fit: cover;
 }
 footer{
+    position: absolute;
+    left: 0;
+    top: calc(100vh - 40px);
     padding-left: 0.5rem;
     z-index: 9999;
 }
@@ -173,7 +180,6 @@ body,input {
     background-color: #f5f5f5;
     display: block;
     padding: 0.3rem;
-    height: calc(var(--vh, 1vh) * 100 - 6.5rem);
     border: 0;
     margin: 0;
     overflow: auto !important;
@@ -373,7 +379,7 @@ input[type=button],#msgList img {
         white-space:nowrap;
     }
     .msgbox {
-        height: calc(var(--vh, 1vh) * 100 - 12.5rem);
+        height: calc(var(--vh, 1vh) * 100 - 14.5rem);
     }
     .cel1 input[type=text] {
         float: left;
@@ -389,9 +395,8 @@ input[type=button],#msgList img {
 
 /*定义横屏 css*/
 @media  (max-width: 600px) and (orientation:landscape) {
-    main{height: auto;}
     .msgbox {
-        height: calc(var(--vh, 1vh) * 100 - 12.5rem);
+        height: calc(var(--vh, 1vh) * 100 - 14.5rem);
     }    
 }
 /* Avoid Chrome to see Safari hack */
