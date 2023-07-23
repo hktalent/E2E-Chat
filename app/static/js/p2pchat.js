@@ -554,7 +554,7 @@ function initQrcode () {
 var bStopRsize = false;
 function setWhOne(){// 只有自己的视频才会调整
 	var x7 = setTimeout(() => {
-		bStopRsize = _$("video").length > 1;
+		bStopRsize = _$("video").size() > 1;
 		if(typeof webcam == "undefined"){webcam = document.getElementById('webcam');}
 		if(webcam && !bStopRsize){
 			var bd = $("body");
