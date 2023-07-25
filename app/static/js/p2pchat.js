@@ -171,7 +171,6 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	var x01 = getNowStr()
 	// var szCp = 0 == t && n != szSelfK ? "<img title='click copy text|点击拷贝' src=/cp1.svg>": "";
 	var szCp = 0 == t && n != szSelfK ? `<svg height="16" viewBox="0 0 16 16" version="1.1" width="16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path></svg>`: "";
-	fDoPlay = true;
 	o1.html(`[<t title='${x01}' class=t2>${n}</t>] <d></d>${szCp}<x></x><a href=#${szId} name=${szId}/>`)
 	o1.find("t.t2").text(n)
 	o1.attr("tm",new Date().getTime());
@@ -223,6 +222,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	else o1.click(autoRm);
 	nCnt++;
 	o9.scrollTop(100000,100000);
+	playSd(2)
 }
 
 // 文件发送、接收需要拆包和组包
@@ -262,9 +262,8 @@ function RevMsg (e) {
 }
 
 // https://emojipedia.org/check-mark-button/
-var clientHeight = 0,fDoPlay = !!0;
+var clientHeight = 0;
 var fn009 = function () {
-	if(fDoPlay && "function" == typeof fnPlay)fnPlay();
 	let vh = window.innerHeight * 0.01;
 	document.documentElement.style.setProperty('--vh', `${vh}px`);
 	setWhOne();
@@ -766,7 +765,7 @@ function init () {
 		}
 		if (peer_id in peers)return;
 		if(!config.should_create_offer){
-			fDoPlay = true;
+			playSd(1);
 			// safari 会报错 https://juejin.cn/post/6844903741838082062
 			// LogMsg(`昵称: ${config.userdata.nick} 上线了`);// 后期这里优化为名字闪烁
 		}
@@ -1514,6 +1513,32 @@ window.addEventListener("beforeunload",function(){
 	part_chat_channel($("#cnId").val());
 	StopStream();
 });
+
+function plWarn(){
+	playSd(3);
+}
+window.g_oWarObj = {};
+function boxslct(o){
+	if(o.checked)window.g_oWarObj[o.value] = 1;
+	else delete window.g_oWarObj[o.value];
+}
+
+function showWnSt(){
+	var ws = $("#wnset"),o = window.labels, a = [],sD = "人,手机,刀,枪";
+	if(o){
+		for(var i in o){
+			var szCkdt = "";
+			if(-1 < sD.indexOf(o[i]))window.g_oWarObj[o[i]]=1,szCkdt = "checked";
+			a.push(`<i><input type=checkbox onchange=boxslct(this) value='${o[i]}' ${szCkdt}>${o[i]}</i>`);
+		}
+	}else{
+		setTimeout(() => {
+			showWnSt()
+		}, 33);
+		return;
+	}
+	$("#wnset").html(a.join("")).show();
+}
 $(document).ready(function () {
 	clientJs = new ClientJS();
 	isChrome = clientJs.isChrome();
@@ -1567,22 +1592,10 @@ $(document).ready(function () {
 		oTxtChat = $(".txtChat")
 		oMyCtn = $("#myCtn"),
 		oclsId = $("#clsId"),
-		ovChat = $(".vChat"),
-		oPl = $("#Roln")[0],
-		fnX1 = function () {
-			oPl.volume = 1;
-			oPl.play();
-		};
-	fnPlay = function () {
-		if(fDoPlay){
-			oPl.play();
-			fDoPlay = !!0;
-		}
-		return false
-	};
+		ovChat = $(".vChat");
 	// text chat
 	oStChat.click(function () {
-		fnX1();
+		playSd(1);
 		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin = doKstart = g_bTxtChat = true;
 		oTxtChat.css("display", "inline-block");
@@ -1607,7 +1620,7 @@ $(document).ready(function () {
 		https://webkit.org/blog/6784/new-video-policies-for-ios/
 		https://stackoverflow.com/questions/52298195/safari-ios-audio-refusing-to-play-with-error
 		*/
-		fnX1();
+		playSd(1);
 		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin=true;
 		g_bTxtChat = false
@@ -1639,7 +1652,7 @@ $(document).ready(function () {
 		if(window.bEaV8 && window.v8Load && typeof window["detectImgV8"] == "function")window["detectImgV8"]()//,imgOldCbk.push(fnFaceDtc);
 		// else rmFnImg(fnFaceDtc);
 		ldai();
-		;
+		showWnSt()
 	});
 	$("#eOcr").change(function(){
 		window.bEabOcr = this.checked;

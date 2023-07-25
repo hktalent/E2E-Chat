@@ -119,7 +119,7 @@ else{
 async function fnMerg (s, t) {
     var szXf = "static/"+t + "." + t;
     // if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,p2pchat,bundle";
-    if (t == "js") s = "stunLists,p2pchat";
+    if (t == "js") s = "msd,stunLists,p2pchat";
     else s = "plyr,p2pchat";
     if(useCc){
         if(fs.existsSync(szXf)){
@@ -197,7 +197,7 @@ async function fnDoMg (req, res, next, reRes) {
 function fnSetPath (s) {
     if (s)
         szPath = s + "js/",
-            szPathC = s + "css/";
+        szPathC = s + "css/";
 }
 
 module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc };
