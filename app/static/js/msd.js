@@ -92,14 +92,6 @@ function startInterval (s) {
         playSound(myAudio[s]);
         bpIn = false;
     },2000);
-    // var xt = setInterval(function () {
-    //     if(bpIn)return;
-    //     bpIn = true;
-    //     if(playSound(myAudio[s])){
-    //         clearInterval(xt);
-    //     }
-    //     bpIn = false;
-    // }, 2000)
 }
 
 function playSd(n) {
