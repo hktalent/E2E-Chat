@@ -42,6 +42,11 @@ rcp app/expressOptions.js /root/${xxx}/app/
 rcp app/server.js /root/${xxx}/app/
 
 
+# rcp app/static/msg.mp3 /root/${xxx}/app/static/
+# rcp app/static/online.mp3 /root/${xxx}/app/static/
+# rcp app/static/wh01.mp3 /root/${xxx}/app/static/
+# rcp app/static/k01.mp3 /root/${xxx}/app/static/
+
 # rcp app/static/favicon.ico /root/${xxx}/app/static/
 # rcp app/static/model/tfjs-backend-wasm-threaded-simd.wasm /root/${xxx}/app/static/model/
 # rcp app/static/model/tfjs-backend-wasm-simd.wasm /root/${xxx}/app/static/model/
