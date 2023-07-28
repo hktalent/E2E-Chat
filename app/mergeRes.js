@@ -114,7 +114,7 @@ if(useCc)MakeN();
 else{
     fs.unlink("p2pchat.js_1",()=>{});
     fs.unlink("static/js.js",()=>{});
-    fs.unlink("static/v8.js",()=>{});
+    // fs.unlink("static/v8.js",()=>{});
     fs.unlink("static/css.css",()=>{});
 }
 async function fnMerg (s, t) {
@@ -172,7 +172,7 @@ async function fnMerg (s, t) {
 }
 // 启动时预处理，提高速度
 fnMerg(",.js", "js");
-fnMerg("v8,.js", "js");
+// fnMerg("v8,.js", "js");
 fnMerg(",.css", "css");
 
 function setLongTermCache (res) {
