@@ -968,7 +968,7 @@ function MkQrcd () {
 	var aP = [];
 	$("input[type=checkbox],input[type=text]").map(function (i) {
 		if(this.type == "checkbox"){this.checked && aP.push(this.id + "=true")}
-		else if(this.id != "nick") aP.push(this.id + "=" + encodeURIComponent(this.value));
+		else if(this.id != "nick" && this.value) aP.push(this.id + "=" + encodeURIComponent(this.value));
 	});
 	if($("#stChat").css("display")!="none")aP.push("startChat=1");
 	else if($("#startChat").css("display")!="none")aP.push("stChat=1");
@@ -1142,6 +1142,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,bIsRvdRcd = false,fnStartRct = f
 		if (recorder) recorder.stopRecording(function () {
 			try {
 				recorder.getDataURL(function (videoDataURL) {
+					videoDataURL = String(videoDataURL);
 					signaling_socket.emit('saveVideo', { type:  'video/webm',"videoDataURL": videoDataURL});
 					setTimeout(function () {CrtDldA(videoDataURL);},33);
 				});
@@ -1372,7 +1373,7 @@ function fnSendSvMsg(){
 function ldai(){
 	if(g_bTxtChat)return;
 	// ");//
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/11.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v8,.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
 	if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -1447,63 +1448,47 @@ function locationHandler(position) {
 	  );
 	return Math.round(psi);
 }
-// Function to add cropped image to canvas
-const addCroppedImageToCanvas = async (canvasId, imageData, maxWidth = 1024) => {
-	// Create a new image element
-	const img = new Image();
+// 将等比例缩放 放到这里
+const createScaledCanvas = (canvas, maxWidth = 1024) => {
+	const aspectRatio = canvas.width / canvas.height;
+	const maxImageWidth = Math.min(150, maxWidth);
+	const scaledWidth = maxImageWidth;
+	const scaledHeight = maxImageWidth / aspectRatio;
   
-	// Convert the ImageData to a data URL
-	const dataUrl = await createImageDataUrl(imageData);
+	const scaledCanvas = document.createElement("canvas");
+	scaledCanvas.width = scaledWidth;
+	scaledCanvas.height = scaledHeight;
+	const scaledCtx = scaledCanvas.getContext("2d");
+	scaledCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, scaledWidth, scaledHeight);
   
-	// Set the src attribute of the image element to the data URL
-	img.src = dataUrl;
+	return scaledCanvas;
+  };
   
-	// Wait for the image to load
-	await new Promise((resolve) => {
-	  img.onload = resolve;
-	});
-  
-	// Get the canvas element by ID
-	const canvas = document.getElementById(canvasId);
-  
-	// Resize the image to a height of 150px while maintaining aspect ratio
-	const aspectRatio = img.width / img.height;
-	img.width = 150 * aspectRatio;
-	img.height = 150;
-  
-	// Check if the image exceeds the maximum width
-	const totalWidth = Array.from(canvas.children).reduce((sum, child) => sum + child.width, 0);
-	const needToRemove = totalWidth + img.width > maxWidth;
-  
-	// If the image needs to be removed, remove the first image
-	if (needToRemove) {
-	  const firstImage = canvas.firstElementChild;
-	  canvas.removeChild(firstImage);
-	}
-  
-	// Add the image to the canvas at the specified position
-	canvas.appendChild(img);
-};
-  
-// 创建一个全局canvas元素
-const globalCanvas = document.createElement("canvas");
-// Function to convert ImageData to data URL
-const createImageDataUrl = (imageData) => {
+  // Function to convert ImageData to data URL
+  const createImageDataUrl = (imageData) => {
 	return new Promise((resolve) => {
-		const canvas = document.createElement("canvas");
-		canvas.width = imageData.width;
-		canvas.height = imageData.height;
-		const ctx = canvas.getContext("2d");
-		ctx.putImageData(imageData, 0, 0);
-		canvas.toBlob((blob) => {
-		const reader = new FileReader();
-		reader.onloadend = () => {
-			resolve(reader.result);
-		};
-		reader.readAsDataURL(blob);
-		});
+	  const canvas = document.createElement("canvas");
+	  canvas.width = imageData.width;
+	  canvas.height = imageData.height;
+	  const ctx = canvas.getContext("2d");
+	  ctx.putImageData(imageData, 0, 0);
+	  canvas.toBlob((blob) => {
+		resolve(canvas); // 返回canvas对象而不是data URL
+	  });
 	});
-};
+  };
+  
+  const addCroppedImageToCanvas = async (canvasId, imageData, maxWidth = 1024) => {
+	const canvas = await createImageDataUrl(imageData); // 等待canvas对象返回
+	const scaledCanvas = createScaledCanvas(canvas, maxWidth);
+  
+	document.getElementById(canvasId).appendChild(scaledCanvas);
+  
+	// 释放内存
+	// URL.revokeObjectURL(img.src);
+  };
+	
+
 
 // HTML5 Video的流是只读的，不可直接修改的 https://developer.mozilla.org/en-US/docs/Web/API/VTTCue
 function fnAddTmGps(){

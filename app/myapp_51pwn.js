@@ -301,7 +301,10 @@ function myapp(option)
             doZipSFl(szSSP + "plyr.svg",res);
             return
         }
-        var aj = "/js/client.min.js,/js/jquery.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/aes.js,/js/fix.js,/js/kindle.js,/js/ie.js,/js/v8.js".split(",");
+        var aj = "/js/client.min.js,/js/jquery.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/aes.js,/js/fix.js,/js/kindle.js,/js/ie.js,/js/common.js,/js/392.js,/js/tensorflow.js".split(",");
+        // for(var k in aj){
+        //     console.log([k,aj[k]])
+        // }
         var s7 = req.path.substring(4);
         var n12 = parseInt(s7.substring(0,s7.length - 3));
         // console.log([n12,aj[n12]])
