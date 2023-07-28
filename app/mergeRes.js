@@ -114,14 +114,14 @@ if(useCc)MakeN();
 else{
     fs.unlink("p2pchat.js_1",()=>{});
     fs.unlink("static/js.js",()=>{});
-    // fs.unlink("static/v8.js",()=>{});
+    fs.unlink("static/v8.js",()=>{});
     fs.unlink("static/css.css",()=>{});
 }
 async function fnMerg (s, t) {
     var szXf = "static/"+t + "." + t;
     // if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,p2pchat,bundle";
     if (t == "js"){ 
-        if(s == "v8,.js"){
+        if(s == "v,.js"){
             s = "v8";
             szXf = "static/"+s + "." + t
         }else s = "msd,stunLists,p2pchat";

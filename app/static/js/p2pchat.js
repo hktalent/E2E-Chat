@@ -18,7 +18,7 @@ if ('serviceWorker' in navigator) {
 	});
 };
 
-const appURL = () => {
+window.appURL = () => {
 	const protocol = String(document.location).split("://")[0] + '://';
 	return protocol + location.host;
 };
@@ -546,8 +546,8 @@ var bStopRsize = false;
 function setWhOne(){// 只有自己的视频才会调整
 	setTimeout(() => {
 		bStopRsize = $("video").length > 1;
-		if(typeof webcam == "undefined"){webcam = document.getElementById('webcam');}
-		if(webcam && !bStopRsize){
+		if(typeof window.webcam == "undefined"){window.webcam = document.getElementById('webcam');}
+		if(window.webcam && !bStopRsize){
 			var bd = $("body");
 			if(!bd.length || !bd[0])return;
 			bd = bd[0];
@@ -1373,7 +1373,7 @@ function fnSendSvMsg(){
 function ldai(){
 	if(g_bTxtChat)return;
 	// ");//
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v8.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v,.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
 	if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -1401,7 +1401,7 @@ function doEvt(event){
 	g_oSdMsg["compass"] = getObjInfo(event,o1);
 	fnMyLogs(JSON.stringify(g_oSdMsg["compass"],null," "));
 }
-let pointDegree;
+var pointDegree;
 function doGps(e) {
 	var compass = e.webkitCompassHeading || Math.abs(e.alpha - 360),compassCircle = document.querySelector(".compass-circle"),myPoint = document.querySelector(".my-point");
 	compassCircle.style.transform = `translate(-50%, -50%) rotate(${-compass}deg)`;
@@ -1772,7 +1772,7 @@ $(document).ready(function () {
 		return false
 	});
 	fnTmArr.push(fn009);
-	window.addEventListener('resize', fn009);
+	// window.addEventListener('resize', fn009);
 	// 微信浏览器 https://www.lixf.cc/2021/03/26/webrtc-in-ios-weixin-browser/
 	document.addEventListener("WeixinJSBridgeReady", function () {  
 		$("video").each(function(){
