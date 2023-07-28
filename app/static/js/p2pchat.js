@@ -1016,7 +1016,6 @@ function appSet() {
 		suppressLocalAudioPlayback: true,
 		sampleRate: { max: 48000, min: 48000 },
 		channelCount: { max: 2, min: 1 },
-		volume: 1.0
 		// https://github.com/muaz-khan/WebRTC-Experiment/issues/435
 		// ,optional:[{echoCancellation: false}],
 		// mandatory: {// https://bugs.webkit.org/show_bug.cgi?id=179411
@@ -1197,7 +1196,7 @@ function setup_local_media (callback, errorback) {
 			$("#showme").attr("checked", true),oXv.removeClass('d-none');
 			
 			// try{
-				local_media.muted = true, local_media.volume = 0;
+				local_media.muted = true;
 				local_media.autoplay = true;
 				local_media.controls = false;
 				attachMediaStream(local_media, stream);
