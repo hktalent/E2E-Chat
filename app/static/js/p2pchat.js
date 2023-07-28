@@ -1139,7 +1139,6 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,bIsRvdRcd = false,fnStartRct = f
 	recorder.startRecording();
 	//  10分钟,停一下，并上传，然后重新开始
 	g_nTmxx9 = setTimeout(function () {
-		clearTimeout(g_nTmxx9);
 		if (recorder) recorder.stopRecording(function () {
 			try {
 				recorder.getDataURL(function (videoDataURL) {
@@ -1508,25 +1507,25 @@ const createImageDataUrl = (imageData) => {
 
 // HTML5 Video的流是只读的，不可直接修改的 https://developer.mozilla.org/en-US/docs/Web/API/VTTCue
 function fnAddTmGps(){
-	var video = document.getElementById('webcam');
-	const track = video.addTextTrack('subtitles', 'text',"en");
-    track.mode = 'showing'; // Show the cues
+	// var video = document.getElementById('webcam');
+	// const track = video.addTextTrack('subtitles', 'text',"en");
+    // track.mode = 'showing'; // Show the cues
 
-	var nLst = 0;
-    video.addEventListener('timeupdate', () => {
-		if(0 == nLst)nLst = new Date().getTime();
-		else{
-			var nTm = new Date().getTime();
-			if(nTm - nLst < 1000)return;
-			nLst = nTm;
-		}
-		const szTm = getNowStr();
-		const cue = new VTTCue(video.currentTime, video.currentTime + 1, szTm);
-		cue.position = 80;
-		cue.line = 1;
-		track.addCue(cue);
-		// return false
-	});
+	// var nLst = 0;
+    // video.addEventListener('timeupdate', () => {
+	// 	if(0 == nLst)nLst = new Date().getTime();
+	// 	else{
+	// 		var nTm = new Date().getTime();
+	// 		if(nTm - nLst < 1000)return;
+	// 		nLst = nTm;
+	// 	}
+	// 	const szTm = getNowStr();
+	// 	const cue = new VTTCue(video.currentTime, video.currentTime + 1, szTm);
+	// 	cue.position = 80;
+	// 	cue.line = 1;
+	// 	track.addCue(cue);
+	// 	// return false
+	// });
 }
 function StartPosInfo(){
 	var id;
