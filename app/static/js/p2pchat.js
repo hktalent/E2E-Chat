@@ -1189,7 +1189,7 @@ function setup_local_media (callback, errorback) {
 			window.webcam = local_media = fnCreateVid(bNbg,"webcam");
 			window.webcam.srcObject = stream;
 			localVvId = local_media.id
-			fnAddTmGps(local_media);
+			fnAddTmGps();
 			// hidden me、self
 			var oXv = $("#Pmt" + local_media.id),oCps = $("div.compass-circle");
 			oCps.css("display","none");
@@ -1506,17 +1506,27 @@ const createImageDataUrl = (imageData) => {
 	});
 };
 
-// HTML5 Video的流是只读的，不可直接修改的
-function fnAddTmGps(video){
-	// const track = video.addTextTrack('metadata', 'Time Track');
-    // track.mode = 'showing'; // Show the cues
+// HTML5 Video的流是只读的，不可直接修改的 https://developer.mozilla.org/en-US/docs/Web/API/VTTCue
+function fnAddTmGps(){
+	var video = document.getElementById('webcam');
+	const track = video.addTextTrack('subtitles', 'text',"en");
+    track.mode = 'showing'; // Show the cues
 
-    // // Listen for 'timeupdate' event on the video
-    // video.addEventListener('timeupdate', () => {
-    //   const currentTime = video.currentTime;
-    //   const cue = new VTTCue(currentTime, currentTime, getNowStr());
-    //   track.addCue(cue);
-    // });
+	var nLst = 0;
+    video.addEventListener('timeupdate', () => {
+		if(0 == nLst)nLst = new Date().getTime();
+		else{
+			var nTm = new Date().getTime();
+			if(nTm - nLst < 1000)return;
+			nLst = nTm;
+		}
+		const szTm = getNowStr();
+		const cue = new VTTCue(video.currentTime, video.currentTime + 1, szTm);
+		cue.position = 80;
+		cue.line = 1;
+		track.addCue(cue);
+		// return false
+	});
 }
 function StartPosInfo(){
 	var id;
