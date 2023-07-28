@@ -967,6 +967,7 @@ function stopPc01(pc){
 function MkQrcd () {
 	var aP = [];
 	$("input[type=checkbox],input[type=text]").map(function (i) {
+		if("sInvite" == this.id)return;
 		if(this.type == "checkbox"){this.checked && aP.push(this.id + "=true")}
 		else if(this.id != "nick" && this.value) aP.push(this.id + "=" + encodeURIComponent(this.value));
 	});
@@ -1815,7 +1816,6 @@ $(document).ready(function () {
 		MkQrcd();
 		fnShT1(this.checked);
 	}).prop("checked"));
-	initBox();
 	$("div.rtool input[type=checkbox]").addClass("btn btn-secondary");
 	if(bIsMobile)
 	{
@@ -1831,4 +1831,5 @@ $(document).ready(function () {
 	}else {
 		// Function.prototype.toString = function(){return undefined};
 	}
+	initBox();
 });
