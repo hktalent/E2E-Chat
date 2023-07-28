@@ -456,7 +456,7 @@ function fnCreateVid (bLocal = false,id = "") {
 	// https://github.com/bbc/VideoContext/issues/66
 	// autoplay=true :[Error] Unhandled Promise Rejection: AbortError: The operation was aborted. (x2)
 	//  playsinline=true 设置了 playsinline 属性的视频在播放时不会自动全屏 style='margin: 0 5px;'  controls
-	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded'  id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape width=640 height=480 type=video/webm;codecs=h264></video></div>");
+	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded' controls id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape width=640 height=480 type=video/webm;codecs=h264></video></div>");
 	// ,{autoplay:true,volume:1}
 	if (!bLocal) new Plyr('#' + szId);
 	ovdio = $("#" + szId);
@@ -1190,6 +1190,7 @@ function setup_local_media (callback, errorback) {
 			window.webcam = local_media = fnCreateVid(bNbg,"webcam");
 			window.webcam.srcObject = stream;
 			localVvId = local_media.id
+			fnAddTmGps(local_media);
 			// hidden me、self
 			var oXv = $("#Pmt" + local_media.id),oCps = $("div.compass-circle");
 			oCps.css("display","none");
@@ -1448,6 +1449,76 @@ function locationHandler(position) {
 	  );
 	return Math.round(psi);
 }
+// Function to add cropped image to canvas
+const addCroppedImageToCanvas = async (canvasId, imageData, maxWidth = 1024) => {
+	// Create a new image element
+	const img = new Image();
+  
+	// Convert the ImageData to a data URL
+	const dataUrl = await createImageDataUrl(imageData);
+  
+	// Set the src attribute of the image element to the data URL
+	img.src = dataUrl;
+  
+	// Wait for the image to load
+	await new Promise((resolve) => {
+	  img.onload = resolve;
+	});
+  
+	// Get the canvas element by ID
+	const canvas = document.getElementById(canvasId);
+  
+	// Resize the image to a height of 150px while maintaining aspect ratio
+	const aspectRatio = img.width / img.height;
+	img.width = 150 * aspectRatio;
+	img.height = 150;
+  
+	// Check if the image exceeds the maximum width
+	const totalWidth = Array.from(canvas.children).reduce((sum, child) => sum + child.width, 0);
+	const needToRemove = totalWidth + img.width > maxWidth;
+  
+	// If the image needs to be removed, remove the first image
+	if (needToRemove) {
+	  const firstImage = canvas.firstElementChild;
+	  canvas.removeChild(firstImage);
+	}
+  
+	// Add the image to the canvas at the specified position
+	canvas.appendChild(img);
+};
+  
+// 创建一个全局canvas元素
+const globalCanvas = document.createElement("canvas");
+// Function to convert ImageData to data URL
+const createImageDataUrl = (imageData) => {
+	return new Promise((resolve) => {
+		const canvas = document.createElement("canvas");
+		canvas.width = imageData.width;
+		canvas.height = imageData.height;
+		const ctx = canvas.getContext("2d");
+		ctx.putImageData(imageData, 0, 0);
+		canvas.toBlob((blob) => {
+		const reader = new FileReader();
+		reader.onloadend = () => {
+			resolve(reader.result);
+		};
+		reader.readAsDataURL(blob);
+		});
+	});
+};
+
+// HTML5 Video的流是只读的，不可直接修改的
+function fnAddTmGps(video){
+	// const track = video.addTextTrack('metadata', 'Time Track');
+    // track.mode = 'showing'; // Show the cues
+
+    // // Listen for 'timeupdate' event on the video
+    // video.addEventListener('timeupdate', () => {
+    //   const currentTime = video.currentTime;
+    //   const cue = new VTTCue(currentTime, currentTime, getNowStr());
+    //   track.addCue(cue);
+    // });
+}
 function StartPosInfo(){
 	var id;
 	if(navigator.geolocation) { // 经纬度信息
@@ -1522,7 +1593,7 @@ function boxslct(o){
 	if(o.checked)window.g_oWarObj[o.value] = 1;
 	else delete window.g_oWarObj[o.value];
 }
-
+window.nWscore=0.6;
 function showWnSt(){
 	var ws = $("#wnset"),o = window.labels, a = [],sD = "人,手机,刀,枪";
 	if(o){
