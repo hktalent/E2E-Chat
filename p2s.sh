@@ -15,8 +15,6 @@ rcp app/static/index.html /root/${xxx}/app/static/
 rcp app/static/js.js /root/${xxx}/app/static/
 rcp app/static/css.css /root/${xxx}/app/static/
 
-
-
 rcp app/static/js/bundle.js /root/${xxx}/app/static/js/
 rcp app/static/js/ocr.js /root/${xxx}/app/static/js/
 
