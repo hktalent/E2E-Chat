@@ -301,7 +301,22 @@ function myapp(option)
             doZipSFl(szSSP + "plyr.svg",res);
             return
         }
-        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/aes.js,/js/fix.js,/js/kindle.js,/js/ie.js,/js/tfjs.js".split(",");
+        /*
+        [ '0', '/js/client.min.js' ]
+[ '1', '/js/jquery.min.js' ]
+[ '2', '/js/RecordRTC.min.js' ]
+[ '3', '/js/adapter-latest.js' ]
+[ '4', '/js/qrcode.min.js' ]
+[ '5', '/js/plyr.js' ]
+[ '6', '/js/html5-qrcode.min.js' ]
+[ '7', '/js/aes.js' ]
+[ '8', '/js/fix.js' ]
+[ '9', '/js/kindle.js' ]
+[ '10', '/js/ie.js' ]
+[ '11', '/js/tfjs.js' ]
+[ '12', '/js/webtorrent.min.js' ]
+        */
+        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/aes.js,/js/fix.js,/js/kindle.js,/js/ie.js,/js/tfjs.js,/js/webtorrent.min.js".split(",");
         // for(var k in aj){
         //     console.log([k,aj[k]])
         // }

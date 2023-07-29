@@ -13,13 +13,13 @@ rcp app/static/plyr.svg /root/${xxx}/app/static/
 
 rcp app/static/index.html /root/${xxx}/app/static/
 rcp app/static/js.js /root/${xxx}/app/static/
+rcp app/static/v8.js /root/${xxx}/app/static/
 rcp app/static/css.css /root/${xxx}/app/static/
 
 rcp app/static/js/bundle.js /root/${xxx}/app/static/js/
 rcp app/static/js/ocr.js /root/${xxx}/app/static/js/
 
 rcp app/static/js/v8.js /root/${xxx}/app/static/js/
-# rcp app/static/v8.js /root/${xxx}/app/static/
 rcp app/static/js/msd.js /root/${xxx}/app/static/js/
 rcp app/static/js/common.js /root/${xxx}/app/static/js/
 rcp app/static/js/392.js /root/${xxx}/app/static/js/
