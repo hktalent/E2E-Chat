@@ -269,6 +269,7 @@ var fn009 = function () {
 	setWhOne();
 	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
 	if(window.bEaV8)getImgFromStream();
+	$("footer").css({top: $("main").height() + $("header").height()+10});
 	return false;
 };
 function clOpen(){
@@ -963,6 +964,7 @@ function stopPc01(pc){
 	}
 }
 
+var szLstQrcode = "";
 // 构建二维码
 function MkQrcd () {
 	var aP = [];
@@ -975,6 +977,8 @@ function MkQrcd () {
 	else if($("#startChat").css("display")!="none")aP.push("stChat=1");
 
 	var szCurUrl = document.location.href.split("#")[0] + "?" + aP.join("&");
+	if(szLstQrcode == szCurUrl)return;
+	szLstQrcode = szCurUrl;
 	document.getElementById('roomurl').textContent = szCurUrl;
 	o1 = document.getElementById("myQrcode")
 	o1.innerHTML = ""

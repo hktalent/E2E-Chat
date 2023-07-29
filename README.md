@@ -20,6 +20,8 @@ https://127.0.0.1:2083/?eAi=true&cnId=51pwn&startChat=1
 ```
 /usr/local/Cellar/openjdk@11/11.0.16.1/libexec/openjdk.jdk/Contents/Home/bin/java  -jar $HOME/MyWork/E2E_chat/tools/closure-compiler-v20230502.jar --js adapter-latest.js --js_output_file adapter-min.js
 
+uglifyjs static/js/webtorrent.min.js -c -m -o static/js/webtorrent.min1.js 
+
 ```
 
 # more
