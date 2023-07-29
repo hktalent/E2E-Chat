@@ -18,6 +18,9 @@ https://127.0.0.1:2083/?eAi=true&cnId=51pwn&startChat=1
 
 # 优化js
 ```
+rm -rf app/static/js/tfjs.js
+wget -c -O app/static/js/tfjs.js 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js'
+
 /usr/local/Cellar/openjdk@11/11.0.16.1/libexec/openjdk.jdk/Contents/Home/bin/java  -jar $HOME/MyWork/E2E_chat/tools/closure-compiler-v20230502.jar --js adapter-latest.js --js_output_file adapter-min.js
 
 uglifyjs static/js/webtorrent.min.js -c -m -o static/js/webtorrent.min1.js 
