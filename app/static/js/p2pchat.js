@@ -269,7 +269,6 @@ var fn009 = function () {
 	setWhOne();
 	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
 	if(window.bEaV8)getImgFromStream();
-	$("footer").css({top: inHeight * 100 - 40});
 	return false;
 };
 function clOpen(){
@@ -1608,81 +1607,151 @@ function showWnSt(){
 	}
 	$("#wnset").html(a.join("")).show();
 }
-const client = new WebTorrent();
-async function webTorrentFetch(magnetURI, url) {
-	return new Promise((resolve, reject) => {
-	  const torrent = client.add(magnetURI, { store: true }, function (torrent) {
-		const file = torrent.files.find((file) => {
-		  return file.name === url.substring(url.lastIndexOf('/') + 1);
-		});
+// const client = new WebTorrent(),oSs = $("#gInfo");
+// client.on('error', err => {
+// 	oSs.text('WebTorrent ERROR: ' + err.message)
+// });
+// client.on('ready', () => {
+// 	oSs.text('WebTorrent client is ready');
+// });
+// async function webTorrentFetch(magnetURI, url) {
+// 	return new Promise((resolve, reject) => {
+// 	  const torrent = client.add(magnetURI, { store: true }, function (torrent) {
+// 		// Print out progress every 5 seconds
+		
+//         const interval = setInterval(() => {
+// 			oSs.text('Progress: ' + (torrent.progress * 100).toFixed(1) + '%')
+// 		  }, 5000)
 
-		file.getBlobURL((err, blobURL) => {
-		  if (err) {
-			reject(err);
-		  } else {
-			resolve(blobURL);
-		  }
-		});
-	  });
+// 		const file = torrent.files.find((file) => {
+// 		  return file.name === url.substring(url.lastIndexOf('/') + 1);
+// 		});
 
-	  // Check if WebTorrent fetch finishes first
-	  torrent.on('done', () => {
-		client.destroy(() => {
-		  console.log('WebTorrent fetch finished');
-		});
-	  });
-	});
-  }
+// 		file.getBlobURL((err, blobURL) => {
+// 			err ? reject(err) : (urlMapping.set(url, blobURL), resolve(blobURL));
+// 		});		  
+// 	  });
 
-async function originalFetch(url) {
-return fetch(url)
-	.then((response) => {
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.blob();
-	})
-	.then((blob) => URL.createObjectURL(blob))
-	.catch((error) => {
-	console.error('Original fetch error:', error);
-	throw error;
-	});
-}
-
-async function fetchWithFallback(magnetURI, url) {
-	try {
-		const webTorrentBlobURL = await webTorrentFetch(magnetURI, url);
-		return webTorrentBlobURL;
-	} catch (error) {
-		console.log('WebTorrent fetch failed:', error);
-		const originalBlobURL = await originalFetch(url);
-		return originalBlobURL;
-	}
-}
-let isControllerInitialized = !!0;
-/*
-{
-  "type": "image/png",
-  "url": "blob:https://example.com/12ab34cd-5678-90ef-ghij-klmnopqrstuv"
-}
-*/
-async function downloadResources(resourceURLs) {
-	try {
-		if(!isControllerInitialized){
-			isControllerInitialized = !!1;
-			const controller = await navigator.serviceWorker.ready;
-			client.createServer({ controller });
-		}
-	  const downloadPromises = resourceURLs.map(({ magnetURI, url }) => fetchWithFallback(magnetURI, url));
-	  const downloadedResources = await Promise.all(downloadPromises);
+// 	  // Check if WebTorrent fetch finishes first
+// 	  torrent.on('done', () => {
+// 		clearInterval(interval);
+// 		// client.destroy(() => {
+// 		//   console.log('WebTorrent fetch finished');
+// 		// });
+// 	  });
+// 	});
+// }
+// const urlMapping = new Map();
+// const _fetch = window.fetch;
+// // https://github.com/ngosang/trackerslist/blob/master/trackers_best.txt
+// // https://github.com/ngosang/trackerslist/blob/master/trackers_all_udp.txt
+// const trackers = `udp://tracker.opentrackr.org:1337/announce
+// https://tracker2.ctix.cn:443/announce
+// https://tracker1.520.jp:443/announce
+// udp://opentracker.i2p.rocks:6969/announce
+// udp://open.demonii.com:1337/announce
+// udp://tracker.openbittorrent.com:6969/announce
+// http://tracker.openbittorrent.com:80/announce
+// udp://exodus.desync.com:6969/announce
+// udp://open.stealth.si:80/announce
+// udp://tracker.torrent.eu.org:451/announce
+// udp://tracker-udp.gbitt.info:80/announce
+// udp://explodie.org:6969/announce
+// https://tracker.gbitt.info:443/announce
+// http://tracker.gbitt.info:80/announce
+// http://bt.endpot.com:80/announce
+// udp://tracker1.bt.moack.co.kr:80/announce
+// udp://tk1.trackerservers.com:8080/announce
+// udp://retracker01-msk-virt.corbina.net:80/announce
+// udp://p4p.arenabg.com:1337/announce
+// udp://movies.zsw.ca:6969/announce`.split("\n");
   
-	  // downloadedResources是一个数组，包含所有资源的结果
-	  // 你可以在这里处理每个资源的结果，例如将它们存储在本地或者进行进一步处理
-	  console.log("All resources downloaded:", downloadedResources);
-	} catch (error) {
-	  console.error("Error downloading resources:", error);
-	}
-}
+// // 将 trackers 数组中的地址连接成字符串，并用逗号分隔
+// const additionalTrackers = trackers.join(",");
+
+// function getMagnetURI(infoHash) {
+// 	return infoHash + "&tr=" + encodeURIComponent(additionalTrackers);
+// }
+
+// async function originalFetch(url, options) {
+// 	if (urlMapping.has(url)) {
+// 	  return urlMapping.get(url);
+// 	} else {
+// 	  return _fetch(url, options)
+// 		.then((response) => {
+// 		  if (!response.ok) {
+// 			throw new Error('Network response was not ok');
+// 		  }
+// 		  return response.blob();
+// 		})
+// 		.then((blob) => {
+// 		  const blobURL = URL.createObjectURL(blob);
+// 		  urlMapping.set(url, blobURL);
+  
+// 		  // Seed the resource as a torrent for P2P sharing
+// 		  client.seed(blob, (torrent) => {
+// 			log(`Torrent for ${url} is seeding. Magnet URI: ${getMagnetURI(torrent.magnetURI)}`);
+// 		  });
+  
+// 		  return blobURL;
+// 		})
+// 		.catch((error) => {
+// 			log('Original fetch error:', error);
+// 		  throw error;
+// 		});
+// 	}
+// }
+  
+// const fetch = (url, options) => {
+// 	return originalFetch(url, options).catch((error) => {
+// 		log('Fetch error:', error);
+// 		throw error;
+// 	});
+// };
+// async function fetchWithFallback(magnetURI, url) {
+// 	try {
+// 		const webTorrentBlobURL = await webTorrentFetch(magnetURI, url);
+// 		return webTorrentBlobURL;
+// 	} catch (error) {
+// 		oSs.text('WebTorrent fetch failed:'+ error);
+// 		const originalBlobURL = await originalFetch(url);
+// 		return originalBlobURL;
+// 	}
+// }
+// let isControllerInitialized = !!0;
+// /*
+// {
+//   "type": "image/png",
+//   "url": "blob:https://example.com/12ab34cd-5678-90ef-ghij-klmnopqrstuv"
+// }
+// */
+// async function downloadResources(resourceURLs) {
+// 	try {
+// 	  if (!isControllerInitialized) {
+// 		isControllerInitialized = true;
+// 		const controller = await navigator.serviceWorker.ready;
+// 		client.createServer({ controller });
+// 	  }
+  
+// 	  const downloadPromises = resourceURLs.map(({ magnetURI, url }) => fetchWithFallback(magnetURI, url));
+// 	  const downloadedResources = await Promise.all(downloadPromises);
+  
+// 	  // downloadedResources is an array containing the blob URLs of all the downloaded resources
+// 	  // You can add the downloaded resources as torrents to seed them for other clients
+// 	  downloadedResources.forEach((blobURL, index) => {
+// 		const resourceURL = resourceURLs[index].url;
+// 		const resourceFile = new File([blobURL], resourceURL.substring(resourceURL.lastIndexOf('/') + 1));
+// 		client.seed(resourceFile, (torrent) => {
+// 			oSs.text(`Torrent for ${resourceURL} is seeding. Magnet URI: ${getMagnetURI(torrent.magnetURI)}`);
+// 		});
+// 	  });
+  
+// 	  oSs.text("All resources downloaded:", downloadedResources);
+// 	} catch (error) {
+// 		oSs.text("Error downloading resources:", error);
+// 	}
+// }
+  
   
 // 要下载的资源URL数组，每个元素包含magnetURI和url属性
 // const resourceURLs = [
