@@ -71,12 +71,14 @@ relay-ip=65.49.208.113
 
 # How Run
 ```
+
+rm -rf static/js.js;rm -rf static/v8.js;node server.js
 find . -name ".DS_Store" -delete
 
 export rip=`host 51pwn.com|grep -Eo '(([0-9]{1,3}\.){3}[0-9]{1,3})'`
 export rport=26188
 
-ssh -i ~/.ssh/id_rsa -C -p ${rport} root@${rip}
+reset;ssh -i ~/.ssh/id_rsa -C -p ${rport} root@${rip}
 tmux ls
 docker run -d -p 3478:3478 -p 3478:3478/udp -p 5349:5349 -p 5349:5349/udp -p 49152-65535:49152-65535/udp coturn/coturn
 

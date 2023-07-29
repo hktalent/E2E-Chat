@@ -2,7 +2,7 @@ var fs = require('fs'),
     szPath = __dirname + "/static/js/",
     szPathC = __dirname + "/static/css/",
     aFCache = {},
-    bJmi = !!1,
+    bJmi = !!0,
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  !!1;
@@ -22,10 +22,9 @@ function fnWc () {
             }
         });
 }
-
-var g_cache = {};
-const { minify } = require("terser");
-var minifyOptions = {
+var g_cache = {},
+    { minify } = require("terser"),
+    minifyOptions = {
     compress: {
         drop_console: bJmi,//移除所有console相关代码；
         drop_debugger: bJmi,//移除自动断点功能；
@@ -38,10 +37,6 @@ var minifyOptions = {
 
 var JsHxOpt = {
     compact: true,      // 压缩代码到一行
-    // domainLock: ["chat.51pwn.com"],     // 限制混淆代码运行的域名,调试阶段绝对不能开启
-    // debugProtection: true, // 如果您打开开发人员工具，会冻结您的浏览器，不允许调试.使用该选项，几乎不可能使用开发人员工具的调试器功能（基于WebKit和Mozilla Firefox的浏览器上）
-    controlFlowFlattening: true,  // 是否开启平展控制流。此选项对性能的影响最大为运行速度降低1.5倍。 使用controlFlowFlatteningThreshold设置将受控制流展平影响的节点的百分比。平展控制流是源代码的结构转换，让代码变得难以阅读。
-    deadCodeInjection: true, // 向代码中注入死代码，增加混淆代码的大小（最大100%）
     debugProtectionInterval: 33, // 如果设置为true，则会在“控制台”选项卡上使用一个间隔来强制调试模式，这使得使用开发人员工具的其他功能更加困难。 启用了debugProtection，才可以使用。
     disableConsoleOutput: true,     // 通过将它们替换为空函数，禁用console.log，console.info，console.error，console.warn，console.debug，console.exception和console.trace的使用。
     deadCodeInjectionThreshold: 0.2,// 节点加入废代码的概率，值越大，混淆代码大小越大
@@ -71,6 +66,14 @@ mangled-shuffled: 和mangled一样，但是变量是乱序的*/
     // stringArrayWrappersType: 'variable',// 可以使用的值：['variable', 'function', 'property']
     stringArrayThreshold: 0.2 // 生成的字符串数组的最小长度
 };
+if(bJmi){
+    Object.assign(JsHxOpt, {
+        controlFlowFlattening: true,  // 是否开启平展控制流。此选项对性能的影响最大为运行速度降低1.5倍。 使用controlFlowFlatteningThreshold设置将受控制流展平影响的节点的百分比。平展控制流是源代码的结构转换，让代码变得难以阅读。
+        deadCodeInjection: true, // 向代码中注入死代码，增加混淆代码的大小（最大100%）
+        domainLock: ["chat.51pwn.com"],     // 限制混淆代码运行的域名,调试阶段绝对不能开启
+        debugProtection: true, // 如果您打开开发人员工具，会冻结您的浏览器，不允许调试.使用该选项，几乎不可能使用开发人员工具的调试器功能（基于WebKit和Mozilla Firefox的浏览器上）
+    });
+}
 
 // 最佳性能
 // var JsHxOpt = {

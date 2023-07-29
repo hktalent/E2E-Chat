@@ -38,7 +38,8 @@ addEventListener('screenfit', function (event) {
 	document.documentElement.style.setProperty('--vh', `${vh}px`);
     var h1 = 0;
     $("body,html").height(event.detail.height);
-    $("main").height(h1 = event.detail.height - $("footer").height() - $("header").height() - 10);
-    $("footer").css({top: h1 + $("header").height()+10});
+    $("footer").css({top: h1=event.detail.height - 40});
+    $("main").height(h1 - $("header").height());
+    
 });
 

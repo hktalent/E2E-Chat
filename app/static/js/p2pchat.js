@@ -262,14 +262,14 @@ function RevMsg (e) {
 }
 
 // https://emojipedia.org/check-mark-button/
-var clientHeight = 0;
+var clientHeight = 0,inHeight = 0;
 var fn009 = function () {
-	let vh = window.innerHeight * 0.01;
-	document.documentElement.style.setProperty('--vh', `${vh}px`);
+	inHeight = window.innerHeight * 0.01;
+	document.documentElement.style.setProperty('--vh', `${inHeight}px`);
 	setWhOne();
 	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
 	if(window.bEaV8)getImgFromStream();
-	$("footer").css({top: $("main").height() + $("header").height()+10});
+	$("footer").css({top: inHeight * 100 - 40});
 	return false;
 };
 function clOpen(){
@@ -1378,7 +1378,7 @@ function fnSendSvMsg(){
 function ldai(){
 	if(g_bTxtChat)return;
 	// ");//
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v8.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v,.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
 	if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -1608,6 +1608,92 @@ function showWnSt(){
 	}
 	$("#wnset").html(a.join("")).show();
 }
+const client = new WebTorrent();
+async function webTorrentFetch(magnetURI, url) {
+	return new Promise((resolve, reject) => {
+	  const torrent = client.add(magnetURI, { store: true }, function (torrent) {
+		const file = torrent.files.find((file) => {
+		  return file.name === url.substring(url.lastIndexOf('/') + 1);
+		});
+
+		file.getBlobURL((err, blobURL) => {
+		  if (err) {
+			reject(err);
+		  } else {
+			resolve(blobURL);
+		  }
+		});
+	  });
+
+	  // Check if WebTorrent fetch finishes first
+	  torrent.on('done', () => {
+		client.destroy(() => {
+		  console.log('WebTorrent fetch finished');
+		});
+	  });
+	});
+  }
+
+async function originalFetch(url) {
+return fetch(url)
+	.then((response) => {
+	if (!response.ok) {
+		throw new Error('Network response was not ok');
+	}
+	return response.blob();
+	})
+	.then((blob) => URL.createObjectURL(blob))
+	.catch((error) => {
+	console.error('Original fetch error:', error);
+	throw error;
+	});
+}
+
+async function fetchWithFallback(magnetURI, url) {
+	try {
+		const webTorrentBlobURL = await webTorrentFetch(magnetURI, url);
+		return webTorrentBlobURL;
+	} catch (error) {
+		console.log('WebTorrent fetch failed:', error);
+		const originalBlobURL = await originalFetch(url);
+		return originalBlobURL;
+	}
+}
+let isControllerInitialized = !!0;
+/*
+{
+  "type": "image/png",
+  "url": "blob:https://example.com/12ab34cd-5678-90ef-ghij-klmnopqrstuv"
+}
+*/
+async function downloadResources(resourceURLs) {
+	try {
+		if(!isControllerInitialized){
+			isControllerInitialized = !!1;
+			const controller = await navigator.serviceWorker.ready;
+			client.createServer({ controller });
+		}
+	  const downloadPromises = resourceURLs.map(({ magnetURI, url }) => fetchWithFallback(magnetURI, url));
+	  const downloadedResources = await Promise.all(downloadPromises);
+  
+	  // downloadedResources是一个数组，包含所有资源的结果
+	  // 你可以在这里处理每个资源的结果，例如将它们存储在本地或者进行进一步处理
+	  console.log("All resources downloaded:", downloadedResources);
+	} catch (error) {
+	  console.error("Error downloading resources:", error);
+	}
+}
+  
+// 要下载的资源URL数组，每个元素包含magnetURI和url属性
+// const resourceURLs = [
+// 	{ magnetURI: "magnet:?xt=urn:btih:08ada5a...", url: "/model/yolov8n_web_model/group1-shard4of4.bin" },
+// 	// Add other resource objects here
+// ];
+  
+// // 调用并发下载函数
+// downloadResources(resourceURLs);
+  
+
 $(document).ready(function () {
 	clientJs = new ClientJS();
 	isChrome = clientJs.isChrome();
@@ -1677,7 +1763,7 @@ $(document).ready(function () {
 		g_bSetup = !g_bTxtChat;
 		JoinRoom();
 		$("#eLpos").click();
-		$("main").height($("body").height() - $("footer").height() - $("header").height() - 20);
+		$("main").height(inHeight * 100 - 40 - $("header").height());
 		// fnTxtChat()
 	});
 	// video chat
