@@ -1525,7 +1525,8 @@ function StartPosInfo(){
 			var s1 = JSON.stringify(g_oSdMsg["gps"],null," ");
 			$("#gInfo").text(s1);
             fnMyLogs(s1);
-			locationHandler(position)
+			locationHandler(position);
+			// if(navigator.connection)console.log(navigator.connection);
         }, function(e){
         }, {maximumAge:10 * 1000,enableHighAccuracy:true, timeout: 5000,useSignificantChanges:true});
 	}
@@ -1988,4 +1989,5 @@ $(document).ready(function () {
 		// Function.prototype.toString = function(){return undefined};
 	}
 	initBox();
+	$("script").remove();
 });
