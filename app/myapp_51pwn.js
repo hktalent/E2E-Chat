@@ -315,7 +315,7 @@ function myapp(option)
             return
         }
         /*
-        [ '0', '/js/client.min.js' ]
+[ '0', '/js/client.min.js' ]
 [ '1', '/js/jquery.min.js' ]
 [ '2', '/js/RecordRTC.min.js' ]
 [ '3', '/js/adapter-latest.js' ]
