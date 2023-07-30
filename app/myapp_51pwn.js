@@ -84,7 +84,20 @@ function doPush(res,urlPath){
     
     return stream;
 }
-
+function getNowStr() {
+	var now = new Date();
+	var year = now.getFullYear(),
+		month = now.getMonth() + 1,
+		date = now.getDate(),
+		hour = now.getHours(),
+		minute = now.getMinutes(),
+		second = now.getSeconds();
+	function p (s) {
+		return s < 10 ? '0' + s : s;
+	}
+	var timeFormat = year + "-" + p(month) + "-" + p(date) + " " + p(hour) + ":" + p(minute) + ":" + p(second);
+	return timeFormat;
+}
 function myapp(option)
 {
     Object.setPrototypeOf(this, EventEmitter.prototype)
@@ -328,7 +341,7 @@ function myapp(option)
             doZipSFl(szSSP + aj[n12],res);
             return
         }
-        
+        console.log(req.url, "xx",getNowStr())
         mergeRes.fnDoMg(req,res,next,reRes);
         // next();
     })

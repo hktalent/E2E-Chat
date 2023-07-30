@@ -6,7 +6,7 @@ xxx="app1"
 
 rcp app/package.json /root/${xxx}/app/
 rcp app/nodemon.json /root/${xxx}/app/
-rcp app/static/index_en.html /root/${xxx}/app/static/
+# rcp app/static/index_en.html /root/${xxx}/app/static/
 
 rcp app/static/plyr.svg /root/${xxx}/app/static/
 # 静态资源，经常需要更新
