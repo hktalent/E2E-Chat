@@ -113,6 +113,7 @@ async function MakeN(){
     fs.writeFileSync(x11 + "_1", String(s1));
 }
 
+
 if(useCc)MakeN();
 else{
     fs.unlink("p2pchat.js_1",()=>{});
@@ -127,7 +128,9 @@ async function fnMerg (s, t) {
         if(s == "v,.js"){
             s = "v8";
             szXf = "static/"+s + "." + t
-        }else s = "msd,stunLists,p2pchat";
+        }else{ 
+            s = "msd,stunLists,p2pchat";
+        }
     }
     else s = "plyr,p2pchat";
     if(useCc){
@@ -200,6 +203,7 @@ async function fnDoMg (req, res, next, reRes) {
     // var bDebug = false //-1 < s1.indexOf('::ffff:127.0.0.1') || -1 < s1.indexOf('::ffff:192.168.')
     res.setHeader('content-type', 'text/' + tp);
     setLongTermCache(res)
+    
     xx = await fnMerg(a[2], t)
     res.end(String(xx));
 }

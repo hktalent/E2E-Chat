@@ -120,12 +120,12 @@ function LogMsg(s){
 }
 
 // 文件下载,download
-async function dlFile (s) {
-	const br = await fetch(s);
-	br.blob().then(blob => {
-		window.URL.createObjectURL(new Blob(blob, {type: szTOsTp}));
-	});
-}
+// async function dlFile (s) {
+// 	const br = await fetch(s);
+// 	br.blob().then(blob => {
+// 		window.URL.createObjectURL(new Blob(blob, {type: szTOsTp}));
+// 	});
+// }
 
 function getUtf8FromB64 (s) {
 	var a = s.split(";base64,");
