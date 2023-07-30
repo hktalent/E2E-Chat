@@ -262,10 +262,9 @@ function RevMsg (e) {
 }
 
 // https://emojipedia.org/check-mark-button/
-var clientHeight = 0,inHeight = 0;
+var clientHeight = 0;
 var fn009 = function () {
-	inHeight = window.innerHeight * 0.01;
-	document.documentElement.style.setProperty('--vh', `${inHeight}px`);
+	setMF();
 	setWhOne();
 	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
 	if(window.bEaV8)getImgFromStream();
@@ -1832,8 +1831,7 @@ $(document).ready(function () {
 		g_bSetup = !g_bTxtChat;
 		JoinRoom();
 		$("#eLpos").click();
-		$("main").height(inHeight * 100 - 40 - $("header").height());
-		// fnTxtChat()
+		setMF();
 	});
 	// video chat
 	oStartChat.click(function (e) {
@@ -1858,9 +1856,12 @@ $(document).ready(function () {
 		$("#eLpos").click();
 		ldai();
 	});
-	var bELpos;
+	var bELpos,bposInit = false;
 	$("#eLpos").change(function(){
-		if(this.checked)bELpos = StartPosInfo();
+		if(this.checked){
+			if(!bposInit)bposInit=true,$("body").append(`<div class=compass><div class=arrow></div><div class=compass-circle></div><div class=my-point></div></div>`);
+			bELpos = StartPosInfo();
+		}
 		else{stopPosInfo(bELpos);}
 	});
 	$("#dspWr").click(function () {

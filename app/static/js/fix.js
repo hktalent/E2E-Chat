@@ -32,14 +32,15 @@
     }),
     a.addEventListener("resize", l)
 }();
-
+var _vh = window.innerHeight * 0.01;
+function setMF(){
+    $("footer").css({top: _vh*100 - 40});
+    $("main").height(_vh * 100 - 56 - $("header").height());
+}
 addEventListener('screenfit', function (event) {
-    let vh = event.detail.height * 0.01;
-	document.documentElement.style.setProperty('--vh', `${vh}px`);
-    var h1 = 0;
+    _vh = event.detail.height * 0.01;
+	document.documentElement.style.setProperty('--vh', `${_vh}px`);
     $("body,html").height(event.detail.height);
-    $("footer").css({top: h1=event.detail.height - 40});
-    $("main").height(h1 - $("header").height() - 10);
-    
+    setMF();
 });
 

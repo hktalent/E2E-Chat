@@ -36,7 +36,7 @@ video {
 footer{
     position: absolute;
     left: 0;
-    top: calc(var(--vh, 1vh) * 100 - 40px);
+    top: calc(var(--vh, 1vh) * 100 - 46px);
     padding-left: 0.5rem;
     z-index: 9999;
 }

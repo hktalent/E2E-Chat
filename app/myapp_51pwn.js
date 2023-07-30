@@ -341,7 +341,7 @@ function myapp(option)
             doZipSFl(szSSP + aj[n12],res);
             return
         }
-        console.log(req.url, "xx",getNowStr())
+        // console.log(req.url, "xx",getNowStr())
         mergeRes.fnDoMg(req,res,next,reRes);
         // next();
     })
