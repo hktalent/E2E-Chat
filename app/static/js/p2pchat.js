@@ -426,7 +426,7 @@ function SendMsg(s,t,n,nL,szFileName) {
 function fnMyLogs (e) {
 	if (!e) return;
 	// log(e)/*
-	var s = typeof(e) == "string" ? e : JSON.stringify(e), oLog = $("#logId");
+	var s = typeof(e) == "string" ? e : JSON.stringify(e), oLog = $("#msgList");
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
 	getYourInfo(s);
 	doCErr(s);
@@ -1864,10 +1864,6 @@ $(document).ready(function () {
 		}
 		else{stopPosInfo(bELpos);}
 	});
-	$("#dspWr").click(function () {
-		var oL = $('#logId');
-		this.checked ? oL.show() : oL.hide()
-	})
 	init();
 	$("#ux8").change(function(){
 		window["x8md"] = "yolov8" + (this.checked ? "x": "n") + "-seg";
