@@ -1865,7 +1865,7 @@ $(document).ready(function () {
 		else{stopPosInfo(bELpos);}
 	});
 	$("#dspWr").click(function () {
-		oL = $('#logId,#msgList');
+		var oL = $('#logId');
 		this.checked ? oL.show() : oL.hide()
 	})
 	init();
