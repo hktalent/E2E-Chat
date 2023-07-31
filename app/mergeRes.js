@@ -2,7 +2,7 @@ var fs = require('fs'),
     szPath = __dirname + "/static/js/",
     szPathC = __dirname + "/static/css/",
     aFCache = {},
-    bJmi = !!1,
+    bJmi = !!0,
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  !!1;
@@ -40,7 +40,7 @@ var JsHxOpt = {
     debugProtectionInterval: 33, // 如果设置为true，则会在“控制台”选项卡上使用一个间隔来强制调试模式，这使得使用开发人员工具的其他功能更加困难。 启用了debugProtection，才可以使用。
     disableConsoleOutput: true,     // 通过将它们替换为空函数，禁用console.log，console.info，console.error，console.warn，console.debug，console.exception和console.trace的使用。
     deadCodeInjectionThreshold: 0.2,// 节点加入废代码的概率，值越大，混淆代码大小越大
-    controlFlowFlatteningThreshold: 0.3,// 必须 >= 0.3，否则各种冲突，报错，每个节点采用平展控制流的概率，该参数主要用来优化大代码的性能和代码大小。大量的平展控制流会是代码运行效率变差而且代码增大。 设置为0表示关闭平展控制流
+    controlFlowFlatteningThreshold: 0.2,// 必须 >= 0.3，否则各种冲突，报错，每个节点采用平展控制流的概率，该参数主要用来优化大代码的性能和代码大小。大量的平展控制流会是代码运行效率变差而且代码增大。 设置为0表示关闭平展控制流
     numbersToExpressions: true, // 将数字转换为等效的表达式。例如，将数字转换为等效的二进制表达式。 该选项会增加混淆代码的大小（最大100%）
     simplify: true, // 简化代码，例如：将if语句转换为三元表达式。 该选项会增加混淆代码的大小（最大100%）
     sourceMap: false, // 是否生成sourceMap
@@ -73,6 +73,11 @@ if(bJmi){
         domainLock: ["chat.51pwn.com"],     // 限制混淆代码运行的域名,调试阶段绝对不能开启
         debugProtection: true, // 如果您打开开发人员工具，会冻结您的浏览器，不允许调试.使用该选项，几乎不可能使用开发人员工具的调试器功能（基于WebKit和Mozilla Firefox的浏览器上）
     });
+}
+function setJm(){
+    bJmi = false;
+    delete JsHxOpt.domainLock;
+    delete JsHxOpt.debugProtection;
 }
 
 // 最佳性能
@@ -216,4 +221,4 @@ function fnSetPath (s) {
         szPathC = s + "css/";
 }
 
-module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc };
+module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc,setJm:setJm };
