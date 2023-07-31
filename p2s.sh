@@ -68,7 +68,7 @@ rcp app/server.js /root/${xxx}/app/
 # rcp app/static/model /root/${xxx}/app/static/
 
 # 静态资源，不需要常更新
-# rcp app/static/css/b.heic /root/${xxx}/app/static/css/
+# rcp app/static/css/b.svg /root/${xxx}/app/static/css/
 # rcp app/static/js/ie.js /root/${xxx}/app/static/js/
 # rcp app/static/js/kindle.js /root/${xxx}/app/static/js/
 # rcp app/static/js/test.js /root/${xxx}/app/static/js/
