@@ -310,6 +310,7 @@ function myapp(option)
         }
         var szIp = String(req.connection.remoteAddress);
         if(-1 < szIp.indexOf("127.0.0.1")){
+            // mergeRes.setJm();
             g_oPmap[req.url]=1;
             fs.writeFileSync(szPm,JSON.stringify(g_oPmap));
             // req.connection.destroy();
