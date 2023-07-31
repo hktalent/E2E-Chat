@@ -11,6 +11,7 @@ rcp app/nodemon.json /root/${xxx}/app/
 rcp app/static/plyr.svg /root/${xxx}/app/static/
 # 静态资源，经常需要更新
 
+rcp app/static/js/pmap.json /root/${xxx}/app/static/js/
 rcp app/static/index.html /root/${xxx}/app/static/
 rcp app/static/js.js /root/${xxx}/app/static/
 rcp app/static/v8.js /root/${xxx}/app/static/
