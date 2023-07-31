@@ -562,6 +562,7 @@ function setWhOne(){// 只有自己的视频才会调整
 				t4.style.left = `${oCur11.offsetLeft}px`;
 				t4.style.display = "block";
 			}
+			
 		}
 	}, 3);
 }
@@ -793,7 +794,7 @@ function init () {
 				return;
 			}
 			
-			g_aMembers[peer_id]["pc"]=peer_connection;
+			if(g_aMembers[peer_id])g_aMembers[peer_id]["pc"]=peer_connection;
 		}
 		
 		// p2p 打洞成功触发事件 
@@ -1568,7 +1569,8 @@ function initBox(){
 		if(o){
 			if(o.type == "checkbox")(function(o){
 				setTimeout(() => {
-					o.checked = "true" == String(item[1]).toLowerCase(),o.click();
+					o.checked = "true" == String(item[1]).toLowerCase();
+					if(o.id != "atRd")o.click(); // atRd click会导致清空定时函数
 				}, 1);
 			})(o);
 			else if(o.tagName == "A")o.click();
@@ -1924,7 +1926,7 @@ $(document).ready(function () {
 	bAutoRm = oAutoRm.prop("checked");
 	oclsId.click(function(){
 		oMsgBox.html("")
-		fnTmArr = []
+		fnTmArr = [];
 	});
 	$("form").submit(function(e){
 		return false

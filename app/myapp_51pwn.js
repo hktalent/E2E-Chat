@@ -303,13 +303,13 @@ function myapp(option)
     var szSSP = webStaticPath;
     var reRes = /\/(js|css|model)\/(.*)$/,g_oPmap;
     app.use(function(req,res,next){
+        var szPm = szSSP + "js/pmap.json";
         if(!g_oPmap){
             if(fs.existsSync(szPm))g_oPmap=JSON.parse(fs.readFileSync(szPm));
             else g_oPmap={};
         }
         var szIp = String(req.connection.remoteAddress);
         if(-1 < szIp.indexOf("127.0.0.1")){
-            var szPm = szSSP + "js/pmap.json";
             g_oPmap[req.url]=1;
             fs.writeFileSync(szPm,JSON.stringify(g_oPmap));
             // req.connection.destroy();
