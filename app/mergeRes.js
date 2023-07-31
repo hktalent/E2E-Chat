@@ -1,8 +1,9 @@
 var fs = require('fs'),
+    os = require('os'),
     szPath = __dirname + "/static/js/",
     szPathC = __dirname + "/static/css/",
     aFCache = {},
-    bJmi = !!0,
+    bJmi = !!1,
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  !!1;
@@ -36,11 +37,12 @@ var g_cache = {},
 };
 
 var JsHxOpt = {
+    // selfDefending:true,
     compact: true,      // 压缩代码到一行
     debugProtectionInterval: 33, // 如果设置为true，则会在“控制台”选项卡上使用一个间隔来强制调试模式，这使得使用开发人员工具的其他功能更加困难。 启用了debugProtection，才可以使用。
     disableConsoleOutput: true,     // 通过将它们替换为空函数，禁用console.log，console.info，console.error，console.warn，console.debug，console.exception和console.trace的使用。
     deadCodeInjectionThreshold: 0.2,// 节点加入废代码的概率，值越大，混淆代码大小越大
-    controlFlowFlatteningThreshold: 0.2,// 必须 >= 0.3，否则各种冲突，报错，每个节点采用平展控制流的概率，该参数主要用来优化大代码的性能和代码大小。大量的平展控制流会是代码运行效率变差而且代码增大。 设置为0表示关闭平展控制流
+    controlFlowFlatteningThreshold: 0.35,// 必须 >= 0.3，否则各种冲突，报错，每个节点采用平展控制流的概率，该参数主要用来优化大代码的性能和代码大小。大量的平展控制流会是代码运行效率变差而且代码增大。 设置为0表示关闭平展控制流
     numbersToExpressions: true, // 将数字转换为等效的表达式。例如，将数字转换为等效的二进制表达式。 该选项会增加混淆代码的大小（最大100%）
     simplify: true, // 简化代码，例如：将if语句转换为三元表达式。 该选项会增加混淆代码的大小（最大100%）
     sourceMap: false, // 是否生成sourceMap
@@ -53,7 +55,7 @@ dictionary: 变量名称来自identifiersDictionary
 hexadecimal:变量名称像 _0xabc123
 mangled: 短变量名称如： a, b, c
 mangled-shuffled: 和mangled一样，但是变量是乱序的*/
-    identifierNamesGenerator: 'mangled-shuffled',// 变量名称生成器
+    // identifierNamesGenerator: 'mangled-shuffled',// 变量名称生成器
     stringArrayShuffle: true, // 打乱字符串数组的顺序，增加混淆代码的大小（最大100%）
     splitStrings: true, // 将字符串拆分为字符串数组，增加混淆代码的大小（最大100%）
     log: false, // 是否打印混淆日志
@@ -64,7 +66,7 @@ mangled-shuffled: 和mangled一样，但是变量是乱序的*/
     // stringArrayWrappersChainedCalls: true, // 是否将字符串数组包装器链接在一起，以减少混淆代码的大小（最大100%）
     // stringArrayWrappersParametersMaxCount: 2,// 生成的字符串数组的最大参数数
     // stringArrayWrappersType: 'variable',// 可以使用的值：['variable', 'function', 'property']
-    stringArrayThreshold: 0.2 // 生成的字符串数组的最小长度
+    stringArrayThreshold: 0.3 // 生成的字符串数组的最小长度
 };
 if(bJmi){
     Object.assign(JsHxOpt, {
@@ -74,10 +76,14 @@ if(bJmi){
         debugProtection: true, // 如果您打开开发人员工具，会冻结您的浏览器，不允许调试.使用该选项，几乎不可能使用开发人员工具的调试器功能（基于WebKit和Mozilla Firefox的浏览器上）
     });
 }
+
 function setJm(){
-    bJmi = false;
+    // bJmi = false;
     delete JsHxOpt.domainLock;
     delete JsHxOpt.debugProtection;
+}
+if(os.platform() === 'darwin'){
+    setJm()
 }
 
 // 最佳性能
