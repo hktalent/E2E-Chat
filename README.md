@@ -33,6 +33,11 @@ xxf=static/js/sw.js;uglifyjs $xxf -c -m -o $xxf
  优化png
  brew install optipng jpegoptim
  optipng $HOME/MyWork/E2E_chat/app/static/css/b.png
+
+png 转 svg 体积大幅减小
+ https://convertio.co/download/0fdcfc32fe46d0833316de0767842e7f0ec93c/
+
+convert /Users/51pwn/Documents/M_T_X/99-密/me/me2.PNG EXAMPLE.svg
 ```
 # /usr/local/etc/turnserver.conf
 
