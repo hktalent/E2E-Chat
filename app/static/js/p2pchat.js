@@ -18,10 +18,7 @@ if ('serviceWorker' in navigator) {
 	});
 };
 
-window.appURL = () => {
-	const protocol = String(document.location).split("://")[0] + '://';
-	return protocol + location.host;
-};
+window.appURL = () => {return document.location.protocol + "//" + location.host};
 const getRoomName = () => {// return $("#cnId").val();
 	return "Pwn"+String($("#cnId").val()).hashCode();
 }
@@ -110,7 +107,7 @@ setInterval(() => {
 }, 1000);
 
 function doCErr(s){
-	if(bIsMobile && signaling_socket){
+	if(bIsMobile && signaling_socket && "function" == typeof signaling_socket.emit){
 		signaling_socket.emit('ocerror', s)
 	}
 }

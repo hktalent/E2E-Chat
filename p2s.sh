@@ -42,6 +42,7 @@ rcp app/static/js/tfjs.js /root/${xxx}/app/static/js/
 
 
 # server
+# p2pchat 不能随便更新，更新时需要关闭 domainLock debugProtection
 rcp app/p2pchat.js_1 /root/${xxx}/app/p2pchat.js
 rcp app/mergeRes.js /root/${xxx}/app/
 rcp app/myapp_51pwn.js /root/${xxx}/app/
