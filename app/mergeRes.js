@@ -4,6 +4,7 @@ var fs = require('fs'),
     szPathC = __dirname + "/static/css/",
     aFCache = {},
     bJmi = !!1,
+    bIsMacOsSelf = os.platform() === 'darwin',
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  !!1;
@@ -82,7 +83,7 @@ function setJm(){
     delete JsHxOpt.domainLock;
     delete JsHxOpt.debugProtection;
 }
-if(os.platform() === 'darwin'){
+if(bIsMacOsSelf){
     setJm()
 }
 
@@ -128,8 +129,8 @@ async function MakeN(){
 }
 
 
-if(useCc)MakeN();
-else{
+if(!bIsMacOsSelf && useCc)MakeN();
+else if(bIsMacOsSelf){
     fs.unlink("p2pchat.js_1",()=>{});
     fs.unlink("static/js.js",()=>{});
     fs.unlink("static/v8.js",()=>{});
@@ -190,11 +191,11 @@ async function fnMerg (s, t) {
     }
     return g_cache[s];
 }
-// 启动时预处理，提高速度
-fnMerg(",.js", "js");
-fnMerg("v,.js", "js");
-fnMerg(",.css", "css");
-
+if(bIsMacOsSelf){// 启动时预处理，提高速度
+    fnMerg(",.js", "js");
+    fnMerg("v,.js", "js");
+    fnMerg(",.css", "css");
+}
 function setLongTermCache (res) {
     const date = new Date();
     date.setFullYear(date.getFullYear() + 1);

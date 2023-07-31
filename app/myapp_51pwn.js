@@ -65,7 +65,7 @@ function doPush(res,urlPath){
           accept: '*/*'
         },
         response: {
-            'Content-Encoding': 'gzip',
+            // 'Content-Encoding': 'gzip',
             'content-type': mime.lookup(szRfp)
         }
     };
@@ -210,6 +210,7 @@ function myapp(option)
     });
     // gzip压缩数据
     app.use(compression({
+        brotli: { quality: 11 },
         "level":9,
         "memLevel":9,
         // "strategy":// 
@@ -226,6 +227,10 @@ function myapp(option)
     }));
     connectSources = ["'self'", "wss://chat.51pwn.com:" + option.port,"wss://192.168.0.107:" + option.port,, "wss://chat.51pwn.com:"+option.port, "wss://127.0.0.1:" + option.port]
     if(bUseHttps)app.use(helmet({directives:{upgradeInsecureRequests:bUseHttps, connectSrc:connectSources}}));
+    app.use(function(req, res, next){
+        res.setHeader("Alt-Svc", 'h3=":'+option.port+'"; ma=2592000');
+        next();
+    });
     app.use(helmet.referrerPolicy({policy:'no-referrer'}));
     app.use(helmet());
     app.disable('x-powered-by');
@@ -333,6 +338,7 @@ function myapp(option)
             doZipSFl(szSSP + "plyr.svg",res);
             return
         }
+        
         /*
 [ '0', '/js/client.min.js' ]
 [ '1', '/js/jquery.min.js' ]
@@ -356,7 +362,8 @@ function myapp(option)
         var n12 = parseInt(s7.substring(0,s7.length - 3));
         // console.log([n12,aj[n12]])
         if(aj[n12] && fs.existsSync(szSSP + aj[n12])){
-            expressOptions.setLongTermCache(res);
+            var stt = fs.statSync(szSSP + aj[n12]);
+            expressOptions.setLongTermCache(res,stt);
             doZipSFl(szSSP + aj[n12],res);
             return
         }
