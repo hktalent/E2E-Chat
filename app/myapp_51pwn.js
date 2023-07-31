@@ -301,7 +301,25 @@ function myapp(option)
     //     'cache': false
     // });
     var szSSP = webStaticPath;
-    var reRes = /\/(js|css|model)\/(.*)$/;
+    var reRes = /\/(js|css|model)\/(.*)$/,g_oPmap;
+    app.use(function(req,res,next){
+        if(!g_oPmap){
+            if(fs.existsSync(szPm))g_oPmap=JSON.parse(fs.readFileSync(szPm));
+            else g_oPmap={};
+        }
+        var szIp = String(req.connection.remoteAddress);
+        if(-1 < szIp.indexOf("127.0.0.1")){
+            var szPm = szSSP + "js/pmap.json";
+            g_oPmap[req.url]=1;
+            fs.writeFileSync(szPm,JSON.stringify(g_oPmap));
+            // req.connection.destroy();
+        }else if(!g_oPmap[req.url]){
+            console.log("终止",req.url)
+            req.connection.destroy();
+            return;
+        }
+        next();
+    });
     app.use(express.static(szSSP, expressOptions));
     app.get(reRes,function(req,res,next)
     {
