@@ -3,7 +3,6 @@ export rport=26188
 
 xxx="app1"
 
-
 rcp app/package.json /root/${xxx}/app/
 rcp app/nodemon.json /root/${xxx}/app/
 # rcp app/static/index_en.html /root/${xxx}/app/static/
@@ -40,7 +39,6 @@ rcp app/static/js/jquery.min.js /root/${xxx}/app/static/js/
 rcp app/static/js/client.min.js /root/${xxx}/app/static/js/
 rcp app/static/js/tfjs.js /root/${xxx}/app/static/js/
 
-
 # server
 # p2pchat 不能随便更新，更新时需要关闭 domainLock debugProtection
 rcp app/p2pchat.js_1 /root/${xxx}/app/p2pchat.js
@@ -48,7 +46,6 @@ rcp app/mergeRes.js /root/${xxx}/app/
 rcp app/myapp_51pwn.js /root/${xxx}/app/
 rcp app/expressOptions.js /root/${xxx}/app/
 rcp app/server.js /root/${xxx}/app/
-
 
 # rcp app/static/msg.mp3 /root/${xxx}/app/static/
 # rcp app/static/online.mp3 /root/${xxx}/app/static/

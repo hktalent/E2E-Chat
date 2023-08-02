@@ -35,7 +35,7 @@ var fs = require('fs'),
     credentials = {};
 
 // fix: UnhandledPromiseRejectionWarning: Error: The client is closed  Commander._RedisClient_sendCommand (node_modules/@node-redis/client/dist/lib/client/index.js:387:31)
-
+// app.set('etag', true); 
 const pubClient = createClient({ url: "redis://localhost:6379" });
 (async () => {
     pubClient.on('error', (err) => console.log('Redis Client Error', err));

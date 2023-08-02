@@ -1175,7 +1175,7 @@ function setup_local_media (callback, errorback) {
 		// echoCancellation: {exact: false},
 		// fix chrome 不支持facingMode
 		appSet();
-		window._xxgetUserMedia = window._xxgetUserMedia || navigator.mediaDevices.getUserMedia
+		window._xxgetUserMedia = window._xxgetUserMedia || navigator.mediaDevices && navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 		window._xxgetUserMedia(g_Constraints).then((stream) => {
 			navigator.mediaDevices.getUserMedia = function(o,cbk){
 				try{
