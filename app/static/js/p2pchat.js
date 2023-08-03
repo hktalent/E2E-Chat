@@ -965,7 +965,7 @@ var szLstQrcode = "";
 function MkQrcd () {
 	var aP = [];
 	$("input[type=checkbox],input[type=text]").map(function (i) {
-		if("sInvite" == this.id)return;
+		if(!!this.id || "sInvite" == this.id)return;
 		if(this.type == "checkbox"){this.checked && aP.push(this.id + "=true")}
 		else if(this.id != "nick" && this.value) aP.push(this.id + "=" + encodeURIComponent(this.value));
 	});
