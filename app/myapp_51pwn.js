@@ -340,19 +340,19 @@ function myapp(option)
         }
         
         /*
-[ '0', '/js/client.min.js' ]
-[ '1', '/js/jquery.min.js' ]
-[ '2', '/js/RecordRTC.min.js' ]
-[ '3', '/js/adapter-latest.js' ]
-[ '4', '/js/qrcode.min.js' ]
-[ '5', '/js/plyr.js' ]
-[ '6', '/js/html5-qrcode.min.js' ]
-[ '7', '/js/aes.js' ]
+[ '0', '/js/client.min.js' ]             // https://cdnjs.cloudflare.com/ajax/libs/ClientJS/0.2.1/client.min.js
+[ '1', '/js/jquery.min.js' ]             // https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js
+[ '2', '/js/RecordRTC.min.js' ]          // https://cdnjs.cloudflare.com/ajax/libs/RecordRTC/5.6.2/RecordRTC.min.js
+[ '3', '/js/adapter-latest.js' ]         // https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.2.3/adapter.min.js
+[ '4', '/js/qrcode.min.js' ]             // https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js
+[ '5', '/js/plyr.js' ]                   // https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js
+[ '6', '/js/html5-qrcode.min.js' ]       // https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js
+[ '7', '/js/aes.js' ]                    // https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js
 [ '8', '/js/fix.js' ]
 [ '9', '/js/kindle.js' ]
 [ '10', '/js/ie.js' ]
 [ '11', '/js/tfjs.js' ]
-[ '12', '/js/webtorrent.min.js' ]
+[ '12', '/js/webtorrent.min.js' ]    // https://cdnjs.com/libraries/webtorrent
         */
         var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/aes.js,/js/fix.js,/js/kindle.js,/js/ie.js,/js/tfjs.js,/js/webtorrent.min.js".split(",");
         // for(var k in aj){
