@@ -69,7 +69,7 @@
   
         try {
           if (!myAudio[s]) {
-            myAudio[s] = await loadSound(`/${s}.mp3`);
+            myAudio[s] = await loadSound(`https://unpkg.com/web-ai-51pwn@latest/dist/${s}.mp3`);
           }
   
           playSoundOnce(myAudio[s]);
