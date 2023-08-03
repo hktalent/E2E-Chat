@@ -522,7 +522,7 @@ i a:hover{box-shadow: 6px 2px 24px #c37ae5;}
     left: 50%;
     transform: translate(-50%, -50%);
     transition: transform 0.1s ease-out;
-    background: url(b.svg) center no-repeat;
+    background: url(https://unpkg.com/web-ai-51pwn@latest/dist/b.svg) center no-repeat;
     background-size: contain;
   }
 
