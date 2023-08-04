@@ -14,7 +14,6 @@ function fnWc () {
     var a = [szPath, szPathC];
     for (var i = 0; i < a.length; i++)
         fs.watch(a[i], { encoding: 'buffer' }, (eventType, filename) => {
-
             var sF = filename.toString();
             if (fs.existsSync(szPath + sF)) sF = szPath + sF;
             else sF = szPathC + sF;

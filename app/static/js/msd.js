@@ -24,6 +24,7 @@ window.addEventListener('DOMContentLoaded', ()=> {
           var ajax = new XMLHttpRequest();
           ajax.open("GET", url, true);
           ajax.responseType = "arraybuffer";
+          ajax.crossorigin = "anonymous";// anonymous：允许跨域请求，但不允许发送任何自定义头部 use-credentials：允许跨域请求，并允许发送任何自定义头部。
           ajax.onload = function () {
             audioCtx.decodeAudioData(
               ajax.response,
@@ -43,7 +44,7 @@ window.addEventListener('DOMContentLoaded', ()=> {
       }
   
       async function playSd(n) {
-        var s = "";
+        let s = "";
         switch (n) {
           case 1:
             s = "online";
@@ -58,8 +59,7 @@ window.addEventListener('DOMContentLoaded', ()=> {
   
         if (bpIn) return;
   
-        var n1 = 1000;
-        var n2 = new Date().getTime();
+        var n1 = 1000, n2 = new Date().getTime();
         if (!oNTm1[s]) oNTm1[s] = n2;
         else {
           if (s == "wh01") n1 = 25000;

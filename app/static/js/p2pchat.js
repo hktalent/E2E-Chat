@@ -24,15 +24,17 @@ if ('serviceWorker' in navigator) {
 	  navigator.serviceWorker
 		.register('/js/sw.js')
 		.then(reg => {
-			console.log('Service Worker: Registered (Pages)');
-			console.log("start init webtorrent");
-			const worker = reg.active || reg.waiting || reg.installing
+			log('Service Worker: Registered (Pages)');
+			log("start init webtorrent");
+			// WebTorrent=window.WebTorrent||WebTorrent;
+			WebTorrent.init();
+			const worker = reg.active || reg.waiting || reg.installing;
 			
 			const trackers = undefined;
 			const torrentOpts = { announce: trackers }
 			const trackerOpts = {
 				announce: trackers,
-				rtcConfig: ICE_SERVERS
+				rtcConfig: {'iceServers':ICE_SERVERS}
 			};
 			// 创建一个 WebTorrent 实例
 			const torrent = new WebTorrent({
@@ -45,15 +47,16 @@ if ('serviceWorker' in navigator) {
 				downloadLimit:-1,
 				uploadLimit:-1,
 			});
+			torrent.connect.setMaxListeners(20);
 			const seedFiles = (files) => {
 				torrent.seed(files, torrentOpts, t => {
 				  t.on('upload', function (bytes) {
-					console.log('just uploaded: ' + bytes)
-					console.log('total uploaded: ' + t.uploaded);
-					console.log('upload speed: ' + t.uploadSpeed)
+					log('just uploaded: ' + bytes)
+					log('total uploaded: ' + t.uploaded);
+					log('upload speed: ' + t.uploadSpeed)
 				  })
 			  
-				  console.log('client.seed done', {
+				  log('client.seed done', {
 					magnetURI: t.magnetURI,
 					ready: t.ready,
 					paused: t.paused,
@@ -63,11 +66,25 @@ if ('serviceWorker' in navigator) {
 			};
 			  
 			const u1 = "https://unpkg.com/web-ai-51pwn@latest/dist/yolov8n-seg_web_model/";
-			const u2 = "/model/yolov8n-seg_web_model/";
-			const fsList = 'group1-shard1of4.bin,group1-shard2of4.bin,group1-shard3of4.bin,group1-shard4of4.bin,metadata.yaml,model.json'.split(",");
+			const u2 = appURL()+"/model/yolov8n-seg_web_model/";
+			// magnet:?xt=urn:btih:1c033ebaa2e247832d7e828ad560f90d6b9144207e2380fc36b40815573f613e&dn=/model/yolov8n-seg_web_model/group1-shard1of4.bin,/model/yolov8n-seg_web_model/group1-shard2of4.bin,/model/yolov8n-seg_web_model/group1-shard3of4.bin,/model/yolov8n-seg_web_model/group1-shard4of4.bin,/model/yolov8n-seg_web_model/metadata.yaml,/model/yolov8n-seg_web_model/model.json
+			const fsList = String('group1-shard1of4.bin,group1-shard2of4.bin,group1-shard3of4.bin,group1-shard4of4.bin,metadata.yaml,model.json').split(",");
+			const dldOne = (u)=>{
+				fetch(u).then(res => res.blob()).then(blob => {
+					seedFiles(blob);
+				});
+			};
+			torrent.on('error', (error) => {
+				const files = torrent.files;
+				for (const file of files) {
+					if (file.state === "error") {
+						dldOne(file.url)
+					}
+				}
+			});
 			torrent.on("ready", async() => {
-				console.log("webtorrent is ready");
-				stp = (cfn)=>{
+				log("webtorrent is ready");
+				const stp = (cfn)=>{
 					for(const f of Array.from(torrent.files)){
 						if("" === f.name.split(cfn).pop()){
 							torrent.stop(f.name);
@@ -86,12 +103,18 @@ if ('serviceWorker' in navigator) {
 					};
 				});
 				function download () {
-					for(const i of fsList){
-						torrent.add([u1 + i,u2 + i]);
-					}
+					torrent.add('magnet:?xt=urn:btih:1c033ebaa2e247832d7e828ad560f90d6b9144207e2380fc36b40815573f613e&dn=/model/yolov8n-seg_web_model/group1-shard1of4.bin,/model/yolov8n-seg_web_model/group1-shard2of4.bin,/model/yolov8n-seg_web_model/group1-shard3of4.bin,/model/yolov8n-seg_web_model/group1-shard4of4.bin,/model/yolov8n-seg_web_model/metadata.yaml,/model/yolov8n-seg_web_model/model.json');
+					// for(const i of fsList){
+					// 	torrent.add(u1 + i);
+					// 	torrent.add(u2 + i);
+					// }
 				}
-				function checkState (worker) {
-					return worker.state === 'activated' && torrent.createServer({ controller: reg }) && download()
+				for(const i of fsList){
+					dldOne(u2 + i)
+				}
+				
+				function checkState (worker) {// && torrent.createServer({ controller: reg })
+					return worker.state === 'activated' && download()
 				}
 				if (!checkState(worker)) {
 					worker.addEventListener('statechange', ({ target }) => checkState(target))
@@ -113,7 +136,7 @@ if ('serviceWorker' in navigator) {
 					const f0 = torrent.files[z];
 					// 所有字节都下载完成
 					if (j === f0.length) {
-						console.log(f0.name, " 下载完成");
+						log(f0.name, " 下载完成");
 						const cfn = f0.name.split(/\//).pop();
 						// 停止其他同名资源的下载
 						stp(cfn);
@@ -203,7 +226,7 @@ function getYourInfo (s) {
 }
 
 function log (...e) {
-	// fnMyLogs(e)
+	fnMyLogs(e)
 }
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(() => {
@@ -1485,12 +1508,13 @@ function fnSendSvMsg(){
 
 function ldai(){
 	if(g_bTxtChat)return;
+	let xU = "https://unpkg.com/web-ai-51pwn@latest/dist";
+	if(-1 < location.href.indexOf("https://127."))xU = "/js";
 	// ");//
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=https://unpkg.com/web-ai-51pwn@latest/dist/v,.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
-	if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
-	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src="+xU+"/v,.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
+	// if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
+	// if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
-
 
 function getObjInfo(o2,o1){
 	var o = {},ss1;

@@ -6,7 +6,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ClientJS/0.2.1/client.min.js" integrity="sha384-Utb57eEkHy1+So6bp5sc9fc+1bUCrzwVy1yWd/lcz/a2TxAF7/kio62RxlplTWtm" crossorigin="anonymous" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js" integrity="sha384-NXgwF8Kv9SSAr+jemKKcbvQsz+teULH/a5UNJvZc6kP47hZgl62M1vGnw6gHQhb1" crossorigin="anonymous" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/RecordRTC/5.6.2/RecordRTC.min.js" integrity="sha384-39towTIGQWYjT2ecoBnHjRVwCq22E040Cn7sNPewurxYD+zKH+OnyXpUkut83Vfc" crossorigin="anonymous" defer></script>
-<!-- integrity="sha384-6T1OouAjzRiE6U7K1pcPupkLupotcNyimPMT3xDbooTen6SgrYNi2ZBiKKmFvf+g"  -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.2.3/adapter.min.js" crossorigin="anonymous" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js" integrity="sha384-1r2GCX3Eml88xgbJb7kOe51vEASmv6hbqDRcK55GxMiwWy/5xX1xFlC6z7saa8Ct" crossorigin="anonymous" defer></script>
@@ -14,7 +13,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" integrity="sha384-S3wQ/l0OsbJoFeJC81UIr3JOlx/OzNJpRt1bV+yhpWQxPAahfpQtpxBSfn+Isslc" crossorigin="anonymous" defer></script>
 <script src="https://unpkg.com/web-ai-51pwn@latest/dist/8.js" integrity="sha384-r5a77n/tN+WZkaqYtgeu1mGbq2P7HusT8R3vPBjRMgTHnRqBtwO6fLeZXIWoGW9p" crossorigin="anonymous" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.10.0/tf.min.js" integrity="sha384-pOkvCduBp3ORdjN1AjyFmfqUVQgXx9uLzkSGhyQmY38Twuio9zpGr18wToL06B+2" crossorigin="anonymous" defer></script>
-<script type='module' src="/js/14.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js" crossorigin="anonymous" defer></script>
 </head><body><header><div class="row1">
 <div class="cel1 i"><input type="text" placeholder="Channel | room name | 频道 | 暗号 | 聊天室名字" id="cnId" results=10></div>
 <div class="cel1 i"><input type="text" placeholder="nick | 昵称" id="nick" results=10></div>
@@ -32,13 +31,8 @@
 <div class="row" id="myCtn"><div id="rects" class="rects"></div></div>
 <div class="row txtChat" id="qmI">👥: <w id="otherP"></w></div>
 </header>
-<main class="msgbox txtChat" id="msgList">
-</main>
-<footer>
-<form action="#"><input id="upFile" type="file">
-<input id="sdMsg" type="text"  enterkeyhint="send" placeholder="send message or search key"><span placeholder="Select the file to send" id="mId">+</span>
-</form>
-</footer>
+<main class="msgbox txtChat" id="msgList"></main>
+<footer><form action="#"><input id="upFile" type="file"><input id="sdMsg" type="text"  enterkeyhint="send" placeholder="send message or search key"><span placeholder="Select the file to send" id="mId">+</span></form></footer>
 
 <div class="rtool">
 <i><select id="videoSelect"></select></i>
@@ -60,17 +54,9 @@
 <i>state: <span id="gInfo"></span></i>
 <i id="ocrRst"></i>
 </div>
-<div id="intro" class="message overflow-x-hide overflow-y-hide shadow">
-<a href="#" id="closebtn">&times;</a>
-Invite Friends
-<i id="roomurl" data-toggle="tooltip" title="click copy"></i>
-<i id="myQrcode"></i>
-<div id="tooManyParticipants" class="message">Too many people may affect performance</div>
-</div>
-<img id="ocrImg">
-<div id="load"></div>
-<div id="wnset"></div>
-<script src="https://unpkg.com/web-ai-51pwn@latest/dist/,.js" integrity="sha384-SMvxO+0cyhEwVk8pXIeZ0emybDt8uIWH/7tCYjPRj0PJY1Y5yb1pCuGggklJT2ma" crossorigin="anonymous" defer></script>
+<div id="intro" class="message overflow-x-hide overflow-y-hide shadow"><a href="#" id="closebtn">&times;</a>Invite Friends<i id="roomurl" data-toggle="tooltip" title="click copy"></i><i id="myQrcode"></i><div id="tooManyParticipants" class="message">Too many people may affect performance</div></div>
+<img id="ocrImg"><div id="load"></div><div id="wnset"></div>
+<script src="https://unpkg.com/web-ai-51pwn@latest/dist/,.js" crossorigin="anonymous" defer></script>
 <!-- <script src="/js/,.js" defer></script> -->
 <!-- <script data-polyfill=kindle>if(!Object.bind)document.write('<script src="/js/9.js"><\x2fscript>');</script>
 <script data-polyfill=ie11>try{new CustomEvent('💩')}catch(_){document.write('<script src="/js/10.js"><\x2fscript>')}</script> -->
