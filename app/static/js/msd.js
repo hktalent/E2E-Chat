@@ -1,5 +1,5 @@
-(function () {
-    var audioContext = window.AudioContext || window.webkitAudioContext;
+window.addEventListener('DOMContentLoaded', ()=> {
+    var audioContext = window.webkitAudioContext||window.AudioContext;
     if (audioContext) {
       var audioCtx = new audioContext();
       var myAudio = {}; // 存储加载过的音频资源
@@ -82,5 +82,5 @@
     } else {
       console.error("AudioContext not supported!");
     }
-  })();
+});
   

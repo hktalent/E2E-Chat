@@ -16,7 +16,15 @@ https://127.0.0.1:2083/?eAi=true&cnId=51pwn&startChat=1
 - 默认 1 分钟自动销毁聊天内容，特别注意，苹果手机目前测试发现，如果浏览器在后台后，计时器会被系统暂停，重新打开后计时器会继续
 - 增加参数控制前端 https://chat.51pwn.com:2083/?eAi=true&cnId=51pwn&startChat=1
 
+
+/**
+
+在 /Users/51pwn/MyWork/E2E_chat/app/node_modules/engine.io/build/transports/polling.js 文件中，将 OutgoingMessage.prototype._headers 替换为 OutgoingMessage.headers。
+ */
 # 优化js
+在线生成脚本的 integrity
+https://www.srihash.org
+
 ```
 rm -rf app/static/js/tfjs.js
 wget -c -O app/static/js/tfjs.js 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js'
