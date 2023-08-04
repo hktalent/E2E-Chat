@@ -3,7 +3,7 @@ const opT = {
     maxAgeSeconds: 60 * 60 * 24 * 365,
     maxEntries: 10000,
     optional: true };
-let ccDb,stp;
+let ccDb;
 
 
 const portTimeoutDuration = 5000
@@ -95,26 +95,26 @@ self.addEventListener("install", e => {
     self.skipWaiting()
 });
 self.addEventListener("activate", async e => {
-    console.log("Service Worker: Activated");
-    e.waitUntil(caches.keys().then(e => Promise.all(e.map(e => {
-        if (e !== cacheName) return caches.delete(e), console.log("Service Worker: Clearing Old "+e+" Cache");
-    }))));
-    ccDb = await caches.open(cacheName,opT);
-    self.clients.claim();
+  console.log("Service Worker: Activated");
+  e.waitUntil(caches.keys().then(e => Promise.all(e.map(e => {
+    if (e !== cacheName) return caches.delete(e), console.log("Service Worker: Clearing Old "+e+" Cache");
+  }))));
+  ccDb = await caches.open(cacheName,opT);
+  self.clients.claim();
 });
 self.addEventListener("fetch", t => {
-    console.log("Service Worker: Fetching");
-    try{
-        let x = caches.match(t.request);
-        if (x)return t.respondWith(x);
-        x = fileResponse(t);
-        if(x)return t.respondWith(x);
-    }catch(e){console.log(e)}
-    t.respondWith(fetch(t.request).then(e => {
-        const c = e.clone();
-        ccDb = ccDb || caches.open(cacheName,opT);
-        if(ccDb)ccDb.put(t.request, c);
-        // if(stp)stp(t.request.url);
-        return e
-    }).catch(e => caches.match(t.request).then(e => e)))
+  console.log("Service Worker: Fetching " + t.request.url);
+  try{
+    let x = caches.match(t.request);
+    if (x)return t.respondWith(x);
+    x = fileResponse(t);
+    if(x)return t.respondWith(x);
+  }catch(e){console.log(e)}
+  t.respondWith(fetch(t.request).then(e => {
+    const c = e.clone();
+    ccDb = ccDb || caches.open(cacheName,opT);
+    if(ccDb)ccDb.put(t.request, c);
+    // if(stp)stp(t.request.url);
+    return e
+  }).catch(e => caches.match(t.request).then(e => e)))
 });

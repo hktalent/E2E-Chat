@@ -18,6 +18,7 @@ https://127.0.0.1:2083/?eAi=true&cnId=51pwn&startChat=1
 
 
 /**
+https://webtorrent.io/intro
 
 在 /Users/51pwn/MyWork/E2E_chat/app/node_modules/engine.io/build/transports/polling.js 文件中，将 OutgoingMessage.prototype._headers 替换为 OutgoingMessage.headers。
  */

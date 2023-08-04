@@ -225,7 +225,7 @@ function myapp(option)
             return compression.filter(req, res);
         }
     }));
-    connectSources = ["'self'", "wss://chat.51pwn.com:" + option.port,"wss://192.168.0.107:" + option.port,, "wss://chat.51pwn.com:"+option.port, "wss://127.0.0.1:" + option.port]
+    connectSources = ["'self'", "wss://chat.51pwn.com:" + option.port,"https://unpkg.com","https://cdnjs.cloudflare.com","wss://192.168.0.107:" + option.port,, "wss://chat.51pwn.com:"+option.port, "wss://127.0.0.1:" + option.port]
     if(bUseHttps)app.use(helmet({directives:{upgradeInsecureRequests:bUseHttps, connectSrc:connectSources}}));
     app.use(function(req, res, next){
         res.setHeader("Alt-Svc", 'h3=":'+option.port+'"; ma=2592000');
