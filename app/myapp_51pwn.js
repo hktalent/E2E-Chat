@@ -315,10 +315,12 @@ function myapp(option)
         }
         var szIp = String(req.connection.remoteAddress);
         if(-1 < szIp.indexOf("127.0.0.1")){
-            // mergeRes.setJm();
-            g_oPmap[req.url]=1;
-            fs.writeFileSync(szPm,JSON.stringify(g_oPmap));
-            // req.connection.destroy();
+            if(-1 == req.url.indexOf("?")){
+                // mergeRes.setJm();
+                g_oPmap[req.url]=1;
+                fs.writeFileSync(szPm,JSON.stringify(g_oPmap));
+                // req.connection.destroy();
+            }
         }else if(!g_oPmap[req.url]){
             console.log("终止",req.url)
             req.connection.destroy();
@@ -329,8 +331,9 @@ function myapp(option)
     app.use(express.static(szSSP, expressOptions));
     app.get(reRes,function(req,res,next)
     {
-        var s11 = mime.lookup(req.path);
+        // var s11 = mime.lookup(req.path);
         if(req.path.match(/sw\.js$/)){
+            expressOptions.setNoCache(res);
             doZipSFl(szSSP + "js/sw.js",res);
             return
         }
@@ -353,8 +356,10 @@ function myapp(option)
 [ '10', '/js/ie.js' ]
 [ '11', '/js/tfjs.js' ]
 [ '12', '/js/webtorrent.min.js' ]    // https://cdnjs.com/libraries/webtorrent
+[ '13', '/js/stunLists.js' ]
+[ '14', '/js/p2pfs.js' ]
         */
-        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/aes.js,/js/fix.js,/js/kindle.js,/js/ie.js,/js/tfjs.js,/js/webtorrent.min.js".split(",");
+        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/aes.js,/js/fix.js,/js/kindle.js,/js/ie.js,/js/tfjs.js,/js/webtorrent.min.js,/js/stunLists.js,/js/p2pfs.js".split(",");
         // for(var k in aj){
         //     console.log([k,aj[k]])
         // }

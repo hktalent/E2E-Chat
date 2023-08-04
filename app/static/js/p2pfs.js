@@ -1,0 +1,1 @@
+import WebTorrent from 'https://esm.sh/webtorrent'

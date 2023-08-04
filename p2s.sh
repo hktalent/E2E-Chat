@@ -25,7 +25,10 @@ rcp app/static/js/common.js /root/${xxx}/app/static/js/
 rcp app/static/js/392.js /root/${xxx}/app/static/js/
 rcp app/static/js/tensorflow.js /root/${xxx}/app/static/js/
 
+rcp app/static/js/p2pfs.js /root/${xxx}/app/static/js/
 rcp app/static/js/sw.js /root/${xxx}/app/static/js/
+rcp app/static/js/stunLists.js /root/${xxx}/app/static/js/
+rcp app/static/js/webtorrent.min.js /root/${xxx}/app/static/js/
 rcp app/static/js/client.min.js.map /root/${xxx}/app/static/js/
 rcp app/static/js/socket.io.js /root/${xxx}/app/static/js/
 rcp app/static/js/plyr.js /root/${xxx}/app/static/js/

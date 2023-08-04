@@ -4,7 +4,7 @@ var fs = require('fs'),
     szPathC = __dirname + "/static/css/",
     aFCache = {},
     bJmi = !!1,
-    bIsMacOsSelf = os.platform() === 'darwin',
+    bIsMacOsSelf = !bJmi && os.platform() === 'darwin',
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  !!1;
@@ -136,6 +136,11 @@ else if(bIsMacOsSelf){
     fs.unlink("static/v8.js",()=>{});
     fs.unlink("static/css.css",()=>{});
 }
+
+async function HxJs(s){
+    var szTmp1 = (await minify(s, minifyOptions)).code;
+    return JavaScriptObfuscator.obfuscate(szTmp1, JsHxOpt).toString("utf-8");
+}
 async function fnMerg (s, t) {
     var szXf = "static/"+t + "." + t;
     // if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,p2pchat,bundle";
@@ -176,9 +181,7 @@ async function fnMerg (s, t) {
     }
     g_cache[s] = b.join("\n");
     if (useCc && bJmi && t == "js") {
-        var szTmp1 = g_cache[s];
-        szTmp1 = (await minify(szTmp1, minifyOptions)).code;
-        g_cache[s] = JavaScriptObfuscator.obfuscate(szTmp1, JsHxOpt).toString("utf-8");
+        g_cache[s] = await HxJs(g_cache[s]);
     }
     if ("css" == t) {
         oM = new CleanCSS({})
@@ -228,4 +231,4 @@ function fnSetPath (s) {
         szPathC = s + "css/";
 }
 
-module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc,setJm:setJm };
+module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc,setJm:setJm,HxJs:HxJs };

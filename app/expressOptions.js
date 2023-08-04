@@ -26,6 +26,7 @@ function setLongTermCache(res,stat) {
 
 
 module.exports = {
+  setNoCache:setNoCache,
   setLongTermCache,setLongTermCache,
   etag: true,
   lastModified: true,
