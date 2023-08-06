@@ -101,6 +101,18 @@ function getYourInfo (s) {
 function log (...e) {
 	// if({"https://127.0.0.1:2083":1,"https://192.168.0.107:2083":1}[location.origin])fnMyLogs(e)
 }
+// 检查css class是否定义
+const checkCssDef=(s)=>{
+	const rules = window.document.styleSheets;
+	for (const sheet of rules) {
+		for (const rule of sheet.cssRules) {
+			if (rule.selector === s) {
+				return true;
+			}
+		}
+	}
+	return false;
+};
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(() => {
 	if($("#atRd").prop("checked")){
@@ -180,7 +192,8 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	o1.find("t.t2").text(n)
 	o1.attr("tm",new Date().getTime());
 	var szTag = "d";
-	if(0 == t){
+	if(0 == t){ // 普通消息
+		if(local_media_stream)setTips("收到["+n+"]消息",s)
 		var oT1 = o1.find(szTag)
 		oT1.text(s);
 		var x009 = o1.find("svg");
@@ -188,7 +201,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 			copyText(o1.find("d"));
 		});
 	}
-	else if(1 == t){
+	else if(1 == t){ // 图片
 		var o22 = o1.find(szTag);
 		o22.html("<img width=100 src='"+ s + "' />");
 		o22.find("img").click(function(){
@@ -198,13 +211,13 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 			o9.scrollTop(100000,100000);
 		})
 	}
-	else if(2 == t){
+	else if(2 == t){// 文件 下载
 		var a = document.createElement("a");
 		a.href = URL.createObjectURL(getBlob(s));
 		a.download = szFileName;
 		a.innerText = "点击下载文件: " + szFileName +"("+ formatBytes(nSize)+")";
 		o1.find(szTag).append(a);
-	}else if(3 == t){
+	}else if(3 == t){ // html
 		o1.find(szTag).html(s);
 	}
 	var n7 = parseInt($("#clsTm").val()||1)
@@ -315,7 +328,7 @@ function fnTxtChatOne(pc,peer_id){
 	sendChannel.onopen = function () {
 		if(peer_id && g_aMembers[peer_id])
 		{
-			var sNick = g_aMembers[peer_id]["nick"]
+			// var sNick = g_aMembers[peer_id]["nick"]
 			// log(sNick)
 			// LogMsg(`你可以 基于 P2P/E2E 加密模式给 ${sNick} 发送消息了`);
 		}
@@ -688,6 +701,10 @@ function initVideoChat () {
 	// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
 }
 
+const setTips = (t,s) => {
+	var x=$("#msgList").tipso('hide').attr("data-tipso-title",t||"🔔Tips").tipso({size: 'tiny'}).tipso('update', 'content', s).tipso('show');
+	setTimeout(function(){x.tipso('hide')}, 2333)
+};
 var g_aMembers = {},bIoIsOk = false;
 function setNickInfo(v){
 	if (szCltFg && signaling_socket) signaling_socket.emit("getNick", szCltFg,JSON.stringify({id:szCltFg,nick:v||szCltFg,vlst:vlst}));
@@ -773,6 +790,7 @@ function init () {
 		var peer_id = config.peer_id;
 		if(config.userdata && config.userdata.nick){
 			g_aMembers[peer_id] = {nick:config.userdata.nick};
+			// if(config.userdata.nick)setTips("Online",config.userdata.nick);
 			upListMb()
 		}
 		if (peer_id in peers)return;
@@ -2026,5 +2044,11 @@ $(document).ready(function () {
 		// 	seedFiles(x);
 		// }
 	}
+	$('*[title]').tipso({
+		size: 'tiny',
+		background: 'tomato',
+		tooltipHover: true,
+		useTitle: true
+	});	  
 	$("script").remove();
 });
