@@ -153,10 +153,10 @@ async function fnMerg (s, t) {
             s = "v8";
             szXf = "static/"+s + "." + t
         }else{ 
-            s = "msd,stunLists,p2pchat";
+            s = "msd,stunLists,tipso.min,p2pchat";
         }
     }
-    else s = "plyr,p2pchat";
+    else s = "plyr,p2pchat,tipso.min";
     if(useCc){
         if(fs.existsSync(szXf)){
             var s1 = fs.readFileSync(szXf).toString("utf-8");
