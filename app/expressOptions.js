@@ -4,7 +4,7 @@ function setNoCache(res) {
   res.setHeader("Expires", date.toUTCString());
   res.setHeader("Pragma", "no-cache");
   res.setHeader("maxAge", "0");
-  res.setHeader("Cache-Control", "public, no-cache");
+  // res.setHeader("Cache-Control", "public, no-cache");// 导致sw.js刷新时没有被更新
 }
 var oNow = new Date(),sz1 = oNow.toUTCString();
 oNow.setFullYear(oNow.getFullYear() + 1);

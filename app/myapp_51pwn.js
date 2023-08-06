@@ -184,6 +184,7 @@ function myapp(option)
     }));
     var connectSources = [
         "'self'",
+        "data:",
         "wss://chat.51pwn.com:" + String(option.port) + "/*",
         "https://chat.51pwn.com:" + String(option.port) + "/*",
         "https://unpkg.com/*",
@@ -200,10 +201,12 @@ function myapp(option)
           connectSrc: connectSources,
           scriptSrc: [
             "'self'",
-            "https://chat.51pwn.com:2083/*",
+            "https://chat.51pwn.com:" + String(option.port) + "/*",
             "https://cdnjs.cloudflare.com/*",
             "https://unpkg.com/*",
-            "'unsafe-eval'"
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            
           ],
           scriptSrcElem: "*",
         }
@@ -415,16 +418,17 @@ function myapp(option)
     // apt-get install coturn
     // yum install coturn
     // /etc/turnserver.conf
-    app.use(function(req, res, next)
-    {
-        // console.log(req.url);
-        if(bUseHttps)
-        {
-            if(!res.locals.nonce)res.locals.nonce = uuid.v4();
-        }
-        // if(fnCheckUa(req,res))next();// else 
-        next();
-    });
+    // 需要关闭，否则报错： Refused to execute a script because its hash, its nonce, or 'unsafe-inline' does not appear in the script-src directive of the Content Security Policy.
+    // app.use(function(req, res, next)
+    // {
+    //     // console.log(req.url);
+    //     if(bUseHttps)
+    //     {
+    //         if(!res.locals.nonce)res.locals.nonce = uuid.v4();
+    //     }
+    //     // if(fnCheckUa(req,res))next();// else 
+    //     next();
+    // });
 
     // https://www.npmjs.com/package/express-session
     if(bUseHttps)app.set('trust proxy', 1),fnOnLog("open https SSL");

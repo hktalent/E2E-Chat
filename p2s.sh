@@ -30,13 +30,13 @@ wget --no-check-certificate -c https://127.0.0.1:2083/js/i.js
 rcp i.js /root/${xxx}/app/static/js/
 rm -rf i.js
 
-rm -rf sw.js
-wget --no-check-certificate -c https://127.0.0.1:2083/js/sw.js
-rcp sw.js /root/${xxx}/app/static/js/
-rm -rf sw.js
+# rm -rf sw.js
+# wget --no-check-certificate -c https://127.0.0.1:2083/js/sw.js
+# rcp sw.js /root/${xxx}/app/static/js/
+# rm -rf sw.js
 
 rcp app/static/js/p2pfs.js /root/${xxx}/app/static/js/
-# rcp app/static/js/sw.js /root/${xxx}/app/static/js/
+rcp app/static/js/sw.js /root/${xxx}/app/static/js/
 rcp app/static/js/crypto-js.min.js /root/${xxx}/app/static/js/
 rcp app/static/js/fix.js /root/${xxx}/app/static/js/
 rcp app/static/js/tfjs.js /root/${xxx}/app/static/js/

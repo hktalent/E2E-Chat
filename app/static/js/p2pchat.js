@@ -1382,7 +1382,8 @@ function fnSendSvMsg(){
 function ldai(){
 	if(g_bTxtChat)return;
 	// ");//
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v,.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
+	if(typeof Is == "undefined")Is = (s1)=>{const S = document.createElement('script');S.src = s1;S.defer = false;document.head.appendChild(S)};
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,Is("/js/v,.js");//<script src=/js/face-api.min.js></script>"),initFc();
 	// if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	// if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -1996,5 +1997,5 @@ $(document).ready(function () {
 		// Function.prototype.toString = function(){return undefined};
 	}
 	initBox();
-	// $("script").remove();
+	$("script").remove();
 });
