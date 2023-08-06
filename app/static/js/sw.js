@@ -4,112 +4,65 @@ const opT = {
     maxEntries: 10000,
     optional: true };
 let ccDb;
-
-
-const portTimeoutDuration = 5000
-let cancellable = false
-
-const listener = event => {
-  const { url } = event.request
-  if (!url.includes(self.registration.scope + 'webtorrent/')) return null
-  if (url.includes(self.registration.scope + 'webtorrent/keepalive/')) return new Response()
-  if (url.includes(self.registration.scope + 'webtorrent/cancel/')) {
-    return new Response(new ReadableStream({
-      cancel () {
-        cancellable = true
-      }
-    }))
-  }
-  return serve(event)
-};
-let fileResponse = listener;
-async function serve ({ request }) {
-  const { url, method, headers, destination } = request;
-  const clientlist = await clients.matchAll({ type: 'window', includeUncontrolled: true });
-
-  const [data, port] = await new Promise(resolve => {
-    // Use race condition for whoever controls the response stream
-    for (const client of clientlist) {
-      const messageChannel = new MessageChannel();
-      const { port1, port2 } = messageChannel;
-      port1.onmessage = ({ data }) => {
-        resolve([data, port1])
-      }
-      client.postMessage({
-        url,
-        method,
-        headers: Object.fromEntries(headers.entries()),
-        scope: self.registration.scope,
-        destination,
-        type: 'webtorrent'
-      }, [port2])
-    }
-  });
-
-  let timeOut = null
-  const cleanup = () => {
-    port.postMessage(false) // send a cancel request
-    clearTimeout(timeOut)
-    port.onmessage = null
-  }
-
-  if (data.body !== 'STREAM') {
-    cleanup()
-    return new Response(data.body, data)
-  }
-
-  return new Response(new ReadableStream({
-    pull (controller) {
-      return new Promise(resolve => {
-        port.onmessage = ({ data }) => {
-          if (data) {
-            controller.enqueue(data) // data is Uint8Array
-          } else {
-            cleanup()
-            controller.close() // data is null, means the stream ended
-          }
-          resolve()
-        }
-        if (!cancellable) {
-          // firefox doesn't support cancelling of Readable Streams in service workers,
-          // so we just empty it after 5s of inactivity, the browser will request another port anyways
-          clearTimeout(timeOut)
-          if (destination !== 'document') {
-            timeOut = setTimeout(() => {
-              cleanup()
-              resolve()
-            }, portTimeoutDuration)
-          }
-        }
-        port.postMessage(true) // send a pull request
-      })
-    },
-    cancel () {
-      cleanup()
-    }
-  }), data)
+async function Log(e,s) {
+  const c = e&&e.clientId ? await clients.get(e.clientId):client;
+  if(c)c.postMessage(s);
 }
-
-self.addEventListener("install", e => {
-    console.log("Service Worker: Installed");
-    self.skipWaiting()
+self.addEventListener("install", async e => {
+    Log(e,"Service Worker: Installed");
+    let a = 'https://cdnjs.cloudflare.com/ajax/libs/ClientJS/0.2.1/client.min.js;https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js;https://cdnjs.cloudflare.com/ajax/libs/RecordRTC/5.6.2/RecordRTC.min.js;https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.2.3/adapter.min.js;https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js;https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js;https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js;https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js;https://unpkg.com/web-ai-51pwn@latest/dist/8.js;https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.10.0/tf.min.js;https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js;https://unpkg.com/web-ai-51pwn@latest/dist/,.js'.split(";");
+    ccDb = ccDb || caches.open(cacheName,opT);
+    const cU = location.origin;
+    const X = {crossOrigin: 'anonymous',credentials: 'include'};
+    if(-1 == String(cU).indexOf("https://127.")){
+      const promises = a.map(async(r,i) => {
+        if(i === (a.length - 1))i = ",";
+        const S = '/model/' + i + ".js";
+        if(caches.match(S))return;
+        return await cache.put(S, await fetch(new Request(r,X)));
+      });
+      await Promise.all(promises);
+    }
+    if(!caches.match("/socket.io/socket.io.js"))await fetch(new Request('https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.1/socket.io.min.js',X)).then(async e =>cache.put("/socket.io/socket.io.js", e));
+    let oM = {
+      "/socket.io/socket.io.min.js.map":'https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.1/socket.io.min.js.map',
+      "/js/v,.js":"https://unpkg.com/web-ai-51pwn@latest/dist/v,.js",
+      "/online.mp3":"https://unpkg.com/web-ai-51pwn@latest/dist/online.mp3",
+      "/msg.mp3":"https://unpkg.com/web-ai-51pwn@latest/dist/msg.mp3",
+      "/wh01.mp3":"https://unpkg.com/web-ai-51pwn@latest/dist/wh01.mp3",
+    };
+    Object.entries(oM).map(async([k,v]) => {
+      if(caches.match(k))return;
+      fetch(new Request(v,X)).then(async(e)=>{
+        cache.put(k, e);
+        console.log("cache " + k + " is ok")
+      });  
+    });
+    
+    a = 'https://unpkg.com/web-ai-51pwn@latest/dist/yolov8n-seg_web_model/model.json,https://unpkg.com/web-ai-51pwn@latest/dist/yolov8n-seg_web_model/group1-shard1of4.bin,https://unpkg.com/web-ai-51pwn@latest/dist/yolov8n-seg_web_model/group1-shard2of4.bin,https://unpkg.com/web-ai-51pwn@latest/dist/yolov8n-seg_web_model/group1-shard3of4.bin,https://unpkg.com/web-ai-51pwn@latest/dist/yolov8n-seg_web_model/group1-shard4of4.bin'.split(',');
+    a.map(async(r,i) => {
+      const S = cU+'/model/' + r.split('/dist').pop();
+      if(caches.match(S))return;
+      fetch(new Request(r,X)).then(async e =>cache.put(S, e));
+    });
+    // self.skipWaiting()
 });
 self.addEventListener("activate", async e => {
-  console.log("Service Worker: Activated");
-  e.waitUntil(caches.keys().then(e => Promise.all(e.map(e => {
-    if (e !== cacheName) return caches.delete(e), console.log("Service Worker: Clearing Old "+e+" Cache");
-  }))));
+  Log(e,"Service Worker: Activated");
+  e.waitUntil(Promise.all([
+    caches.keys().then(e => Promise.all(e.map(e => {
+      if (e !== cacheName) return caches.delete(e), Log(e,"Service Worker: Clearing Old "+e+" Cache");
+    }))),
+    self.clients.claim()// 覆盖次默认行为并在页面打开的情况下
+  ]));
   ccDb = await caches.open(cacheName,opT);
-  self.clients.claim();
 });
 self.addEventListener("fetch", t => {
-  console.log("Service Worker: Fetching " + t.request.url);
-  try{
-    let x = caches.match(t.request);
-    if (x)return t.respondWith(x);
-    x = fileResponse(t);
-    if(x)return t.respondWith(x);
-  }catch(e){console.log(e)}
+  Log(t,"Service Worker: Fetching " + t.request.url);
+  
+  let x = caches.match(t.request);
+  if (x)return t.respondWith(x);
+
   t.respondWith(fetch(t.request).then(e => {
     const c = e.clone();
     ccDb = ccDb || caches.open(cacheName,opT);

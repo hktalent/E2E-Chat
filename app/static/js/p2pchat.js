@@ -9,6 +9,12 @@ String.prototype.hashCode = function() {
 	}
 	return hash;
 };
+//  验证 script 的 integrity
+// const valid = window.crypto.subtle.verify(integrity, script.textContent);
+function T2Sha384 (s,v) {
+	var s1 = "SHA384-"+CryptoJS.SHA384(s).toString(CryptoJS.enc.Base64);
+	return v ? window.crypto.subtle.verify(s1, s):s1;
+}
 function prettyBytes (num) {
 	const units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 	const neg = num < 0
@@ -19,139 +25,6 @@ function prettyBytes (num) {
 	num = Number((num / Math.pow(1000, exponent)).toFixed(2))
 	return (neg ? '-' : '') + num + ' ' + unit
 }
-if ('serviceWorker' in navigator) {
-	window.addEventListener('load', () => {// https://caniuse.com/?search=service%20worker
-	  navigator.serviceWorker
-		.register('/js/sw.js')
-		.then(reg => {
-			log('Service Worker: Registered (Pages)');
-			log("start init webtorrent");
-			// WebTorrent=window.WebTorrent||WebTorrent;
-			WebTorrent.init();
-			const worker = reg.active || reg.waiting || reg.installing;
-			
-			const trackers = undefined;
-			const torrentOpts = { announce: trackers }
-			const trackerOpts = {
-				announce: trackers,
-				rtcConfig: {'iceServers':ICE_SERVERS}
-			};
-			// 创建一个 WebTorrent 实例
-			const torrent = new WebTorrent({
-				tracker: trackerOpts,
-				maxConns:128,
-				dht:true,
-				lsd:true,
-				webSeeds:true,
-				utp:true,
-				downloadLimit:-1,
-				uploadLimit:-1,
-			});
-			torrent.connect.setMaxListeners(20);
-			const seedFiles = (files) => {
-				torrent.seed(files, torrentOpts, t => {
-				  t.on('upload', function (bytes) {
-					log('just uploaded: ' + bytes)
-					log('total uploaded: ' + t.uploaded);
-					log('upload speed: ' + t.uploadSpeed)
-				  })
-			  
-				  log('client.seed done', {
-					magnetURI: t.magnetURI,
-					ready: t.ready,
-					paused: t.paused,
-					done: t.done,
-				  });
-				})
-			};
-			  
-			const u1 = "https://unpkg.com/web-ai-51pwn@latest/dist/yolov8n-seg_web_model/";
-			const u2 = appURL()+"/model/yolov8n-seg_web_model/";
-			// magnet:?xt=urn:btih:1c033ebaa2e247832d7e828ad560f90d6b9144207e2380fc36b40815573f613e&dn=/model/yolov8n-seg_web_model/group1-shard1of4.bin,/model/yolov8n-seg_web_model/group1-shard2of4.bin,/model/yolov8n-seg_web_model/group1-shard3of4.bin,/model/yolov8n-seg_web_model/group1-shard4of4.bin,/model/yolov8n-seg_web_model/metadata.yaml,/model/yolov8n-seg_web_model/model.json
-			const fsList = String('group1-shard1of4.bin,group1-shard2of4.bin,group1-shard3of4.bin,group1-shard4of4.bin,metadata.yaml,model.json').split(",");
-			const dldOne = (u)=>{
-				fetch(u).then(res => res.blob()).then(blob => {
-					seedFiles(blob);
-				});
-			};
-			torrent.on('error', (error) => {
-				const files = torrent.files;
-				for (const file of files) {
-					if (file.state === "error") {
-						dldOne(file.url)
-					}
-				}
-			});
-			torrent.on("ready", async() => {
-				log("webtorrent is ready");
-				const stp = (cfn)=>{
-					for(const f of Array.from(torrent.files)){
-						if("" === f.name.split(cfn).pop()){
-							torrent.stop(f.name);
-						}
-					};
-				};
-				torrent.on("start", async(e) => {
-					// 检查是否已经从 caches.match() 中匹配了文件
-					const u = e.detail.url;
-					for(const i of fsList){
-						if (u.split(i).pop() === "") {
-							const c = await reg.caches.match(u2 + i);
-							if(c)stp(i);
-							break;
-						}
-					};
-				});
-				function download () {
-					torrent.add('magnet:?xt=urn:btih:1c033ebaa2e247832d7e828ad560f90d6b9144207e2380fc36b40815573f613e&dn=/model/yolov8n-seg_web_model/group1-shard1of4.bin,/model/yolov8n-seg_web_model/group1-shard2of4.bin,/model/yolov8n-seg_web_model/group1-shard3of4.bin,/model/yolov8n-seg_web_model/group1-shard4of4.bin,/model/yolov8n-seg_web_model/metadata.yaml,/model/yolov8n-seg_web_model/model.json');
-					// for(const i of fsList){
-					// 	torrent.add(u1 + i);
-					// 	torrent.add(u2 + i);
-					// }
-				}
-				for(const i of fsList){
-					dldOne(u2 + i)
-				}
-				
-				function checkState (worker) {// && torrent.createServer({ controller: reg })
-					return worker.state === 'activated' && download()
-				}
-				if (!checkState(worker)) {
-					worker.addEventListener('statechange', ({ target }) => checkState(target))
-				}
-				/* 监听下载完成事件
-				文件名 name
-				文件大小 size, length(当前已经下载的字节数)
-				文件类型 "type": "text/plain",
-				文件创建时间 "created": "2023-03-08T12:00:00Z",
-				文件修改时间 "modified": "2023-03-08T12:00:00Z",
-				文件权限 "permissions": "0644",
-				文件所有者 "owner": "user1", "group": "group1"
-				*/
-				let ccDb = await caches.open("v1",{ 
-					maxAgeSeconds: 60 * 60 * 24 * 365,
-					maxEntries: 10000,
-					optional: true });
-				torrent.on("downloaded", (j,z) => {
-					const f0 = torrent.files[z];
-					// 所有字节都下载完成
-					if (j === f0.length) {
-						log(f0.name, " 下载完成");
-						const cfn = f0.name.split(/\//).pop();
-						// 停止其他同名资源的下载
-						stp(cfn);
-						// 获取文件下载请求对象
-						const r = Object.assign({}, j.request);
-						r.path = u2 + cfn;
-						if(ccDb)ccDb.put(r, f0);
-						seedFiles(f0);
-					}
-				});
-			})
-		})
-		.catch(err => log(`Service Worker: Error: ${err}`));
-	});
-};
 
 window.appURL = () => {return document.location.protocol + "//" + location.host};
 const getRoomName = () => {// return $("#cnId").val();
@@ -226,7 +99,7 @@ function getYourInfo (s) {
 }
 
 function log (...e) {
-	fnMyLogs(e)
+	// fnMyLogs(e)
 }
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(() => {
@@ -1100,7 +973,7 @@ var szLstQrcode = "";
 function MkQrcd () {
 	var aP = [];
 	$("input[type=checkbox],input[type=text]").map(function (i) {
-		if(!!this.id || "sInvite" == this.id)return;
+		if(!String(this.id) || "sInvite" == this.id)return;
 		if(this.type == "checkbox"){this.checked && aP.push(this.id + "=true")}
 		else if(this.id != "nick" && this.value) aP.push(this.id + "=" + encodeURIComponent(this.value));
 	});
@@ -1138,7 +1011,7 @@ const quickScan = [{"label": "4K(UHD)","width": 3840,"height": 2160,"ratio": "16
 {"label": "360p(nHD)","width": 640,"height": 360,"ratio": "16:9"},{"label": "CIF","width": 352,"height": 288,"ratio": "4:3"},
 {"label": "QVGA","width": 320,"height": 240,"ratio": "4:3"},{"label": "QCIF","width": 176,"height": 144,"ratio": "4:3"},
 {"label": "QQVGA","width": 160,"height": 120,"ratio": "4:3"}];
-var g_Constraints = 0,n001 = 3,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
+var g_Constraints = 0,n001 = 5,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
 
 // 构建、初始化全局 变量 g_Constraints，必须运行，否则视频聊天无法启动 https://webrtchacks.github.io/WebRTC-Camera-Resolution/
 function appSet() {
@@ -1175,8 +1048,8 @@ function appSet() {
 	// 不能加更多属性了，不然可能导致chrome无法创建对象
 	g_Constraints = {
 		"audio": oT,
-		"video": {
-			// deviceId: videoSource ? { exact: videoSource } : undefined,// pc 端
+		"video": {// 将 deviceId 属性从 video 对象中删除。此属性不兼容 Safari 和 Firefox。
+			"facingMode":"environment",// "user",// "environment",
 			// 'mandatory': {// chrome 不支持
 				minFrameRate: n001,
 				maxFrameRate: n001
@@ -1263,13 +1136,13 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,bIsRvdRcd = false,fnStartRct = f
 		oStreamTrack = track;
 		videoOnlyStream.addTrack(track);
 	});
-	///////////////*/
+	///////////////*
 	var recorder = RecordRTC(videoOnlyStream || stream || local_media, {
 		'type': 'video'// 测评表明 AV1 是最佳的
-		, 'mimeType': 'video/webm;codecs=h264' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
-		,disableLogs: true
-		,audioBitsPerSecond:100
-		,videoBitsPerSecond: 5000
+		, 'mimeType': 'video/webm;codecs=vp9' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
+		,'audioBitsPerSecond': 100,
+		'videoBitsPerSecond': 1000,
+		'frameRate': 24,
 	});
 	
 	recorder.startRecording();
@@ -1391,7 +1264,7 @@ function videoImgOnload(){
 }
 
 var szImageData;
-////////人脸（识别、年龄、表情、性别）相关////////////////
+/*///////人脸（识别、年龄、表情、性别）相关////////////////
 async function initFc(){
 	// node 环境，所以需要使用 node 环境下的 canvas 作为渲染基础
 	// faceapi.env.monkeyPatch({
@@ -1443,7 +1316,7 @@ async function fnFaceDtc(){
 	}catch(e){log(e)}
 }
 
-//////////////////////////
+/////////////////////////*/
 
 var oImgOcr = document.getElementById("ocrImg");
 oImgOcr.onload = videoImgOnload;
@@ -1508,10 +1381,8 @@ function fnSendSvMsg(){
 
 function ldai(){
 	if(g_bTxtChat)return;
-	let xU = "https://unpkg.com/web-ai-51pwn@latest/dist";
-	if(-1 < location.href.indexOf("https://127."))xU = "/js";
 	// ");//
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src="+xU+"/v,.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src=/js/v,.js></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
 	// if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	// if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -2030,6 +1901,7 @@ $(document).ready(function () {
 	osdMsg.keydown(function (e) {
 		if (e.keyCode == 13) SendMsg(osdMsg.val()),osdMsg.val("")
 	})
+	// 发送文件
 	var fnDoBlog =function(blob,szName){
 		var reader = new FileReader();
 		reader.onload = function (event) {
@@ -2124,5 +1996,5 @@ $(document).ready(function () {
 		// Function.prototype.toString = function(){return undefined};
 	}
 	initBox();
-	$("script").remove();
+	// $("script").remove();
 });

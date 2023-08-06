@@ -1,5 +1,6 @@
 process.setMaxListeners(5000);
 var fs = require('fs'),
+    os = require('os'),
     spdy = require('spdy'),
     // brotli = require('brotli'),
     express = require('express'),
@@ -35,7 +36,6 @@ var fs = require('fs'),
     credentials = {};
 
 // fix: UnhandledPromiseRejectionWarning: Error: The client is closed  Commander._RedisClient_sendCommand (node_modules/@node-redis/client/dist/lib/client/index.js:387:31)
-// app.set('etag', true); 
 const pubClient = createClient({ url: "redis://localhost:6379" });
 (async () => {
     pubClient.on('error', (err) => console.log('Redis Client Error', err));
@@ -163,12 +163,110 @@ function myapp(option)
         minifyJS:                  true
     };
     oHtmlCc = {};
+    app.disable('x-powered-by');
+    app.set('etag', true); 
+    // gzip压缩数据
+    app.use(compression({
+        brotli: { quality: 11 },
+        "level":9,
+        "memLevel":9,
+        // "strategy":// 
+        "filter":function(req,res)
+        {
+            if(-1 < req.path.indexOf("/model") && -1 == req.path.indexOf(".json"))return false;
+            var s = String(res && res.getHeader('Content-Type') || "");
+            if(-1 < s.indexOf("text/") || -1 < s.indexOf("javascript") || -1 < s.indexOf("css"))
+            {
+                return true;
+            }
+            return compression.filter(req, res);
+        }
+    }));
+    var connectSources = [
+        "'self'",
+        "wss://chat.51pwn.com:" + String(option.port) + "/*",
+        "https://chat.51pwn.com:" + String(option.port) + "/*",
+        "https://unpkg.com/*",
+        "https://cdnjs.cloudflare.com/*",
+        "wss://chat.51pwn.com:"+String(option.port) + "/*"
+    ];
+    if(os.platform() === 'darwin'){
+        connectSources.push("wss://192.168.0.107:" + String(option.port)+ "/*","wss://127.0.0.1:" + String(option.port)+ "/*")
+    }
+    app.use(helmet());
+    // 终于fixed 头部信息生效的bug
+    app.use(helmet.contentSecurityPolicy({
+        directives: {
+          connectSrc: connectSources,
+          scriptSrc: [
+            "'self'",
+            "https://chat.51pwn.com:2083/*",
+            "https://cdnjs.cloudflare.com/*",
+            "https://unpkg.com/*",
+            "'unsafe-eval'"
+          ],
+          scriptSrcElem: "*",
+        }
+    }));
+    app.use(function(req, res, next){
+        res.setHeader("Alt-Svc", 'h3=":'+option.port+'"; ma=2592000');
+        next();
+    });
+    
+    
     // cache静态资源等时间，这个对性能影响很大，缓冲客户端后，在设置等时间范围内、刷新不再请求
     // Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
     expressOptions.maxAge = (7*24*60*60) + 's';//'31536000s';//'3600s';
-    app.use(express.static("/js/sw.js", {
-        maxAge: 0
-    }));
+    var reRes = /\/(js|css|model)\/(.*)$/,g_oPmap;
+    app.get(reRes,function(req,res,next)
+    {
+        // var s11 = mime.lookup(req.path);
+        if(req.path.match(/sw\.js$/)){
+            expressOptions.setNoCache(res);
+            doZipSFl(szSSP + "js/sw.js",res);
+            return
+        }
+        if(req.path.match(/plyr\.svg/)){
+            doZipSFl(szSSP + "plyr.svg",res);
+            return
+        }
+        
+        /*
+[ '0', '/js/client.min.js' ]             // https://cdnjs.cloudflare.com/ajax/libs/ClientJS/0.2.1/client.min.js
+[ '1', '/js/jquery.min.js' ]             // https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js
+[ '2', '/js/RecordRTC.min.js' ]          // https://cdnjs.cloudflare.com/ajax/libs/RecordRTC/5.6.2/RecordRTC.min.js
+[ '3', '/js/adapter-latest.js' ]         // https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.2.3/adapter.min.js
+[ '4', '/js/qrcode.min.js' ]             // https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js
+[ '5', '/js/plyr.js' ]                   // https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js
+[ '6', '/js/html5-qrcode.min.js' ]       // https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js
+[ '7', '/js/crypto-js.min.js' ]          // https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js
+[ '8', '/js/fix.js' ]                    // https://unpkg.com/web-ai-51pwn@latest/dist/8.js
+[ '9', '/js/tfjs.js' ]                   // https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.10.0/tf.min.js
+[ '10', '/js/webtorrent.min.js' ]        // https://cdnjs.com/libraries/webtorrent
+[ '11', '/js/stunLists.js' ]
+[ '12', '/js/p2pfs.js' ]
+        */
+        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/crypto-js.min.js,/js/fix.js,/js/tfjs.js,/js/webtorrent.min.js,/js/stunLists.js,/js/p2pfs.js".split(",");
+        // for(var k in aj){
+        //     console.log([k,aj[k]])
+        // }
+        var s7 = req.path.substring(4);
+        var n12 = parseInt(s7.substring(0,s7.length - 3));
+        // console.log([n12,aj[n12]])
+        if(aj[n12] && fs.existsSync(szSSP + aj[n12])){
+            var stt = fs.statSync(szSSP + aj[n12]);
+            expressOptions.setLongTermCache(res,stt);
+            doZipSFl(szSSP + aj[n12],res);
+            return
+        }
+        if(req.path.match(/i\.js/)){
+            doZipSFl(szSSP + "js/i.js",res);
+            return
+        }
+        // console.log(req.url, "xx",getNowStr())
+        mergeRes.fnDoMg(req,res,next,reRes);
+        // next();
+    });
     app.use(function(req, res, next){
         szPath = req.path;
         
@@ -208,32 +306,6 @@ function myapp(option)
         }
         next();
     });
-    // gzip压缩数据
-    app.use(compression({
-        brotli: { quality: 11 },
-        "level":9,
-        "memLevel":9,
-        // "strategy":// 
-        "filter":function(req,res)
-        {
-            if(-1 < req.path.indexOf("/model") && -1 == req.path.indexOf(".json"))return false;
-            var s = String(res && res.getHeader('Content-Type') || "");
-            if(-1 < s.indexOf("text/"))
-            {
-                return true;
-            }
-            return compression.filter(req, res);
-        }
-    }));
-    connectSources = ["'self'", "wss://chat.51pwn.com:" + option.port,"https://unpkg.com","https://cdnjs.cloudflare.com","wss://192.168.0.107:" + option.port,, "wss://chat.51pwn.com:"+option.port, "wss://127.0.0.1:" + option.port]
-    if(bUseHttps)app.use(helmet({directives:{upgradeInsecureRequests:bUseHttps, connectSrc:connectSources}}));
-    app.use(function(req, res, next){
-        res.setHeader("Alt-Svc", 'h3=":'+option.port+'"; ma=2592000');
-        next();
-    });
-    app.use(helmet.referrerPolicy({policy:'no-referrer'}));
-    app.use(helmet());
-    app.disable('x-powered-by');
     // app.use(express.limit('4M')),app.use(express.bodyParser());
     // app.use(bodyParser.json({limit: '150mb'}));
     // app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -242,12 +314,21 @@ function myapp(option)
     // })); 
     // app.use(express.json());app.use(express.urlencoded());
 
-    function doZipSFl(szFl,res){
+    async function doZipSFl(szFl,res){
         szFl = szFl.replace(/\/+/g,"/")
         res.setHeader("Content-Type",mime.lookup(szFl));
         var bZip = -1 == szFl.indexOf("/model") && -1 == szFl.indexOf(".json")
         // if(bZip)res.setHeader('Content-Encoding', 'gzip');
-        var ss = oHtmlCc[szFl] || fs.readFileSync(szFl);
+        var ss = oHtmlCc[szFl];
+        
+        if(!ss){
+            ss=fs.readFileSync(szFl);
+            if(/\.js$/g.test(szFl)){
+                if(/sw\.js$/g.test(szFl)){
+                    ss = await mergeRes.HxJs1(ss.toString("utf-8"));
+                }else if(/i\.js$/g.test(szFl))ss = await mergeRes.HxJs(ss.toString("utf-8"));
+            }
+        }
         oHtmlCc[szFl] = ss;
         // var ss = fs.createReadStream(szFl,{autoClose:true});
         // console.log(szFl)
@@ -306,7 +387,7 @@ function myapp(option)
     //     'cache': false
     // });
     var szSSP = webStaticPath;
-    var reRes = /\/(js|css|model)\/(.*)$/,g_oPmap;
+    
     app.use(function(req,res,next){
         var szPm = szSSP + "js/pmap.json";
         if(!g_oPmap){
@@ -328,55 +409,8 @@ function myapp(option)
         }
         next();
     });
+    
     app.use(express.static(szSSP, expressOptions));
-    app.get(reRes,function(req,res,next)
-    {
-        // var s11 = mime.lookup(req.path);
-        if(req.path.match(/sw\.js$/)){
-            expressOptions.setNoCache(res);
-            doZipSFl(szSSP + "js/sw.js",res);
-            return
-        }
-        if(req.path.match(/plyr\.svg/)){
-            doZipSFl(szSSP + "plyr.svg",res);
-            return
-        }
-        
-        /*
-[ '0', '/js/client.min.js' ]             // https://cdnjs.cloudflare.com/ajax/libs/ClientJS/0.2.1/client.min.js
-[ '1', '/js/jquery.min.js' ]             // https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js
-[ '2', '/js/RecordRTC.min.js' ]          // https://cdnjs.cloudflare.com/ajax/libs/RecordRTC/5.6.2/RecordRTC.min.js
-[ '3', '/js/adapter-latest.js' ]         // https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.2.3/adapter.min.js
-[ '4', '/js/qrcode.min.js' ]             // https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js
-[ '5', '/js/plyr.js' ]                   // https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js
-[ '6', '/js/html5-qrcode.min.js' ]       // https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js
-[ '7', '/js/aes.js' ]                    // https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js
-[ '8', '/js/fix.js' ]
-[ '9', '/js/kindle.js' ]
-[ '10', '/js/ie.js' ]
-[ '11', '/js/tfjs.js' ]
-[ '12', '/js/webtorrent.min.js' ]    // https://cdnjs.com/libraries/webtorrent
-[ '13', '/js/stunLists.js' ]
-[ '14', '/js/p2pfs.js' ]
-        */
-        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/aes.js,/js/fix.js,/js/kindle.js,/js/ie.js,/js/tfjs.js,/js/webtorrent.min.js,/js/stunLists.js,/js/p2pfs.js".split(",");
-        // for(var k in aj){
-        //     console.log([k,aj[k]])
-        // }
-        var s7 = req.path.substring(4);
-        var n12 = parseInt(s7.substring(0,s7.length - 3));
-        // console.log([n12,aj[n12]])
-        if(aj[n12] && fs.existsSync(szSSP + aj[n12])){
-            var stt = fs.statSync(szSSP + aj[n12]);
-            expressOptions.setLongTermCache(res,stt);
-            doZipSFl(szSSP + aj[n12],res);
-            return
-        }
-        // console.log(req.url, "xx",getNowStr())
-        mergeRes.fnDoMg(req,res,next,reRes);
-        // next();
-    })
-
     // app.use('/stunLists.js', browserify(['fs',{'./readstunlist.js':{run: true,precompile:true,minify:true,gzip:true,debug:false}}]));
     // apt-get install coturn
     // yum install coturn

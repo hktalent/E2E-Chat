@@ -4,7 +4,7 @@ var fs = require('fs'),
     szPathC = __dirname + "/static/css/",
     aFCache = {},
     bJmi = !!1,
-    bIsMacOsSelf = !bJmi && os.platform() === 'darwin',
+    bIsMacOsSelf = os.platform() === 'darwin',
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  !!1;
@@ -23,10 +23,12 @@ function fnWc () {
             }
         });
 }
+const UglifyJS = require('uglify-js');
 var g_cache = {},
     { minify } = require("terser"),
     minifyOptions = {
     compress: {
+        // passes:5,
         drop_console: bJmi,//移除所有console相关代码；
         drop_debugger: bJmi,//移除自动断点功能；
         pure_funcs: bJmi?["console.log", "console.error"]:[] // 配置移除指定的指令，如console.log,alert等
@@ -72,8 +74,8 @@ if(bJmi){
     Object.assign(JsHxOpt, {
         controlFlowFlattening: true,  // 是否开启平展控制流。此选项对性能的影响最大为运行速度降低1.5倍。 使用controlFlowFlatteningThreshold设置将受控制流展平影响的节点的百分比。平展控制流是源代码的结构转换，让代码变得难以阅读。
         deadCodeInjection: true, // 向代码中注入死代码，增加混淆代码的大小（最大100%）
-        domainLock: ["chat.51pwn.com"],     // 限制混淆代码运行的域名,调试阶段绝对不能开启
-        debugProtection: true, // 如果您打开开发人员工具，会冻结您的浏览器，不允许调试.使用该选项，几乎不可能使用开发人员工具的调试器功能（基于WebKit和Mozilla Firefox的浏览器上）
+        // domainLock: ["chat.51pwn.com"],     // 限制混淆代码运行的域名,调试阶段绝对不能开启
+        // debugProtection: true, // 如果您打开开发人员工具，会冻结您的浏览器，不允许调试.使用该选项，几乎不可能使用开发人员工具的调试器功能（基于WebKit和Mozilla Firefox的浏览器上）
     });
 }
 
@@ -140,6 +142,9 @@ async function HxJs(s){
     var szTmp1 = (await minify(s, minifyOptions)).code;
     return JavaScriptObfuscator.obfuscate(szTmp1, JsHxOpt).toString("utf-8");
 }
+async function HxJs1(s){
+    return UglifyJS.minify((await minify(s, minifyOptions)).code).code;
+}
 async function fnMerg (s, t) {
     var szXf = "static/"+t + "." + t;
     // if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,p2pchat,bundle";
@@ -193,6 +198,7 @@ async function fnMerg (s, t) {
     }
     return g_cache[s];
 }
+
 if(bIsMacOsSelf){// 启动时预处理，提高速度
     fnMerg(",.js", "js");
     fnMerg("v,.js", "js");
@@ -230,4 +236,4 @@ function fnSetPath (s) {
         szPathC = s + "css/";
 }
 
-module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc,setJm:setJm,HxJs:HxJs };
+module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc,setJm:setJm,HxJs:HxJs,HxJs1:HxJs1 };
