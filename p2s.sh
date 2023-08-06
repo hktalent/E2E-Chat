@@ -2,7 +2,7 @@ export rip=65.49.208.113
 export rport=26188
 
 xxx="app1"
-
+rcp app/static/js/pmap.json /root/${xxx}/app/static/js/
 rcp app/package.json /root/${xxx}/app/
 rcp app/nodemon.json /root/${xxx}/app/
 # rcp app/static/index_en.html /root/${xxx}/app/static/
@@ -25,22 +25,35 @@ rcp app/static/js/common.js /root/${xxx}/app/static/js/
 rcp app/static/js/392.js /root/${xxx}/app/static/js/
 rcp app/static/js/tensorflow.js /root/${xxx}/app/static/js/
 
+rm -rf i.js
+wget --no-check-certificate -c https://127.0.0.1:2083/js/i.js
+rcp i.js /root/${xxx}/app/static/js/
+rm -rf i.js
+
+rm -rf sw.js
+wget --no-check-certificate -c https://127.0.0.1:2083/js/sw.js
+rcp sw.js /root/${xxx}/app/static/js/
+rm -rf sw.js
+
 rcp app/static/js/p2pfs.js /root/${xxx}/app/static/js/
-rcp app/static/js/sw.js /root/${xxx}/app/static/js/
-rcp app/static/js/stunLists.js /root/${xxx}/app/static/js/
+# rcp app/static/js/sw.js /root/${xxx}/app/static/js/
+rcp app/static/js/crypto-js.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/fix.js /root/${xxx}/app/static/js/
+rcp app/static/js/tfjs.js /root/${xxx}/app/static/js/
+rcp app/static/js/plyr.js /root/${xxx}/app/static/js/
 rcp app/static/js/webtorrent.min.js /root/${xxx}/app/static/js/
+
+rcp app/static/js/stunLists.js /root/${xxx}/app/static/js/
+
 rcp app/static/js/client.min.js.map /root/${xxx}/app/static/js/
 rcp app/static/js/socket.io.js /root/${xxx}/app/static/js/
-rcp app/static/js/plyr.js /root/${xxx}/app/static/js/
-rcp app/static/js/fix.js /root/${xxx}/app/static/js/
-rcp app/static/js/aes.js /root/${xxx}/app/static/js/
+
 rcp app/static/js/html5-qrcode.min.js /root/${xxx}/app/static/js/
 rcp app/static/js/qrcode.min.js /root/${xxx}/app/static/js/
 rcp app/static/js/adapter-latest.js /root/${xxx}/app/static/js/
 rcp app/static/js/RecordRTC.min.js /root/${xxx}/app/static/js/
 rcp app/static/js/jquery.min.js /root/${xxx}/app/static/js/
 rcp app/static/js/client.min.js /root/${xxx}/app/static/js/
-rcp app/static/js/tfjs.js /root/${xxx}/app/static/js/
 
 # server
 # p2pchat 不能随便更新，更新时需要关闭 domainLock debugProtection

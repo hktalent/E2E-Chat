@@ -1,4 +1,3 @@
-
 function setNoCache(res) {
   const date = new Date();
   date.setFullYear(date.getFullYear() - 1);
