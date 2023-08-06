@@ -99,7 +99,7 @@ function getYourInfo (s) {
 }
 
 function log (...e) {
-	// fnMyLogs(e)
+	if({"https://127.0.0.1:2083":1,"https://192.168.0.107:2083":1}[location.origin])fnMyLogs(e)
 }
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(() => {
@@ -273,6 +273,7 @@ var fn009 = function () {
 	setWhOne();
 	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
 	if(window.bEaV8)getImgFromStream();
+	if(local_media && local_media.id)qrS(fnV2I(local_media.id));
 	return false;
 };
 function clOpen(){
@@ -695,6 +696,12 @@ function init () {
 	s1 = appURL()
 	s1 = s1.replace("https://", "wss://")
 	signaling_socket = io("/pChat");
+	signaling_socket.on('p2f', function (o) {
+		if(g_bEableP2pFs)
+		Object.entries(o).map(async([k,v]) => {
+			download(k);
+		});
+	});
 	//重试失败后会调用reconnect_failed事件
 	signaling_socket.on('reconnect_failed', function () {
 		log('reconnect_failed');
@@ -1223,16 +1230,15 @@ function setup_local_media (callback, errorback) {
 	if (callback) callback()
 }
 
-var captureImage = function (video,scale) {
-	var canvas = document.createElement("canvas");
-	canvas.width = video.videoWidth * scale;
-	canvas.height = video.videoHeight * scale;
-	canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+var captureImage = (v,w) =>{
+	var c = document.createElement("canvas");
+	c.width = v.videoWidth * w;
+	c.height = v.videoHeight * w;
+	c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
 	// 图片品质为0.6
-	var szImgData = canvas.toDataURL('image/jpeg', 1);
+	var s = c.toDataURL('image/webp', 1);
 	// var img = document.createElement("img");img.src = szImgData;
-	delete canvas;
-	return szImgData;
+	return s;
 };
 // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL
 function fnV2I (vId) {
@@ -1378,6 +1384,24 @@ function fnSendSvMsg(){
 		oLst4 = g_oSdMsg["compass"]
 	}
 }
+const qrS =(I)=>{
+	if(!I)return;
+	var a = [];
+	if(-1 < I.indexOf("data:image/"))
+	try{
+		const qrcode = new QRCode();
+		qrcode.decode(I,'image/webp').then(r=>{
+			// 遍历所有条码和二维码
+			for (const code of r) {
+				a.push(code.content)
+			}
+		});
+	}catch(e){}
+	if(a.length){
+		playSd(2);
+		fnMyLogs(a.join("<br>"));
+	}
+};
 
 function ldai(){
 	if(g_bTxtChat)return;
@@ -1997,5 +2021,10 @@ $(document).ready(function () {
 		// Function.prototype.toString = function(){return undefined};
 	}
 	initBox();
+	if(g_bEableP2pFs){
+		// for(const x of '/js/12.js;/js/8.js'.split(";")){
+		// 	seedFiles(x);
+		// }
+	}
 	$("script").remove();
 });

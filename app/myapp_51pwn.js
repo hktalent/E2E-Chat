@@ -182,13 +182,13 @@ function myapp(option)
             return compression.filter(req, res);
         }
     }));
-    var connectSources = [
+    var w1 = "https://unpkg.com/*", w2 = "https://cdnjs.cloudflare.com/*",connectSources = [
         "'self'",
         "data:",
         "wss://chat.51pwn.com:" + String(option.port) + "/*",
         "https://chat.51pwn.com:" + String(option.port) + "/*",
-        "https://unpkg.com/*",
-        "https://cdnjs.cloudflare.com/*",
+        w1,
+        w2,
         "wss://chat.51pwn.com:"+String(option.port) + "/*"
     ];
     if(os.platform() === 'darwin'){
@@ -202,8 +202,8 @@ function myapp(option)
           scriptSrc: [
             "'self'",
             "https://chat.51pwn.com:" + String(option.port) + "/*",
-            "https://cdnjs.cloudflare.com/*",
-            "https://unpkg.com/*",
+            w2,
+            w1,
             "'unsafe-inline'",
             "'unsafe-eval'",
             
