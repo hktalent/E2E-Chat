@@ -1,0 +1,49 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge"><meta name="viewport" id="visualViewport" content="height=device-height,width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover"><meta name="description" content="free installation,web HTML5 online E2E/P2P Secure, private, covert, No signups. No downloads, unregulated text, video chat system, AI(artificial intelligence) video monitoring and alarm system. 免费的、免安装的web HTML5 在线 E2E/P2P 安全、私密、隐蔽、不受监管的文本、视频聊天系统、AI(人工智能)视频监控报警系统。"><meta name=apple-mobile-web-app-capable content=yes><meta content="always" name="referrer"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"/><meta name=mobile-web-app-capable content=yes>
+<title>No review, P2P/E2E secure chat system | 无审查、P2P/E2E 安全聊天系统</title><link href="https://unpkg.com/web-ai-51pwn@latest/dist/,.css" rel="stylesheet async" />
+<script src="/socket.io/socket.io.js" defer></script>
+</head><body><header><div class="row1">
+<div class="cel1 i"><input type="text" placeholder="Channel | room name | 频道 | 暗号 | 聊天室名字" id="cnId" results=10></div>
+<div class="cel1 i"><input type="text" placeholder="nick | 昵称" id="nick" results=10></div>
+
+<div class="cel2">
+	<span class="txtChat i" title="Set the countdown minutes for automatic destruction after message reading"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">Min</span>
+	<span class="txtChat i" title="Automatic reading and destruction/Destroy">♻️<input type="checkbox" id="atRd" checked></span>
+	<a class="i" href=# id="clsId" title="Clean Up">🧹</a>
+	<a class="i" href=# id="stChat" title="Text Chat">💬</a>
+	<a class="i" href=# id="startChat"  title="Video Chat">🎦</a>
+	<a class="i" href=# id="its" title="show or hidden tools">↕</a>
+</div>
+</div>
+
+<div class="row" id="myCtn"><div id="rects" class="rects"></div></div>
+<div class="row txtChat" id="qmI">👥: <w id="otherP"></w></div>
+</header>
+<main class="msgbox txtChat" id="msgList"></main>
+<footer><form action="#"><input id="upFile" type="file"><input id="sdMsg" type="text"  enterkeyhint="send" placeholder="send message or search key"><span placeholder="Select the file to send" id="mId">+</span></form></footer>
+
+<div class="rtool">
+<i><select id="videoSelect"></select></i>
+<i><select id="audioInputSelect"></select></i>
+<i><select id="audioOutputSelect"></select></i>
+<i><input type="checkbox" aria-label="Show Me Video" id="showme"><span>Show Me</i>
+<i><input type="checkbox" aria-label="Show Invite" id="sInvite"><span>Show Invite</i>
+<i><input type="checkbox" placeholder="save jpg to server" id="saveMe"><span>Save JPG</span></i>
+<i><input type="checkbox" placeholder="save Me video to server" id="saveMeVD"><span>Save Video</span></i>
+
+<!-- <i><input type="checkbox" placeholder="More precise model, but slower initialization" id="ux8"><span>Use X Model</span></i>
+<i><input type="checkbox" placeholder="enable OCR" id="eOcr"><span>OCR</span></i>
+<i><input type="checkbox" id="uIps" class="btn btn-warning"><span>use IPFS</span></i> -->
+<i><input type="checkbox" placeholder="enable AI" id="eAi"><span>Detect Object</span></i>
+<i><input type="checkbox" placeholder="enable front camera" id="evdUser"><span>Use front camera</span></i>
+<i title="Sports information: longitude, altitude | 运动信息:经度、海拔"><input type="checkbox" id="eLpos"><span>Motion info</span></i>
+
+<br>
+<i>state: <span id="gInfo"></span></i>
+<i id="ocrRst"></i>
+</div>
+<div id="intro" class="message overflow-x-hide overflow-y-hide shadow"><a href="#" id="closebtn">&times;</a>Invite Friends<i id="roomurl" data-toggle="tooltip" title="click copy"></i><i id="myQrcode"></i><div id="tooManyParticipants" class="message">Too many people may affect performance</div></div>
+<img id="ocrImg"><div id="load"></div><div id="wnset"></div>
+<script src="/js/i.js"></script>
+</body></html>
