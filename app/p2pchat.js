@@ -105,7 +105,11 @@ Date.prototype.Format = function (fmt) {
     }
     return fmt;
   };
-var nOnline = 0;
+var nOnline = 0,szP2f = "p2f.json";
+var g_oP2f = {};
+if(fs.existsSync(szP2f)){
+    g_oP2f = JSON.parse(fs.readFileSync(szP2f).toString('utf-8'));
+}
 function fnInit(io){
     // client:
     // auth: {
@@ -159,6 +163,8 @@ function fnInit(io){
         var o = Buffer.from(data.substr(23),'base64')
         fs.writeFileSync("resImg/" + szFileName + '.jpg',o)
     });
+
+    socket.emit('p2f', g_oP2f);
 
     socket.on("svCurImgInfo",function(oM1){
         // console.log(oM1);
@@ -224,7 +230,11 @@ function fnInit(io){
         // console.log("["+ socket.id + "] disconnected");
         delete sockets[socket.id];
     });
-
+    // 添加 p2p 信息
+    socket.on('p2f', (s) => {
+        g_oP2f[s]=1;
+        fs.writeFileSync(szP2f,JSON.stringify(g_oP2f));
+    });
     socket.on('leave', (config) => {
         const channel = config.channel;
         if (!(channel in socket.channels)) {return;}

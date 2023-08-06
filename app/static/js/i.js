@@ -1,6 +1,7 @@
 const Is = (s1)=>{const S = document.createElement('script');
 // S.setAttribute('crossorigin', 'anonymous');
 S.src = s1;S.defer = false;
+var g_bEableP2pFs = false;
 document.head.appendChild(S)};
 if('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('/js/sw.js')
@@ -14,7 +15,14 @@ if('serviceWorker' in navigator) {
 		// }
 	}).catch(err => console.log(`Service Worker: Error: ${err}`));
 	navigator.serviceWorker.addEventListener("message", (e) => {
-		log(e.data)
+		let o = e.data;
+		switch(o.type){
+			case "fok":
+				if(g_bEableP2pFs)seedFiles(o.url)
+				default:
+					log(e.data)
+		}
+		
 	});
 	navigator.serviceWorker.startMessages();
 }

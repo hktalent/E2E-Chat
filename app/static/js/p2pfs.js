@@ -1,6 +1,13 @@
 WebTorrent.init();
 
-const trackers = undefined;
+const trackers = ["udp://tracker.opentrackr.org:1337/announce",
+"udp://tracker.leechers-paradise.org:6969/announce",
+"udp://tracker.coppersurfer.tk:6969/announce",
+"udp://tracker.internetwarriors.net:1337/announce",
+"udp://tracker.tiny-vps.com:6969/announce",
+"udp://open.stealth.si:80/announce",
+"https://tracker.fastdownload.xyz:443/announce",
+"https://tracker.sloppyta.co:443/announce"];
 const torrentOpts = { announce: trackers }
 const trackerOpts = {
     announce: trackers,
@@ -17,43 +24,37 @@ const torrent = new WebTorrent({
     downloadLimit:-1,
     uploadLimit:-1,
 });
-torrent.connect.setMaxListeners(20);
+
 const seedFiles = (files) => {
-    torrent.seed(files, torrentOpts, t => {
-        t.on('upload', function (bytes) {
-        log('just uploaded: ' + bytes)
-        log('total uploaded: ' + t.uploaded);
-        log('upload speed: ' + t.uploadSpeed)
-        })
-    
-        log('client.seed done', {
-        magnetURI: t.magnetURI,
-        ready: t.ready,
-        paused: t.paused,
-        done: t.done,
+    log("start share file " + files)
+    fetch(files).then(async(r) => {
+        torrent.seed(await r.blob(), torrentOpts, t => {
+            t.on('upload', function (bytes) {
+                log('just uploaded: ' + bytes)
+                log('total uploaded: ' + t.uploaded);
+                log('upload speed: ' + t.uploadSpeed)
+            })
+            if(signaling_socket)signaling_socket.emit("p2f", t.magnetURI);
+            return t;
         });
-    })
-};
-    
-const u1 = "https://unpkg.com/web-ai-51pwn@latest/dist/yolov8n-seg_web_model/";
-const u2 = appURL()+"/model/yolov8n-seg_web_model/";
-// magnet:?xt=urn:btih:1c033ebaa2e247832d7e828ad560f90d6b9144207e2380fc36b40815573f613e&dn=/model/yolov8n-seg_web_model/group1-shard1of4.bin,/model/yolov8n-seg_web_model/group1-shard2of4.bin,/model/yolov8n-seg_web_model/group1-shard3of4.bin,/model/yolov8n-seg_web_model/group1-shard4of4.bin,/model/yolov8n-seg_web_model/metadata.yaml,/model/yolov8n-seg_web_model/model.json
-const fsList = String('group1-shard1of4.bin,group1-shard2of4.bin,group1-shard3of4.bin,group1-shard4of4.bin,metadata.yaml,model.json').split(",");
-const dldOne = (u)=>{
-    fetch(u).then(res => res.blob()).then(blob => {
-        seedFiles(blob);
     });
 };
+
 torrent.on('error', (error) => {
-    const files = torrent.files;
-    for (const file of files) {
-        if (file.state === "error") {
-            dldOne(file.url)
-        }
-    }
+    log(error);
 });
+let ccDb = null;
+async function download(x) {
+    // log("start download share file " + x);
+    if(ccDb && !(await ccDb.match(x)))torrent.add(x);
+    else log("ccDb is null, or file is in cache");
+}
 torrent.on("ready", async() => {
     log("webtorrent is ready");
+    ccDb = await caches.open("v1.2.6",{ 
+        maxAgeSeconds: 60 * 60 * 24 * 365,
+        maxEntries: 10000,
+        optional: true });
     const stp = (cfn)=>{
         for(const f of Array.from(torrent.files)){
             if("" === f.name.split(cfn).pop()){
@@ -63,28 +64,14 @@ torrent.on("ready", async() => {
     };
     torrent.on("start", async(e) => {
         // 检查是否已经从 caches.match() 中匹配了文件
-        const u = e.detail.url;
-        for(const i of fsList){
-            if (u.split(i).pop() === "") {
-                var cc = window.caches||await navigator.serviceWorker.getCaches();
-                if(cc){
-                    const c = await cc.match(u2 + i);
-                    if(c)stp(i);
-                }
-                break;
-            }
-        };
+        const u = new URL(e.detail.url);
+        var cc = window.caches||await navigator.serviceWorker.getCaches();
+        if(cc){
+            const c = await cc.match(u.pathname);
+            if(c)stp(i);
+        }
     });
-    function download () {
-        torrent.add('magnet:?xt=urn:btih:1c033ebaa2e247832d7e828ad560f90d6b9144207e2380fc36b40815573f613e&dn=/model/yolov8n-seg_web_model/group1-shard1of4.bin,/model/yolov8n-seg_web_model/group1-shard2of4.bin,/model/yolov8n-seg_web_model/group1-shard3of4.bin,/model/yolov8n-seg_web_model/group1-shard4of4.bin,/model/yolov8n-seg_web_model/metadata.yaml,/model/yolov8n-seg_web_model/model.json');
-        // for(const i of fsList){
-        // 	torrent.add(u1 + i);
-        // 	torrent.add(u2 + i);
-        // }
-    }
-    for(const i of fsList){
-        dldOne(u2 + i)
-    }
+    
     
     /* 监听下载完成事件
     文件名 name
@@ -95,10 +82,6 @@ torrent.on("ready", async() => {
     文件权限 "permissions": "0644",
     文件所有者 "owner": "user1", "group": "group1"
     */
-    let ccDb = await caches.open("v1",{ 
-        maxAgeSeconds: 60 * 60 * 24 * 365,
-        maxEntries: 10000,
-        optional: true });
     torrent.on("downloaded", (j,z) => {
         const f0 = torrent.files[z];
         // 所有字节都下载完成
@@ -110,7 +93,12 @@ torrent.on("ready", async() => {
             // 获取文件下载请求对象
             const r = Object.assign({}, j.request);
             r.path = u2 + cfn;
-            if(ccDb)ccDb.put(r, f0);
+            if(ccDb){
+                ccDb.put(r, f0);
+                console.log( f0.name + " to cache");
+            }else{
+                console.log("cache ccDb is null");
+            }
             seedFiles(f0);
         }
     });
