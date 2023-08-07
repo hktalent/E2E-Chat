@@ -11,11 +11,11 @@ String.prototype.hashCode = function() {
 };
 //  验证 script 的 integrity
 // const valid = window.crypto.subtle.verify(integrity, script.textContent);
-function T2Sha384 (s,v) {
+const T2Sha384 =(s,v) =>{
 	var s1 = "SHA384-"+CryptoJS.SHA384(s).toString(CryptoJS.enc.Base64);
 	return v ? window.crypto.subtle.verify(s1, s):s1;
-}
-function prettyBytes (num) {
+},
+prettyBytes =(num) =>{
 	const units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 	const neg = num < 0
 	if (neg) num = -num
@@ -24,7 +24,7 @@ function prettyBytes (num) {
 	const unit = units[exponent]
 	num = Number((num / Math.pow(1000, exponent)).toFixed(2))
 	return (neg ? '-' : '') + num + ' ' + unit
-}
+};
 
 window.appURL = () => {return document.location.protocol + "//" + location.host};
 const getRoomName = () => {// return $("#cnId").val();
@@ -171,11 +171,12 @@ function formatBytes(bytes, decimals = 2) {
 
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
-function copyText(o) {
+function copyText(o,x) {
 	// o.select();
 	// o.setSelectionRange(0, 99999)
 	// document.execCommand("copy");
 	navigator.clipboard.writeText(o.text());
+	setTips('','Copied|已拷贝',x);
 }
 function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	var szId = `TmpId${nCnt}`
@@ -198,7 +199,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 		oT1.text(s);
 		var x009 = o1.find("svg");
 		x009.click(function(){
-			copyText(o1.find("d"));
+			copyText(o1.find("d"),this);
 		});
 	}
 	else if(1 == t){ // 图片
@@ -482,24 +483,23 @@ function fnCreateVid (bLocal = false,id = "") {
 }
 
 // qrcode
-function onScanSuccess (decodedText, decodedResult) {
+const onScanSuccess =(decodedText, decodedResult) =>{
 	$("#rstMsg").text(decodedText)
-}
+},
 
 // 离开群聊
-function part_chat_channel (channel) {
+part_chat_channel =(channel)=> {
 	signaling_socket.emit('part', channel);
-}
+},
 
-function JoinRoom(){
+JoinRoom=()=>{
 	if(!b_clickJoin)return;
 	var szRoom = $("#cnId").val();
 	if(szRoom){
 		join_chat_channel(szRoom,{nick:$("#nick").val()});
 	}
-}
-
-function join_chat_channel (channel, userdata) {
+},
+join_chat_channel =(channel, userdata) =>{
 	if(!b_clickJoin)return;
 	for(var k in g_aMembers){
 		if(g_aMembers[k]['sendChannel']){
@@ -510,9 +510,8 @@ function join_chat_channel (channel, userdata) {
 	g_aMembers={};
 	join_chat_channel1(channel, userdata)
 	
-}
-
-function join_chat_channel1 (channel, userdata) {
+},
+join_chat_channel1 =(channel, userdata) =>{
 	if(!b_clickJoin)return;
 	userdata || (userdata={});
 	userdata["nick"] = $("#nick").val();
@@ -528,10 +527,10 @@ function join_chat_channel1 (channel, userdata) {
 	}
 	signaling_socket.emit('join', { "channel": channel, "userdata": userdata });
 	szLstChannel = channel
-}
+},
 
 // chrome 支持 https://developer.mozilla.org/en-US/docs/Web/API/BarcodeDetector/detect
-function doQrcodeScan(imageEl,fnCbk){
+doQrcodeScan=(imageEl,fnCbk)=>{
 	if("BarcodeDetector" in window){
 		var aF = [];
 		BarcodeDetector.getSupportedFormats().then((supportedFormats) => {
@@ -547,9 +546,8 @@ function doQrcodeScan(imageEl,fnCbk){
 			})
 		});
 	}
-}
-
-function initQrcode () {
+},
+initQrcode =()=> {
 	if (localVvId && !bCloseQrcode) {
 		qWBox = $("#" + localVvId)
 		html5QrcodeScanner = new Html5Qrcode(localVvId);
@@ -559,7 +557,7 @@ function initQrcode () {
 		// 后置镜头
 		// html5QrcodeScanner.start({ deviceId: { exact: localVvId } }, config, onScanSuccess);
 	}
-}
+};
 var bStopRsize = false;
 function setWhOne(){// 只有自己的视频才会调整
 	setTimeout(() => {
@@ -701,8 +699,8 @@ function initVideoChat () {
 	// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
 }
 
-const setTips = (t,s) => {
-	var x=$("#msgList").tipso('hide').attr("data-tipso-title",t||"🔔Tips").tipso({size: 'tiny'}).tipso('update', 'content', s).tipso('show');
+const setTips = (t,s,o) => {
+	var x=(o&&$(o)||$("#msgList")).tipso('hide').attr("data-tipso-title",t||"🔔Tips").tipso({size: 'tiny'}).tipso('update', 'content', s).tipso('show');
 	setTimeout(function(){x.tipso('hide')}, 2333)
 };
 var g_aMembers = {},bIoIsOk = false;
@@ -1402,16 +1400,17 @@ function fnSendSvMsg(){
 		oLst4 = g_oSdMsg["compass"]
 	}
 }
+// 扫码结果回调用
 const qrS =(I)=>{
 	if(!I)return;
-	var a = [];
+	const a = [];
 	if(-1 < I.indexOf("data:image/"))
 	try{
-		const qrcode = new QRCode();
-		qrcode.decode(I,'image/webp').then(r=>{
+		const cR = new QRCode();
+		cR.decode(I,'image/webp').then(r=>{
 			// 遍历所有条码和二维码
-			for (const code of r) {
-				a.push(code.content)
+			for (const c of r) {
+				a.push(c.content)
 			}
 		});
 	}catch(e){}
@@ -1810,9 +1809,35 @@ function showWnSt(){
   
 // // 调用并发下载函数
 // downloadResources(resourceURLs);
-  
+function html2img(html) {
+	// https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js
+	return new Promise(resolve=> {
+		const d = document.createElement("div");
+		d.innerHTML = html;
+		html2canvas(d).then(canvas => {
+			canvas.toBlob(blob=>{
+				console.log(blog)
+				resolve(blob)
+			},'image/webp',0.5);
+		});
+	});
+} 
 
-$(document).ready(function () {
+$(document).ready(()=>{
+	// const rq1 =  new QRCode("qrcode", {
+	// 	text: `L: 最低的容错水平，可以纠正 7 个错误。
+	// 	M: 中等的容错水平，可以纠正 15 个错误。
+	// 	Q: 较高的容错水平，可以纠正 25 个错误。
+	// 	H: 最高的容错水平，可以纠正 30 个错误。`,
+	// 	width: 200,
+	// 	height: 200,
+	// 	errorCorrectionLevel: "H"
+	// 	});
+	// const qrcodeDiv = document.createElement("div");
+	// qrcodeDiv.innerHTML = rq1.renderAsImage();
+	// $("main").append(qrcodeDiv)
+	// 	const dataURL = qrcode.renderAsDataURL();
+	// fnMyLogs(dataURL)
 	clientJs = new ClientJS();
 	isChrome = clientJs.isChrome();
 	isFirefox = clientJs.isFirefox();
@@ -1944,7 +1969,14 @@ $(document).ready(function () {
 	osdMsg.keydown(function (e) {
 		if (e.keyCode == 13) SendMsg(osdMsg.val()),osdMsg.val("")
 	})
-	// 发送文件
+	/* 发送文件
+	const blob = new Blob(["This is a 10MB file."], {type: "text/plain"});
+	const chunks = [];// 2MB
+	for (let i = 0; i < blob.size; i += 2097152) {
+	chunks.push(blob.slice(i, i + 2097152));
+	}
+	const newBlob = await Blob.from(chunks); // 是的，每个 blob.slice(i, i + 2097152) 都可以独立构建一个 Blob
+	*/
 	var fnDoBlog =function(blob,szName){
 		var reader = new FileReader();
 		reader.onload = function (event) {
@@ -1953,14 +1985,28 @@ $(document).ready(function () {
 		}; 
 		reader.readAsDataURL(blob);
 	};
-	// 处理图片、文件
-	osdMsg.bind("paste",function (e) {
+	/* 处理图片、文件, item.getAsFile(): 返回一个 File 对象
+	name: 文件名
+	type: 文件类型
+	size: 文件大小
+	slice(): 返回一个 Blob 对象，该对象包含文件的一部分
+	getAsDataURL(): 返回一个 DataURL，该 DataURL 包含文件的内容
+	readAsArrayBuffer(): 将文件读取到一个 ArrayBuffer 对象中
+	readAsBinaryString(): 将文件读取到一个 BinaryString 对象中
+	readAsText(): 将文件读取到一个 Text 对象中
+	*/
+	osdMsg.bind("paste",async(e)=>{
 		// var pastedData = e.originalEvent.clipboardData.getData('text');
 		// log(pastedData)
-		var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+		var oClp = e.clipboardData || e.originalEvent.clipboardData;
+		var items = oClp.items;
+		// var sx1=oClp.getData('text/html');
+		// if(sx1)return fnDoBlog(await html2img(sx1),"paste");
+
 		for (var index in items) {
 			var item = items[index];
 			if(!item){continue}
+			
 			if (item.kind === 'file' || item.type && item.type.indexOf("image") === 0) {
 				fnDoBlog(item.getAsFile(),"paste");
 			}
