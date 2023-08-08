@@ -287,7 +287,7 @@ var fn009 = function () {
 	setWhOne();
 	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
 	if(window.bEaV8)getImgFromStream();
-	if(local_media && local_media.id)qrS(fnV2I(local_media.id));
+	// if(local_media && local_media.id)qrS(fnV2I(local_media.id));
 	return false;
 };
 function clOpen(){
@@ -1343,7 +1343,7 @@ async function fnFaceDtc(){
 var oImgOcr = document.getElementById("ocrImg");
 oImgOcr.onload = videoImgOnload;
 
-function rmFnImg(fnCbk){
+const rmFnImg=(fnCbk)=>{
 	for(var i in imgOldCbk){
 		if(imgOldCbk[i] == fnCbk)
 		{
@@ -1352,9 +1352,7 @@ function rmFnImg(fnCbk){
 		}
 	}
 	return false;
-}
-
-function fnTmp89() {
+},fnTmp89=() =>{
 	if(window["OcrImg"]){
 		if(window.bEabOcr)imgOldCbk.push(window["OcrImg"]);else rmFnImg(window["OcrImg"]);
 	}
@@ -1363,11 +1361,11 @@ function fnTmp89() {
 
 var g_oSdMsg = {},oLst1, oLst2,oLst3,oLst4;
 // ocr 结果回调用
-window['doOcrCbk'] = function(s){
+window['doOcrCbk'] = (s)=>{
 	g_oSdMsg["ocr"] = s;
 	$("#ocrRst").text(s);
 };
-window['doODetcCbk'] = function(oDtc){
+window['doODetcCbk'] = (oDtc)=>{
 	g_oSdMsg["object"] = oDtc;
 };
 
@@ -1410,6 +1408,7 @@ const qrS =(I)=>{
 		cR.decode(I,'image/webp').then(r=>{
 			// 遍历所有条码和二维码
 			for (const c of r) {
+				setTips('',c.data);
 				a.push(c.content)
 			}
 		});
@@ -1809,7 +1808,7 @@ function showWnSt(){
   
 // // 调用并发下载函数
 // downloadResources(resourceURLs);
-function html2img(html) {
+const html2img=(html)=> {
 	// https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js
 	return new Promise(resolve=> {
 		const d = document.createElement("div");
@@ -1821,23 +1820,22 @@ function html2img(html) {
 			},'image/webp',0.5);
 		});
 	});
-} 
+}, genQrcd=(s)=>{
+	const rq1 =  new QRCode("msgList", {
+		text: s,
+		width: 200,
+		height: 200,
+		errorCorrectionLevel: "H"
+		});
+	// const s1 = rq1.renderAsImage();
+	// alert(s1)
+};
 
-$(document).ready(()=>{
-	// const rq1 =  new QRCode("qrcode", {
-	// 	text: `L: 最低的容错水平，可以纠正 7 个错误。
+$(document).ready(function(){
+	// genQrcd( `L: 最低的容错水平，可以纠正 7 个错误。
 	// 	M: 中等的容错水平，可以纠正 15 个错误。
 	// 	Q: 较高的容错水平，可以纠正 25 个错误。
-	// 	H: 最高的容错水平，可以纠正 30 个错误。`,
-	// 	width: 200,
-	// 	height: 200,
-	// 	errorCorrectionLevel: "H"
-	// 	});
-	// const qrcodeDiv = document.createElement("div");
-	// qrcodeDiv.innerHTML = rq1.renderAsImage();
-	// $("main").append(qrcodeDiv)
-	// 	const dataURL = qrcode.renderAsDataURL();
-	// fnMyLogs(dataURL)
+	// 	H: 最高的容错水平，可以纠正 30 个错误。`);
 	clientJs = new ClientJS();
 	isChrome = clientJs.isChrome();
 	isFirefox = clientJs.isFirefox();
