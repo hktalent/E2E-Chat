@@ -156,7 +156,7 @@ async function fnMerg (s, t) {
             s = "msd,stunLists,tipso.min,p2pchat";
         }
     }
-    else s = "plyr,p2pchat,tipso.min";
+    else s = "plyr,tipso.min,p2pchat";
     if(useCc){
         if(fs.existsSync(szXf)){
             var s1 = fs.readFileSync(szXf).toString("utf-8");
