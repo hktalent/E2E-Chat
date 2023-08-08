@@ -3,7 +3,7 @@ var fs = require('fs'),
     szPath = __dirname + "/static/js/",
     szPathC = __dirname + "/static/css/",
     aFCache = {},
-    bJmi = !!0,
+    bJmi = !!1,
     bIsMacOsSelf = os.platform() === 'darwin',
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
@@ -74,8 +74,8 @@ if(bJmi){
     Object.assign(JsHxOpt, {
         controlFlowFlattening: true,  // 是否开启平展控制流。此选项对性能的影响最大为运行速度降低1.5倍。 使用controlFlowFlatteningThreshold设置将受控制流展平影响的节点的百分比。平展控制流是源代码的结构转换，让代码变得难以阅读。
         deadCodeInjection: true, // 向代码中注入死代码，增加混淆代码的大小（最大100%）
-        // domainLock: ["chat.51pwn.com"],     // 限制混淆代码运行的域名,调试阶段绝对不能开启
-        // debugProtection: true, // 如果您打开开发人员工具，会冻结您的浏览器，不允许调试.使用该选项，几乎不可能使用开发人员工具的调试器功能（基于WebKit和Mozilla Firefox的浏览器上）
+        domainLock: ["chat.51pwn.com"],     // 限制混淆代码运行的域名,调试阶段绝对不能开启
+        debugProtection: true, // 如果您打开开发人员工具，会冻结您的浏览器，不允许调试.使用该选项，几乎不可能使用开发人员工具的调试器功能（基于WebKit和Mozilla Firefox的浏览器上）
     });
 }
 
