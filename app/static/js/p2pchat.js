@@ -283,6 +283,13 @@ function RevMsg (e) {
 // https://emojipedia.org/check-mark-button/
 var clientHeight = 0;
 var fn009 = function () {
+	let oT2 = $("div.r1rt"),w = 0;
+	oT2.find("a.i,span.i").each(function(){
+		let oT = $(this);
+		if(oT.is(":visible"))w += oT.width();
+	});
+	w += 50;
+	oT2.css({"left":"calc(100vw - " + (w + 25) + "px)",width:w+"px"});
 	setMF();
 	setWhOne();
 	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
