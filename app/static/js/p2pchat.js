@@ -1879,6 +1879,13 @@ $(document).ready(function(){
 
 	listDivie();
 	var doKstart = false;
+	const dspNa=()=>{
+		var oT0 = $("#cah,#nkid"),o7 = $("#qmI");
+		if(bIsMobile && "true" !=$("div.rtool").attr("show"))
+		{
+			oT0.hide();
+			o7.addClass("r1lft");
+		}else oT0.show(),o7.removeClass("r1lft")};
 	// navigator.mediaDevices.enumerateDevices().then(function(a){console.log(a[0])})
 	var szHs = document.location.hash,
 		oCnId = $("#cnId"),
@@ -1898,6 +1905,8 @@ $(document).ready(function(){
 		oStChat.hide();
 		oMyCtn.hide();
 		ovChat.hide();
+		dspNa();
+		
 		oMyCtn.html("");
 		// https://9to5answer.com/stop-close-webcam-stream-which-is-opened-by-navigator-mediadevices-getusermedia
 		StopStream();
@@ -1925,6 +1934,7 @@ $(document).ready(function(){
 		oTxtChat.hide();
 		oMyCtn.show();
 		ovChat.show();
+		dspNa();
 		StartVideo();
 		$("#eLpos").click();
 		ldai();
@@ -2056,6 +2066,7 @@ $(document).ready(function(){
 		var o10 = $("div.rtool");
 		if(o10.attr("show"))o10.hide(),o10.removeAttr("show");
 		else o10.show(),o10.attr("show",true);
+		dspNa();
 	});
 	if (szHs) {
 		oCnId.val(szHs.substring(1));

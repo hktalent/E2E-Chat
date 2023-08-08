@@ -19,17 +19,17 @@
 <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js" crossorigin="anonymous" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" defer></script>
 </head><body><header><div class="row1">
-<div class="cel1 i"><input type="text" placeholder="Channel | room name | 频道 | 暗号 | 聊天室名字" id="cnId" results=10></div>
-<div class="cel1 i"><input type="text" placeholder="nick | 昵称" id="nick" results=10></div>
-
-<div class="cel2">
+<div class="cel1 i" id="cah"><input type="text" placeholder="Channel | room name | 频道 | 暗号 | 聊天室名字" id="cnId" results=10></div>
+<div class="cel1 i" id="nkid"><input type="text" placeholder="nick | 昵称" id="nick" results=10></div>
+<div class="cel2"></div>
+</div>
+<div class="r1rt">
 	<span class="txtChat i" title="Set the countdown minutes for automatic destruction after message reading"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">Min</span>
 	<span class="txtChat i" title="Automatic reading and destruction/Destroy">♻️<input type="checkbox" id="atRd" checked></span>
 	<a class="i" href=# id="clsId" title="Clean Up">🧹</a>
 	<a class="i" href=# id="stChat" title="Text Chat">💬</a>
 	<a class="i" href=# id="startChat"  title="Video Chat">🎦</a>
 	<a class="i" href=# id="its" title="show or hidden tools">↕</a>
-</div>
 </div>
 
 <div class="row" id="myCtn"><div id="rects" class="rects"></div></div>
