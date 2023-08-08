@@ -567,25 +567,33 @@ i a:hover{box-shadow: 6px 2px 24px #c37ae5;}
     fill-opacity: 0.0;
 }
 .r1rt{
-    left: calc(100vw - 130px);
+    left: calc(100vw - 200px);
     top: 0;
-    width: 120px;
+    width: 175px;
     white-space: nowrap;
     text-align: end;
-    margin-top: 3px 10px 0 0;
+    padding: 3px 10px 3px 10px;
     position: absolute;
     float: right;
     z-index: 99999999999;
     border: 1px solid rgba(247, 135, 236, 0);
 }
+.r1rt a{
+    display: inline-block;
+    padding: 3px;
+    width: 27px;
+    height: 27px;
+    text-align: center;
+    vertical-align: middle;
+}
 .r1rt:hover{
-    background-color: rgba(247, 135, 236, 0.65);
-    box-shadow: 0 18px 22px -6px rgb(195, 241, 104) !important;
-    border: 1px solid #0cf104;
+    background-color: rgba(169, 240, 134, 0.65);
+    box-shadow: 0 18px 22px -6px rgb(230, 133, 237) !important;
+    border: 1px solid #f19e04;
 }
 .r1lft{
     left: 0;
-    top: 0;
+    top: 5px;
     float: left;
     position: absolute;
     z-index: 999999999;
