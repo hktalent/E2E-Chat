@@ -1,5 +1,6 @@
 // var Peer = require('simple-peer'),wrtc = require('wrtc');
-var fs = require('fs'), { Level } = require('level');
+var fs = require('fs'), { Level } = require('level'),http = require('http');
+// const { url } = require('inspector');
 /*
 ln -s  /usr/share/node/lib/node_modules/stunsrv/bin/stunsrv.js /usr/local/bin/stunsrv
 stunsrv 65.49.192.6 65.49.192.6 3342 5589 65.49.192.6 65.49.192.6
@@ -110,6 +111,33 @@ var g_oP2f = {};
 if(fs.existsSync(szP2f)){
     g_oP2f = JSON.parse(fs.readFileSync(szP2f).toString('utf-8'));
 }
+
+const httpClt = (u)=>{
+    var oRst = null;
+    return new Promise(function(resolve, reject) {
+        let oH = new URL(u);
+        oH['rejectUnauthorized']=!!0;
+        https.get(oH, function (res) {
+            if (res.statusCode == 200) {
+                var body = [];
+                res.on('data', function (chunk) {
+                    body.push(chunk);
+                });
+                res.on('end', function () {
+                    body = Buffer.concat(body).toString("utf-8");
+                    var szRst = String(body);
+                    oRst = JSON.parse(szRst);
+                    resolve(oRst);
+                });
+                res.on('error', function (e) {
+                    console.log(e);
+                    reject(e);
+                });
+            }
+        });
+    });
+};
+
 function fnInit(io){
     // client:
     // auth: {
@@ -156,6 +184,40 @@ function fnInit(io){
     //     ss(socket).emit('profile-image', stream, {name: filename});
     //     fs.createReadStream(filename).pipe(stream);
     // });
+    socket.on('csys', (s,szCltFg) => {
+        s = s.substr(1)
+
+        let szOld = s,a = s.split(" ");
+        s = a[0]
+        let msg = "",spstr = "<br>";
+        switch(s){
+            case "59k":
+                if(1 < a.length)httpClt("https://127.0.0.1:8081/s?l=2&q=" + encodeURIComponent(szOld.substr(s.length + 1))).then(o=>{
+                    msg = JSON.stringify(o,null," ");
+                    if(msg)socket.emit('msg4One',{"msg": "<pre>"+msg+"</pre>",t:3,"nick":"Super Vip"});
+                });
+                return;
+                // break
+            case "bard":
+                break
+            case "0nljne":
+                for(var k in channels){
+                    let v = channels[k]
+                    msg += "Group: " + k  + spstr;
+                    for(var i in v){
+                        let v1 = v[i];
+                        if(!v1)continue;
+                        if(v1["nick"])msg += " Nick: " + v1["nick"] + spstr;
+                        if(v1.conn)msg += " Ip: " + String(v1.conn.remoteAddress).replace(/.*>:/g,"") + spstr;
+                        if(v1.fingerprint)msg += " Fingerprint: " + v1.fingerprint + spstr;
+                    }
+                    msg += spstr
+                }
+                break
+        }
+        if(msg)socket.emit('msg4One',{"msg": msg,t:3,"nick":"Super Vip"});
+    });
+
     if(!fs.existsSync('resImg'))fs.mkdirSync('resImg');
     // 保存照片
     socket.on('saveImg', (data) => {
@@ -253,7 +315,9 @@ function fnInit(io){
         // console.log("["+ socket.id + "] join ", config);
         const channel = config.channel;
         const userdata = config.userdata;
+        if(config.f)socket.fingerprint = config.f
         socket.nick = userdata.nick; 
+        // console.log(socket.conn.remoteAddress)
         // 允许多次join 和 addpeer ,短线重连时允许的
         // if (channel in socket.channels) {
         //     console.log("["+ socket.id + "] ERROR: already joined ", channel);
@@ -287,6 +351,7 @@ function fnInit(io){
             }
             // console.log("["+ socket.id + "] recodeSelf");
         }
+        // console.log(channels)
     });
 
     // 离开调用

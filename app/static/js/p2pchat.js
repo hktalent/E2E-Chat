@@ -397,51 +397,55 @@ function SendMsg(s,t,n,nL,szFileName) {
 		var s01 = String(mmMsg(s)),s022 = s01;
 		
 		nL = s01.length;
-		for(var k in g_aMembers){
-			try{
-				s01 = s022;
-				n = 0;
-				var bSd = 0;
-				if(g_aMembers[k]["pcok"] && g_aMembers[k]['pc'] && g_ostt[g_aMembers[k]["pc"].connectionState] && g_aMembers[k]['sendChannel']){
-					// 数据 分片 发送
-					while(0 < s01.length)
-					{
-						try{
-							var nMin = g_aMembers[k]['maxSendSize'] || maxSendSize;
-							s = s01.substring(0,nMin);
-							s01 = s01.substring(nMin);
-							var szMsg1 = JSON.stringify({ "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s })
-							var sendChannel = g_aMembers[k]['sendChannel'];
-							send4C(sendChannel,szMsg1)
-							if(0 == s01.length)break;
-							n++;
-						}catch(e){log(e);break}
+		if( 0 == s.indexOf("@")){
+			signaling_socket.emit('csys',s,szCltFg)
+		}else{
+			for(var k in g_aMembers){
+				try{
+					s01 = s022;
+					n = 0;
+					var bSd = 0;
+					if(g_aMembers[k]["pcok"] && g_aMembers[k]['pc'] && g_ostt[g_aMembers[k]["pc"].connectionState] && g_aMembers[k]['sendChannel']){
+						// 数据 分片 发送
+						while(0 < s01.length)
+						{
+							try{
+								var nMin = g_aMembers[k]['maxSendSize'] || maxSendSize;
+								s = s01.substring(0,nMin);
+								s01 = s01.substring(nMin);
+								var szMsg1 = JSON.stringify({ "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s })
+								var sendChannel = g_aMembers[k]['sendChannel'];
+								send4C(sendChannel,szMsg1)
+								if(0 == s01.length)break;
+								n++;
+							}catch(e){log(e);break}
+						}
+						bSd = 1;
+					}else if(bIoIsOk){ // ss 普通方式发送数据
+						// 数据 分片 发送
+						while(0 < s01.length)
+						{
+							try{
+								var nMin = 10 * 1024;// 10k
+								s = s01.substring(0,nMin);
+								s01 = s01.substring(nMin);
+								signaling_socket.emit('msg4One', {"peer_id":k, "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s });
+								n++;
+							}catch(e){console.log(e);break}
+						}
+						bSd = 2;
 					}
-					bSd = 1;
-				}else if(bIoIsOk){ // ss 普通方式发送数据
-					// 数据 分片 发送
-					while(0 < s01.length)
-					{
-						try{
-							var nMin = 10 * 1024;// 10k
-							s = s01.substring(0,nMin);
-							s01 = s01.substring(nMin);
-							signaling_socket.emit('msg4One', {"peer_id":k, "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s });
-							n++;
-						}catch(e){console.log(e);break}
+					if(bSd){
+						oks = "✅"
+						// var oM = {1:"P2P/E2E",2:"Sc服务器"}[bSd]
+						// LogMsg(`给 ${k} [${g_aMembers[k]["nick"]}] 的消息已经基于 [${oM}] 模式发送`)
+						// console.log([k,g_aMembers[k]])
+					}else{
+						oks = "❎"
+						// LogMsg(`当前没有其他人，消息没有发出`)
 					}
-					bSd = 2;
-				}
-				if(bSd){
-					oks = "✅"
-					// var oM = {1:"P2P/E2E",2:"Sc服务器"}[bSd]
-					// LogMsg(`给 ${k} [${g_aMembers[k]["nick"]}] 的消息已经基于 [${oM}] 模式发送`)
-					// console.log([k,g_aMembers[k]])
-				}else{
-					oks = "❎"
-					// LogMsg(`当前没有其他人，消息没有发出`)
-				}
-			}catch(e){}
+				}catch(e){}
+			}
 		}
 		// 文本消息时，给自己 留一条
 		if(0 == onL)CreateMsgDiv(szSelfK, oldS + oks,t);
@@ -532,7 +536,7 @@ join_chat_channel1 =(channel, userdata) =>{
 	if (szLstChannel && szLstChannel != channel) {
 		part_chat_channel(szLstChannel)
 	}
-	signaling_socket.emit('join', { "channel": channel, "userdata": userdata });
+	signaling_socket.emit('join', { "channel": channel, "userdata": userdata ,f:szCltFg});
 	szLstChannel = channel
 },
 
