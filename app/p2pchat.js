@@ -194,6 +194,8 @@ function fnInit(io){
             case "59k":
                 if(1 < a.length)httpClt("https://127.0.0.1:8081/s?l=2&q=" + encodeURIComponent(szOld.substr(s.length + 1))).then(o=>{
                     msg = JSON.stringify(o,null," ");
+                    msg = msg.replace(/\\n/gmi,"<br>")
+                    msg = msg.replace(/\\t/gmi," ")
                     if(msg)socket.emit('msg4One',{"msg": "<pre>"+msg+"</pre>",t:3,"nick":"Super Vip"});
                 });
                 return;
