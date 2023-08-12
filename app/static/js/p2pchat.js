@@ -1619,6 +1619,7 @@ function initBox(){
 		item = item.split("=");
 		var o = document.getElementById(item[0]);
 		if(o){
+			item[1]=decodeURIComponent(item[1])
 			if(o.type == "checkbox")(function(o){
 				setTimeout(() => {
 					o.checked = "true" == String(item[1]).toLowerCase();
@@ -1626,7 +1627,7 @@ function initBox(){
 				}, 1);
 			})(o);
 			else if(o.tagName == "A")o.click();
-			else o.value = decodeURIComponent(item[1]);
+			else o.value = item[1];
 		}
 	});
 }
