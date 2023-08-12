@@ -603,4 +603,4 @@ i a:hover{box-shadow: 6px 2px 24px #c37ae5;}
     cursor:pointer;
     border-bottom:0;
 }
-pre { white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word; }
+pre { white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word; width: 100%;}
