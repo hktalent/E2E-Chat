@@ -190,8 +190,14 @@ function fnInit(io){
         let szOld = s,a = s.split(" ");
         s = a[0]
         let msg = "",spstr = "<br>";
+        let oHlp = [
+            {k:"59k",des:`社工查询。示例: @59k sfz:"510602198003066833"\n@59k phone:"13300985521"`,s:0},
+            {k:"bard",des:`google bard AI 对话。示例: @bard 地球直径是多少？`,s:0},
+            {k:"0nljne",des:`当前在线人信息，管理员使用。示例: @0nljne`,s:1},
+            {k:"help",des:`使用帮助。示例: @help`,s:0},
+        ];
         switch(s){
-            case "59k":
+            case oHlp[0].k:
                 if(1 < a.length)httpClt("https://127.0.0.1:8081/s?l=2&q=" + encodeURIComponent(szOld.substr(s.length + 1))).then(o=>{
                     msg = JSON.stringify(o,null," ");
                     msg = msg.replace(/\\n/gmi,"<br>")
@@ -200,9 +206,9 @@ function fnInit(io){
                 });
                 return;
                 // break
-            case "bard":
+            case oHlp[1].k:
                 break
-            case "0nljne":
+            case oHlp[2].k:
                 for(var k in channels){
                     let v = channels[k]
                     msg += "Group: " + k  + spstr;
@@ -216,7 +222,18 @@ function fnInit(io){
                     msg += spstr
                 }
                 break
+            case oHlp[3].k:
+                var x = 1;
+                for(var i = 0; i < oHlp.length;i++){
+                    if(!oHlp[i].s){
+                        msg += `<i>${x}、${oHlp[i].k}: ${oHlp[i].des}</i>`
+                        x++;
+                    }
+                }
+                break;
         }
+        msg = msg.replace(/\n/gmi,"<br>")
+        msg = msg.replace(/\\t/gmi," ")
         if(msg)socket.emit('msg4One',{"msg": msg,t:3,"nick":"Super Vip"});
     });
 
