@@ -819,7 +819,7 @@ function init () {
 		// ,RtpDataChannels:true,preferSCTP:isFirefox
 		// iceTransportPolicy, iceCandidatePoolSize
 		// chrome 不支持：DtlsSrtpKeyAgreement "DtlsSrtpKeyAgreement": true
-		peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,iceTransportPolicy: 'all',iceCandidatePoolSize: 50});
+		peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,iceTransportPolicy: 'all'});
 		window.peer_connection = peer_connection;
 
 		peers[peer_id] = peer_connection;
@@ -923,6 +923,8 @@ function init () {
 			}
 		}catch(e){log(e)}
 		// log('1 Remote Session-description received from ', config);
+		/*允许设置多个 setRemoteDescription。您可以在连接的生命周期内多次调用 setRemoteDescription 方法，以接收来自不同远程对等方的会话描述。
+		每次调用 setRemoteDescription 时，它会更新连接的远程描述，从而允许您在同一个连接上与多个不同的远程对等方进行通信 */
 		var desc = new RTCSessionDescription(remote_description);
 		var stuff = peer.setRemoteDescription(desc, function () {
 			if (remote_description.type == "offer") {
@@ -1176,7 +1178,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,bIsRvdRcd = false,fnStartRct = f
 		, 'mimeType': 'video/webm;codecs=vp9' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
 		,'audioBitsPerSecond': 100,
 		'videoBitsPerSecond': 1000,
-		'frameRate': 24,
+		'frameRate': 15,
 	});
 	
 	recorder.startRecording();
