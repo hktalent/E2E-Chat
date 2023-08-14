@@ -24,6 +24,13 @@ main {
     -moz-border-radius: 0.8rem;
     border-radius: 0.8rem;
 }
+main::after{
+    opacity: 0.5;
+    color: rgba(248, 7, 7, 0.5);
+    font-size: 3rem;
+    text-align: center;
+    content: "HTML5, HTTP3/HTTP2, TLS1.3/1.2, cloudflare CDN accelerates and hides server";
+}
 
 .d-none,#ocrImg {
     display: none !important;
