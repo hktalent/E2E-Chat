@@ -112,11 +112,13 @@ if(fs.existsSync(szP2f)){
     g_oP2f = JSON.parse(fs.readFileSync(szP2f).toString('utf-8'));
 }
 
+// /api/sgk/_count
 const httpClt = (u)=>{
     var oRst = null;
     return new Promise(function(resolve, reject) {
         let oH = new URL(u);
         oH['rejectUnauthorized']=!!0;
+        oH['cache'] = false;
         https.get(oH, function (res) {
             if (res.statusCode == 200) {
                 var body = [];
