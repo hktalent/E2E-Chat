@@ -51,6 +51,7 @@ async function download(x) {
 }
 torrent.on("ready", async() => {
     log("webtorrent is ready");
+    if(!caches)return;
     ccDb = await caches.open("v1.2.6",{ 
         maxAgeSeconds: 60 * 60 * 24 * 365,
         maxEntries: 10000,
