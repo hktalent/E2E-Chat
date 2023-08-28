@@ -147,6 +147,7 @@ async function HxJs1(s){
 }
 async function fnMerg (s, t) {
     var szXf = "static/"+t + "." + t;
+    
     // if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,p2pchat,bundle";
     if (t == "js"){ 
         if(s == "v,.js"){
@@ -158,13 +159,17 @@ async function fnMerg (s, t) {
     }
     else s = "plyr,tipso.min,p2pchat";
     if(useCc){
-        if(fs.existsSync(szXf)){
-            var s1 = fs.readFileSync(szXf).toString("utf-8");
-            g_cache[s] = s1;
-            return s1;
-        }
         if(g_cache[s]){
             return g_cache[s];
+        }
+        
+        if(fs.existsSync(szXf)){
+            var s1 = fs.readFileSync(szXf).toString("utf-8");
+            if(!g_cache[s]){
+                console.log("cache ",s,t)
+                g_cache[s] = s1;
+            }
+            return s1;
         }
     }
     console.log("开始初始化 " + szXf)
@@ -184,12 +189,15 @@ async function fnMerg (s, t) {
         }
     }
     g_cache[s] = b.join("\n");
+    console.log("cache ",s,t)
     if (useCc && bJmi && t == "js") {
+        console.log("cache js ",s,t)
         g_cache[s] = await HxJs(g_cache[s]);
     }
     if ("css" == t) {
         oM = new CleanCSS({})
         o1 = oM.minify(g_cache[s])
+        console.log("cache css ",s,t)
         g_cache[s] = o1.styles
     }
     if(useCc){
@@ -200,9 +208,11 @@ async function fnMerg (s, t) {
 }
 
 if(bIsMacOsSelf){// 启动时预处理，提高速度
-    fnMerg(",.js", "js");
-    fnMerg("v,.js", "js");
-    fnMerg(",.css", "css");
+    (async()=>{
+    await fnMerg(",.js", "js");
+    await fnMerg("v,.js", "js");
+    await fnMerg(",.css", "css");
+    })()
 }
 function setLongTermCache (res) {
     const date = new Date();
@@ -219,15 +229,14 @@ function TrueIp(req){
 // var reRes = /\/(js|css)\/([^.]+)$/;
 async function fnDoMg (req, res, next, reRes) {
     TrueIp(req)
+    reRes = reRes || /\/(js|css)\/([^.]+)$/;
     var a = reRes.exec(req.url), t = a[1], tp = "js" == t ? "javascript" : "css";
     if (!(/[,;\|]/g.test(req.url))) return next();
-
     s1 = String(req.connection.remoteAddress)
     // var bDebug = false //-1 < s1.indexOf('::ffff:127.0.0.1') || -1 < s1.indexOf('::ffff:192.168.')
     res.setHeader('content-type', 'text/' + tp);
     setLongTermCache(res)
-    
-    xx = await fnMerg(a[2], t)
+    xx = await fnMerg(a[a.length - 1], t)
     res.end(String(xx));
 }
 function fnSetPath (s) {

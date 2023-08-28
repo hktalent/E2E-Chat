@@ -222,7 +222,7 @@ function myapp(option)
     // cache静态资源等时间，这个对性能影响很大，缓冲客户端后，在设置等时间范围内、刷新不再请求
     // Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
     expressOptions.maxAge = (7*24*60*60) + 's';//'31536000s';//'3600s';
-    var reRes = /(\/(js|css|model)\/(.*)$)|(\.mp3$)/,g_oPmap;
+    var reRes = /(?:\/(js|css|model)\/(.*)$)|(\.mp3$)/,g_oPmap;
     app.get(reRes,function(req,res,next)
     {
         // var s11 = mime.lookup(req.path);
@@ -231,11 +231,11 @@ function myapp(option)
             doZipSFl(szSSP + "js/sw.js",res);
             return
         }
-        if(req.path.match(/plyr\.svg/)){
+        if(req.path.match(/plyr\.svg$/)){
             doZipSFl(szSSP + "plyr.svg",res);
             return
         }
-        if(req.path.match(/\.mp3/)){
+        if(req.path.match(/\.mp3$/)){
             res.setHeader("Content-Type","audio/mp3");
             res.sendFile(szSSP + req.path);
             // doZipSFl(szSSP + req.path,res);
@@ -265,6 +265,7 @@ function myapp(option)
         var n12 = parseInt(s7.substring(0,s7.length - 3));
         
         // console.log([n12,aj[n12]])
+        
         if(aj[n12] && fs.existsSync(szSSP + aj[n12])){
             var stt = fs.statSync(szSSP + aj[n12]);
             expressOptions.setLongTermCache(res,stt);
@@ -275,6 +276,7 @@ function myapp(option)
             doZipSFl(szSSP + "js/i.js",res);
             return
         }
+    
         // console.log(req.url, "xx",getNowStr())
         mergeRes.fnDoMg(req,res,next,reRes);
         // next();
