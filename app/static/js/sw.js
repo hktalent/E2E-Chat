@@ -3,10 +3,8 @@ const opT = {
     maxAgeSeconds: 60 * 60 * 24 * 365,
     maxEntries: 10000,
     optional: true };
-let ccDb,client = navigator.serviceWorker.controller;
+let ccDb;
 async function Log(e,s) {
-  const c = e&&e.clientId ? await clients.get(e.clientId):client;
-  if(c)c.postMessage(s);
 }
 const fOk = async(t)=>{
   const u = new URL(t.request.url);
