@@ -3,6 +3,7 @@ const Is = (s1)=>{const S = document.createElement('script');
 // S.setAttribute('crossorigin', 'anonymous');
 S.src = s1;S.defer = false;
 document.head.appendChild(S)};
+window.addEventListener('load', () => {
 if('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('/js/sw.js')
 	.then(reg => {
@@ -26,3 +27,4 @@ if('serviceWorker' in navigator) {
 	});
 	navigator.serviceWorker.startMessages();
 }
+});
