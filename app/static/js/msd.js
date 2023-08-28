@@ -19,32 +19,32 @@ window.onload = function () {
       }
     }
 
-    // function loadSound(url) {
-    //   return new Promise((resolve, reject) => {
-    //     var ajax = new XMLHttpRequest();
-    //     ajax.open("GET", url, true);
-    //     ajax.responseType = "arraybuffer";
-    //     ajax.crossorigin = "anonymous";// anonymous：允许跨域请求，但不允许发送任何自定义头部 use-credentials：允许跨域请求，并允许发送任何自定义头部。
-    //     ajax.onload = function () {
-    //       audioCtx.decodeAudioData(
-    //         ajax.response,
-    //         function (buffer) {
-    //           resolve(buffer);
-    //         },
-    //         function (error) {
-    //           reject(error);
-    //         }
-    //       );
-    //     };
-    //     ajax.onerror = function (error) {
-    //       reject(error);
-    //     };
-    //     ajax.send();
-    //   });
-    // }
     function loadSound(url) {
-      return fetch(url).then(buffer => audioCtx.decodeAudioData(buffer));
+      return new Promise((resolve, reject) => {
+        var ajax = new XMLHttpRequest();
+        ajax.open("GET", url, true);
+        ajax.responseType = "arraybuffer";
+        ajax.crossorigin = "anonymous";// anonymous：允许跨域请求，但不允许发送任何自定义头部 use-credentials：允许跨域请求，并允许发送任何自定义头部。
+        ajax.onload = function () {
+          audioCtx.decodeAudioData(
+            ajax.response,
+            function (buffer) {
+              resolve(buffer);
+            },
+            function (error) {
+              reject(error);
+            }
+          );
+        };
+        ajax.onerror = function (error) {
+          reject(error);
+        };
+        ajax.send();
+      });
     }
+    // function loadSound(url) {// 经过测试，这种方法加载的音频无法播放
+    //   return fetch(url).then(buffer => audioCtx.decodeAudioData(buffer));
+    // }
 
     async function playSd(n) {
       let s = "";
@@ -72,7 +72,7 @@ window.onload = function () {
 
       try {
         if (!myAudio[s]) {
-          myAudio[s] = await loadSound("/"+s+".mp3");
+          myAudio[s] = await loadSound(window.appURL()+"/"+s+".mp3");
         }
 
         playSoundOnce(myAudio[s]);
