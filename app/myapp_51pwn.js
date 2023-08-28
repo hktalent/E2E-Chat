@@ -1,6 +1,7 @@
 process.setMaxListeners(5000);
 var fs = require('fs'),
     os = require('os'),
+    // crypto = require("crypto"),
     spdy = require('spdy'),
     // brotli = require('brotli'),
     express = require('express'),
@@ -22,7 +23,7 @@ var fs = require('fs'),
     // apt install redis;service redis-server start
     // brew install redis;brew services restart redis
     nMaxConn = 100,
-    // https://github.com/helmetjs/csp, standalone module: helmet-csp
+    // https://github.com/helmetjs/helmet/  standalone module: helmet-csp  Content-MD5
     helmet = require('helmet'),
     // session = require('express-session'),
     expressOptions = require('./expressOptions'),
@@ -208,11 +209,12 @@ function myapp(option)
             "'unsafe-eval'",
             
           ],
-          scriptSrcElem: "*",
-        }
+          scriptSrcElem: "*"
+        },
     }));
     app.use(function(req, res, next){
         res.setHeader("Alt-Svc", 'h3=":'+option.port+'"; ma=2592000');
+        // res.setHeader("Feature-Policy",'fullscreen=*,accelerometer=self, camera=self, geolocation=self, gyroscope=self, magnetometer=self, microphone=self, payment=self');
         next();
     });
     
@@ -220,7 +222,7 @@ function myapp(option)
     // cache静态资源等时间，这个对性能影响很大，缓冲客户端后，在设置等时间范围内、刷新不再请求
     // Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
     expressOptions.maxAge = (7*24*60*60) + 's';//'31536000s';//'3600s';
-    var reRes = /\/(js|css|model)\/(.*)$/,g_oPmap;
+    var reRes = /(\/(js|css|model)\/(.*)$)|(\.mp3$)/,g_oPmap;
     app.get(reRes,function(req,res,next)
     {
         // var s11 = mime.lookup(req.path);
@@ -231,6 +233,12 @@ function myapp(option)
         }
         if(req.path.match(/plyr\.svg/)){
             doZipSFl(szSSP + "plyr.svg",res);
+            return
+        }
+        if(req.path.match(/\.mp3/)){
+            res.setHeader("Content-Type","audio/mp3");
+            res.sendFile(szSSP + req.path);
+            // doZipSFl(szSSP + req.path,res);
             return
         }
         
@@ -255,6 +263,7 @@ function myapp(option)
         // }
         var s7 = req.path.substring(4);
         var n12 = parseInt(s7.substring(0,s7.length - 3));
+        
         // console.log([n12,aj[n12]])
         if(aj[n12] && fs.existsSync(szSSP + aj[n12])){
             var stt = fs.statSync(szSSP + aj[n12]);
@@ -304,6 +313,10 @@ function myapp(option)
             if(0 == szEn.indexOf("en"))szFn = "/index_en.html";
             html = oHtmlCc[szFn] || minify(fs.readFileSync("static" + szFn).toString("utf-8"), mOpt);
             oHtmlCc[szFn] = html;
+            // 创建一个 MD5 哈希对象
+            // const hash = crypto.createHash("md5");
+            // hash.update(html);
+            // res.setHeader("Content-MD5",crypto.digest("md5", hash.digest()));
             res.send(html);
             return
         }
@@ -319,7 +332,11 @@ function myapp(option)
 
     async function doZipSFl(szFl,res){
         szFl = szFl.replace(/\/+/g,"/")
-        res.setHeader("Content-Type",mime.lookup(szFl));
+        var szT = mime.lookup(szFl);
+        if(/\.mp3$/.test(szFl)){
+            szT = "audio/mp3"
+        }
+        res.setHeader("Content-Type",szT);
         var bZip = -1 == szFl.indexOf("/model") && -1 == szFl.indexOf(".json")
         // if(bZip)res.setHeader('Content-Encoding', 'gzip');
         var ss = oHtmlCc[szFl];
