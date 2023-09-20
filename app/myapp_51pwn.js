@@ -127,6 +127,8 @@ function myapp(option)
             credentials = {
                 "key": fs.readFileSync(key, 'utf8'),
                 "cert": fs.readFileSync(cert, 'utf8'),
+                minVersion: "TLSv1.2",
+                zlib: true,
               // **optional** SPDY-specific options
               spdy: {
                 protocols: ['h2','spdy/3.1', 'spdy/3', 'spdy/2'],
@@ -214,7 +216,17 @@ function myapp(option)
     }));
     app.use(function(req, res, next){
         res.setHeader("Alt-Svc", 'h3=":'+option.port+'"; ma=2592000');
-        // res.setHeader("Feature-Policy",'fullscreen=*,accelerometer=self, camera=self, geolocation=self, gyroscope=self, magnetometer=self, microphone=self, payment=self');
+        /* 推荐的写法
+    摄像头 - camera
+    麦克风 - microphone
+    地理位置 - geolocation
+    陀螺仪 - gyroscope
+
+    () - 表示不允许,禁止访问该权限
+    self - 表示仅允许同源使用
+    * 表示允许任意来源使用
+        */
+        res.setHeader("Permissions-Policy", 'camera=*, microphone=*, geolocation=*,gyroscope=*');
         next();
     });
     
