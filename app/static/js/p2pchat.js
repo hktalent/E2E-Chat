@@ -824,7 +824,7 @@ function init () {
 
 		peers[peer_id] = peer_connection;
 		
-		peer_connection.onicegatheringstatechange = function(){
+		peer_connection.onicegatheringstatechange = function(event){
 			if (peer_connection.iceConnectionState === 'failed') {
 				try{peer_connection.restartIce()}catch(e){log('peer_connection.restartIce ',e)}
 			}
@@ -843,6 +843,7 @@ function init () {
 				if (event.candidate.candidate === '') {
 					return;
 				}
+				fnMyLogs(event);// ip 地址
 				var c = parseCandidate(event.candidate.candidate);
 				signaling_socket.emit('relayICECandidate', {
 					'peer_id': peer_id,

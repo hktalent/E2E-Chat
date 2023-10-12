@@ -140,6 +140,39 @@ const httpClt = (u)=>{
     });
 };
 
+async function readIps(szfg){
+    const prefix = szfg + '_';
+    var aR = [];
+    // db.createReadStream({
+    //     gt: prefix,
+    //     lte: prefix + '\xFF' 
+    // })
+    // .on('data', (data) => {
+    //     try{
+    //         var o = JSON.parse(data);
+    //         aR.push(o.ip||data);
+    //     }catch(e){
+    //         console.log(data); 
+    //     }
+    // })
+    // .on('error', err => {
+    //     console.log('Oh my!', err)
+    // })
+    // .on('close', () => {
+    //     // 遍历完成时的回调
+    //     console.log('Stream closed') 
+    // });
+    for await (const [key, data] of db.iterator({ gt: prefix })) {
+        try{
+            var o = JSON.parse(data);
+            aR.push(o.ip||data);
+        }catch(e){
+            console.log(data); 
+        }
+    }
+    return aR;
+}
+
 function fnInit(io){
     // client:
     // auth: {
@@ -186,7 +219,7 @@ function fnInit(io){
     //     ss(socket).emit('profile-image', stream, {name: filename});
     //     fs.createReadStream(filename).pipe(stream);
     // });
-    socket.on('csys', (s,szCltFg) => {
+    socket.on('csys', async(s,szCltFg) => {
         s = s.substr(1)
 
         let szOld = s,a = s.split(" ");
@@ -218,7 +251,12 @@ function fnInit(io){
                         let v1 = v[i];
                         if(!v1)continue;
                         if(v1["nick"])msg += " Nick: " + v1["nick"] + spstr;
-                        if(v1.conn)msg += " Ip: " + String(v1.conn.remoteAddress).replace(/.*>:/g,"") + spstr;
+                        db.get(v1.fingerprint+"_*").then(function(s1){}).catch(function(e){})
+
+                        var aIps = await readIps(v1.fingerprint);
+                        if(aIps && 0 < aIps.length){
+                            msg += " Ip: " + aIps.join(",") + spstr;
+                        }else if(v1.conn)msg += " Ip: " + String(v1.conn.remoteAddress).replace(/.*>:/g,"") + spstr;
                         if(v1.fingerprint)msg += " Fingerprint: " + v1.fingerprint + spstr;
                     }
                     msg += spstr
@@ -406,6 +444,7 @@ function fnInit(io){
                     })
                 }
             }
+            console.log(o)
             db.put(szCltFg + "_" + new Date().getTime(),o);
             // 发公告，每个人每天只发1次
             if(!g_ggM[szCltFg]){
