@@ -241,7 +241,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	else o1.click(autoRm);
 	nCnt++;
 	o9.scrollTop(100000,100000);
-	playSd(2)
+	if(window["playSd"])window["playSd"](2)
 }
 
 // 文件发送、接收需要拆包和组包
