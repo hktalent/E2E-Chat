@@ -234,7 +234,14 @@ function myapp(option)
     // cache静态资源等时间，这个对性能影响很大，缓冲客户端后，在设置等时间范围内、刷新不再请求
     // Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
     expressOptions.maxAge = (7*24*60*60) + 's';//'31536000s';//'3600s';
-    var reRes = /(?:\/(js|css|model)\/(.*)$)|(\.mp3$)/,g_oPmap;
+    var reRes = /(?:\/(js|css|model)\/(.*)$)|(\/tagmgmt\/bs\.js$)|(\.mp3$)/,g_oPmap;
+    // app.get(/\/tagmgmt\/bs\.js$/,function(req,res,next){
+    //     console.log([req.path,req.headers])
+    //     res.setHeader("Content-Type","application/javascript");
+    //     res.end("alert(333)")
+    //     console.log("xxxxx")
+    //     return
+    // })
     app.get(reRes,function(req,res,next)
     {
         // var s11 = mime.lookup(req.path);

@@ -1,17 +1,17 @@
-function playSoundOnce(audioBuffer) {
-    if (!bpIn) {
-    bpIn = true;
+function playSoundOnce (audioBuffer) {
+  if (!window.bpIn) {
+    window.bpIn = true;
     var source = audioCtx.createBufferSource();
     source.buffer = audioBuffer;
     source.connect(audioCtx.destination);
     source.onended = function () {
-      bpIn = false;
+      window.bpIn = false;
     };
     source.start();
   }
 }
 
-function loadSound(url) {
+function loadSound (url) {
   return new Promise((resolve, reject) => {
     var ajax = new XMLHttpRequest();
     ajax.open("GET", url, true);
@@ -38,7 +38,7 @@ function loadSound(url) {
 //   return fetch(url).then(buffer => audioCtx.decodeAudioData(buffer));
 // }
 
-async function playSd(n) {
+async function playSd (n) {
   let s = "";
   switch (n) {
     case 1:
@@ -64,7 +64,7 @@ async function playSd(n) {
 
   try {
     if (!myAudio[s]) {
-      myAudio[s] = await loadSound(window.appURL()+"/"+s+".mp3");
+      myAudio[s] = await loadSound(window.appURL() + "/" + s + ".mp3");
     }
 
     playSoundOnce(myAudio[s]);
@@ -75,11 +75,11 @@ async function playSd(n) {
 
 window.playSd = playSd;
 window.onload = function () {
-  var audioContext = window.webkitAudioContext||window.AudioContext;
+  var audioContext = window.webkitAudioContext || window.AudioContext;
   if (audioContext) {
-    var audioCtx = new audioContext();
-    var myAudio = {}; // 存储加载过的音频资源
-    var bpIn = false; // 标记是否正在播放音频
-    var oNTm1 = {}; // 存储上次播放音频的时间戳
+    window.audioCtx = new audioContext();
+    window.myAudio = {}; // 存储加载过的音频资源
+    window.bpIn = false; // 标记是否正在播放音频
+    window.oNTm1 = {}; // 存储上次播放音频的时间戳
   } else console.error("AudioContext not supported!");
 }

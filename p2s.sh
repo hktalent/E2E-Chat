@@ -1,5 +1,5 @@
-export rip=65.49.208.113
-export rport=26188
+export rip=144.202.116.91
+export rport=22
 xxx="app1"
 
 # reset;ssh -i ~/.ssh/id_rsa -C -p ${rport} root@${rip}
