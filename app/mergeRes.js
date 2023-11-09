@@ -4,7 +4,7 @@ var fs = require('fs'),
     szPathC = __dirname + "/static/css/",
     aFCache = {},
     bJmi = !!1,
-    bIsMacOsSelf = 0&&os.platform() === 'darwin',
+    bIsMacOsSelf = 1,//0&&os.platform() === 'darwin',
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  !!1;

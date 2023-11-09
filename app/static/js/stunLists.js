@@ -4,8 +4,12 @@ var ICE_SERVERS = [
     "credential": "e2zeuP_p",
     "username": "e2eu",
 },
+{
+    "urls": "turn:144.202.116.91",
+    "credential": "e2zeuP_p",
+    "username": "e2eu",
+},
 {"urls":"stun:stun.miwifi.com:3478"},
-{"urls":"stun:65.49.208.113:3478"},
 // {"urls":"stun:stun.pjsip.org:3478"},
 {"urls":"stun:stun3.l.google.com:19302"},
 // {"urls":"stun:stun.hoiio.com:3478"},

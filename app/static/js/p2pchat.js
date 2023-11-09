@@ -459,15 +459,14 @@ function fnMyLogs (e) {
 	// log(e)/*
 	var s = typeof(e) == "string" ? e : JSON.stringify(e), oLog = $("#msgList");
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
-	getYourInfo(s);
 	doCErr(s);
-	var szHtml = "<p>" + getNowStr() + "&nbsp;" + s + "</p>";
-	// LogMsg(szHtml);
-	if (0 < oLog.find("p").first().length) {
-		oLog = oLog.find("p").first().before(szHtml);
-	}
-	else oLog.append(szHtml);
-	$("#warnId").text("Warning(" + (++nLogs) + ")");
+	// var szHtml = "<p>" + getNowStr() + "&nbsp;" + s + "</p>";
+	// // LogMsg(szHtml);
+	// if (0 < oLog.find("p").first().length) {
+	// 	oLog = oLog.find("p").first().before(szHtml);
+	// }
+	// else oLog.append(szHtml);
+	// $("#warnId").text("Warning(" + (++nLogs) + ")");
 	////////*/
 }
 // N 个参数日志输出
@@ -843,7 +842,7 @@ function init () {
 				if (event.candidate.candidate === '') {
 					return;
 				}
-				fnMyLogs(event);// ip 地址
+				getYourInfo(JSON.stringify(event));
 				var c = parseCandidate(event.candidate.candidate);
 				signaling_socket.emit('relayICECandidate', {
 					'peer_id': peer_id,
