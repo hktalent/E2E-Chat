@@ -275,8 +275,10 @@ function myapp(option)
 [ '10', '/js/webtorrent.min.js' ]        // https://cdnjs.com/libraries/webtorrent
 [ '11', '/js/stunLists.js' ]
 [ '12', '/js/p2pfs.js' ]
+[ '13', '/js/html2canvas.min.js' ]
+
         */
-        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/crypto-js.min.js,/js/fix.js,/js/tfjs.js,/js/webtorrent.min.js,/js/stunLists.js,/js/p2pfs.js".split(",");
+        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/crypto-js.min.js,/js/fix.js,/js/tfjs.js,/js/webtorrent.min.js,/js/stunLists.js,/js/p2pfs.js,/js/html2canvas.min.js".split(",");
         // for(var k in aj){
         //     console.log([k,aj[k]])
         // }
