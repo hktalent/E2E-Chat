@@ -84,8 +84,8 @@ function getYourInfo (s) {
 		p2 = /fingerprint:sha-256 ([^\\]+)/gmi,
 		a = p2.exec(s);
 	a = p1.exec(s);
+	var oHst = g_oYourInfo['ip'] || (g_oYourInfo['ip'] = []);
 	if (a) {
-		var oHst = g_oYourInfo['ip'] || (g_oYourInfo['ip'] = []);
 		if (-1 == JSON.stringify(oHst).indexOf(a[1]))
 			oHst.push([a[1], a[2]].join(":"));
 	}
@@ -96,6 +96,10 @@ function getYourInfo (s) {
 			szgetYourInfo = s1
 		}
 	}
+	// 匹配IPv6的格式
+	var ipv6_regex = /([a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
+	var ipv6_addr = ipv6_regex.exec(s)
+	if(ipv6_addr&&0<ipv6_addr.length)oHst.push(ipv6_addr[1]);
 }
 
 function log (...e) {
