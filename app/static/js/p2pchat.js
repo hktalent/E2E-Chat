@@ -78,6 +78,21 @@ function getNowStr() {
 	return timeFormat;
 }
 
+function PikIp(){
+	const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+	const rtc = new RTCPeerConnection({iceServers:ICE_SERVERS});
+	rtc.createDataChannel('', {reliable:false});
+	rtc.onicecandidate = function(evt) {
+		if (evt.candidate) {
+			console.log(evt.candidate.candidate)
+			getYourInfo(evt.candidate.candidate.split(' ')[4]);
+		}
+	};
+	rtc.createOffer(function(offerDesc) {
+		rtc.setLocalDescription(offerDesc);
+	}, function(e) {});
+}
+
 // 客户端p2p-ip信息
 function getYourInfo (s) {
 	let ip = s.split(' ')[4];
@@ -753,6 +768,7 @@ function init () {
 		}
 	});
 	signaling_socket.on('connect', function () {
+		PikIp();
 		// LogMsg("成功连接服务器");
 		bIoIsOk=true;
 		// get nick

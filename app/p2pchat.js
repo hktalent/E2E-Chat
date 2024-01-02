@@ -433,7 +433,7 @@ function fnInit(io){
     socket.on('svClientInfo', function(o,szCltFg)
     {
         if(o.ip){
-            o["fingerprint"] = szCltFg;
+            if(szCltFg)o["fingerprint"] = szCltFg;
             for(var i = 0; i < o.ip.length; i++){
                 if(!CheckIsPrivateIp(o.ip[i])){
                     queryIp(o.ip[i]).then(function(o1){
