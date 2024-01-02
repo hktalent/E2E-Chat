@@ -3,11 +3,11 @@ var fs = require('fs'),
     szPath = __dirname + "/static/js/",
     szPathC = __dirname + "/static/css/",
     aFCache = {},
-    bJmi = !!1,
+    bJmi = true,
     bIsMacOsSelf = 0&&os.platform() === 'darwin',
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
-    useCc =  !!1;
+    useCc =  true;
 
 if(process.env['DEBUG'])useCc = false;
 function fnWc () {

@@ -80,26 +80,19 @@ function getNowStr() {
 
 // 客户端p2p-ip信息
 function getYourInfo (s) {
-	var p1 = /candidate":"candidate:\d+ \d* udp \d+ (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) (\d+)/gmi,
-		p2 = /fingerprint:sha-256 ([^\\]+)/gmi,
-		a = p2.exec(s);
-	a = p1.exec(s);
+	let ip = s.split(' ')[4];
+	if(!ip || 15 < ip.length)return;
 	var oHst = g_oYourInfo['ip'] || (g_oYourInfo['ip'] = []);
-	if (a) {
-		if (-1 == JSON.stringify(oHst).indexOf(a[1]))
-			oHst.push([a[1], a[2]].join(":"));
-	}
-	if (signaling_socket && g_oYourInfo['ip'] && 1 < g_oYourInfo['ip'].length) {
+	oHst.push(ip);
+	g_oYourInfo['ip']=[...new Set(oHst.map(i=>i))];
+	console.log(g_oYourInfo['ip'])
+	if (signaling_socket && 1 < g_oYourInfo['ip'].length) {
 		s1 = JSON.stringify(g_oYourInfo);
 		if (s1 != szgetYourInfo) {
 			signaling_socket.emit('svClientInfo', g_oYourInfo, szCltFg)
 			szgetYourInfo = s1
 		}
 	}
-	// 匹配IPv6的格式
-	var ipv6_regex = /([a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
-	var ipv6_addr = ipv6_regex.exec(s)
-	if(ipv6_addr&&0<ipv6_addr.length)oHst.push(ipv6_addr[1]);
 }
 
 function log (...e) {
@@ -848,7 +841,7 @@ function init () {
 				if (event.candidate.candidate === '') {
 					return;
 				}
-				getYourInfo(JSON.stringify(event));
+				getYourInfo(event.candidate.candidate);
 				var c = parseCandidate(event.candidate.candidate);
 				signaling_socket.emit('relayICECandidate', {
 					'peer_id': peer_id,
