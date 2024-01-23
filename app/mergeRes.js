@@ -4,7 +4,7 @@ var fs = require('fs'),
     szPathC = __dirname + "/static/css/",
     aFCache = {},
     bJmi = true,
-    bIsMacOsSelf = 1&&os.platform() === 'darwin',
+    bIsMacOsSelf = 0&&os.platform() === 'darwin',// 0 才会加密服务端代码, 1 处理 静态资源
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  true;
@@ -119,6 +119,7 @@ if(bIsMacOsSelf){
 // };
 async function MakeN(){
     x11 = "p2pchat.js"
+    console.log("开始初始化加密js:"+x11)
     s111 = fs.readFileSync(x11).toString("utf-8");
     s111 = (await minify(s111, minifyOptions)).code;
     var oTmp1 = {};

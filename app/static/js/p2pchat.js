@@ -471,7 +471,6 @@ function fnMyLogs (e) {
 	// log(e)/*
 	var s = typeof(e) == "string" ? e : JSON.stringify(e), oLog = $("#msgList");
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
-	alert(s)
 	doCErr(s);
 	
 	// var szHtml = "<p>" + getNowStr() + "&nbsp;" + s + "</p>";
