@@ -295,13 +295,13 @@ function RevMsg (e) {
 // https://emojipedia.org/check-mark-button/
 var clientHeight = 0;
 var fn009 = function () {
-	let oT2 = $("div.r1rt"),w = 0;
+	let oT2 = $("div.r1rt"),w = 0,n=0;
 	oT2.find("a.i,span.i").each(function(){
 		let oT = $(this);
-		if(oT.is(":visible"))w += oT.width();
+		if(oT.is(":visible"))n++,w += oT.width();
 	});
-	w += 50;
-	oT2.css({"left":"calc(100vw - " + (w + 25) + "px)",width:w+"px"});
+	w += n*10+10;
+	oT2.css({"left":"calc(100vw - " + (w + n * 3 + (n - 1) * 3) + "px)",width:w+"px"});
 	setMF();
 	setWhOne();
 	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
@@ -1770,6 +1770,19 @@ $(document).ready(function(){
 		else oNt.addClass('d-none');
 	});
 
+	let bHd = true;
+	let SetRow1=()=>{
+		if(bHd){
+		   bHd=false;
+		   $("div.row1").hide();
+		   $("#shRow1")[0].innerText="<";
+		}else{
+			bHd=true;
+			$("div.row1").show();
+			$("#shRow1")[0].innerText=">";
+		}
+	};
+
 	listDivie();
 	var doKstart = false;
 	const dspNa=()=>{
@@ -1789,6 +1802,8 @@ $(document).ready(function(){
 		oMyCtn = $("#myCtn"),
 		oclsId = $("#clsId"),
 		ovChat = $(".vChat");
+		
+	$("#shRow1").click(SetRow1);
 	// text chat
 	oStChat.click(function () {
 		playSd(1);
@@ -1807,9 +1822,11 @@ $(document).ready(function(){
 		JoinRoom();
 		$("#eLpos").click();
 		setMF();
+		SetRow1();
 	});
 	// video chat
 	oStartChat.click(function (e) {
+		SetRow1();
 		/*
 		https://webkit.org/blog/7734/auto-play-policy-changes-for-macos/
 		https://www.crifan.com/safari_js_code_unhandled_promise_rejection_notallowederror_the_request_is_not_allowed_by_the_user_agent_or_the_platform_in_the_current_context/
