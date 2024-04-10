@@ -1,4 +1,4 @@
-brew services  restart redis
+brew services  start redis
 rm -rf static/js.js static/v8.js static/css.css;
 node --inspect --trace-deprecation server.js
 
