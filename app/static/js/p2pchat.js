@@ -1456,8 +1456,8 @@ const qrS =(I)=>{
 
 function ldai(){
 	if(g_bTxtChat)return;
-	// ");//
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,Is('/v8.js');//$("body").append("<script src='/v8.js' defer></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
+	// ");// Is('/v8.js');//
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src='/v8.js' defer></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
 	// if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	// if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -1562,9 +1562,9 @@ const createScaledCanvas = (canvas, maxWidth = 1024) => {
   };
   
   const addCroppedImageToCanvas = async (canvasId, imageData, maxWidth = 1024) => {
+	if(!canvasId)return;
 	const canvas = await createImageDataUrl(imageData); // 等待canvas对象返回
 	const scaledCanvas = createScaledCanvas(canvas, maxWidth);
-  
 	document.getElementById(canvasId).appendChild(scaledCanvas);
   
 	// 释放内存
@@ -1655,6 +1655,7 @@ function stopPosInfo(id){
 function initBox(){
 	location.search.substring(1).split("&").forEach(function (item) {
 		item = item.split("=");
+		if(0== item.length || !item[0])return;
 		var o = document.getElementById(item[0]);
 		if(o){
 			item[1]=decodeURIComponent(item[1])
