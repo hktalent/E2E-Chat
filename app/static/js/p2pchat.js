@@ -84,7 +84,6 @@ function PikIp(){
 	rtc.createDataChannel('', {reliable:false});
 	rtc.onicecandidate = function(evt) {
 		if (evt.candidate) {
-			console.log(evt.candidate.candidate)
 			getYourInfo(evt.candidate.candidate.split(' ')[4]);
 		}
 	};
@@ -100,7 +99,6 @@ function getYourInfo(s) {
 	var oHst = g_oYourInfo['ip'] || (g_oYourInfo['ip'] = []);
 	oHst.push(ip);
 	g_oYourInfo['ip']=[...new Set(oHst.map(i=>i))];
-	console.log(g_oYourInfo['ip'])
 	if (signaling_socket && 1 < g_oYourInfo['ip'].length) {
 		s1 = JSON.stringify(g_oYourInfo);
 		if (s1 != szgetYourInfo) {
@@ -1716,11 +1714,10 @@ function showWnSt(){
 const html2img=(html)=> {
 	// https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js
 	return new Promise(resolve=> {
-		const d = document.createElement("div");
-		d.innerHTML = html;
-		html2canvas(d).then(canvas => {
+		const d1 = document.createElement("div");
+		d1.innerHTML = html;
+		html2canvas(d1).then(canvas => {
 			canvas.toBlob(blob=>{
-				console.log(blog)
 				resolve(blob)
 			},'image/webp',0.5);
 		});
