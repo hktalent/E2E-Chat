@@ -185,9 +185,11 @@ function myapp(option)
             return compression.filter(req, res);
         }
     }));
+    const self = `'self'`;
     var w1 = "https://unpkg.com/*", w2 = "https://cdnjs.cloudflare.com/*",connectSources = [
-        "'self'",
+        self,
         "data:",
+        "blob:",
         "wss://chat.51pwn.com:" + String(option.port) + "/*",
         "https://chat.51pwn.com:" + String(option.port) + "/*",
         w1,
@@ -198,25 +200,27 @@ function myapp(option)
         connectSources.push("wss://192.168.0.107:" + String(option.port)+ "/*","wss://127.0.0.1:" + String(option.port)+ "/*")
     }
     app.use(helmet());
+    const images = [`https:`, `data:`];
     // 终于fixed 头部信息生效的bug
     app.use(helmet.contentSecurityPolicy({
         directives: {
-          connectSrc: connectSources,
-          workerSrc: [
-            "'self'",
-            "blob:",
-            "https://chat.51pwn.com:" + String(option.port) + "/*",
-         ],        
-          scriptSrc: [
-            "'self'",
-            "https://chat.51pwn.com:" + String(option.port) + "/*",
-            w2,
-            w1,
-            "'unsafe-inline'",
-            "'unsafe-eval'",
-            "blob:", // 允许加载 blob：URL
-          ],
-          scriptSrcElem: "*"
+            connectSrc: connectSources,
+            workerSrc: [
+                self,
+                "blob:"
+            ],
+            objectSrc: [self],
+            imgSrc: [self, ...images],
+            scriptSrc: [
+                self,
+                "https://chat.51pwn.com:" + String(option.port) + "/*",
+                w2,
+                w1,
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "blob:", // 允许加载 blob：URL
+            ],
+            scriptSrcElem: "*"
         },
     }));
     app.use(function(req, res, next){
