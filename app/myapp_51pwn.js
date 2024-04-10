@@ -209,7 +209,7 @@ function myapp(option)
             w1,
             "'unsafe-inline'",
             "'unsafe-eval'",
-            
+            "blob:", // 允许加载 blob：URL
           ],
           scriptSrcElem: "*"
         },
@@ -256,7 +256,8 @@ function myapp(option)
         }
         if(req.path.match(/\.mp3$/)){
             res.setHeader("Content-Type","audio/mp3");
-            res.sendFile(szSSP + req.path);
+            var s4 = String(szSSP + req.path).replace(/\/+/g,"/");
+            res.sendFile(s4);
             // doZipSFl(szSSP + req.path,res);
             return
         }

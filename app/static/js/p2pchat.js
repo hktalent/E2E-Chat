@@ -94,8 +94,8 @@ function PikIp(){
 }
 
 // 客户端p2p-ip信息
-function getYourInfo (s) {
-	let ip = s.split(' ')[4];
+function getYourInfo(s) {
+	let ip = String(s||"").split(' ')[4];
 	if(!ip || 15 < ip.length)return;
 	var oHst = g_oYourInfo['ip'] || (g_oYourInfo['ip'] = []);
 	oHst.push(ip);
@@ -323,7 +323,7 @@ function fnTxtChatOne(pc,peer_id){
 	}
 	pc.ondatachannel = function(e){
 		// log(" == pc.ondatachannel is ok ===>> ")
-		e.channel.onmessage = RevMsg
+		if(e.channel)e.channel.onmessage = RevMsg
 		if(peer_id && g_aMembers[peer_id]){g_aMembers[peer_id]['sendChannel'] = e.channel;clOpen()}
 		else {log(`${peer_id} 没有成功注册到 g_aMembers`);}
 	}
