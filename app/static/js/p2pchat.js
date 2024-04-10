@@ -1166,15 +1166,21 @@ const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
 	return blob;
 }
 function CrtDldA(s){
+	// 开启人脸识别的情况，只在检测到人时保存
+	if($("#eAi").attr("checked") && !g_bWarn)return;
 	var a1 = s.split(";base64,");
 	var link = document.createElement("a");
 	const blob = b64toBlob(a1[1],a1[0].substr(5));
 	var objectURL = window.URL.createObjectURL(blob)
 	$("#ocrRst").append(link);
+	link.className="mmMp4";
 	link.href = objectURL;
 	link.target = "_blank";
 	var s1 = getNowStr() +".mp4";
 	link.innerText = link.download = s1;
+	let a = $("#ocrRst a.mmMp4");
+	// 这里应该做一些处理，如果没有发生报警，也就是没有检测到人，就不保存，这样可以节省空间
+	if(!g_bWarn&&a.length > 100)a[0].remove();
 }
 // 触发保存
 var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,bIsRvdRcd = false,fnStartRct = function () {// https://recordrtc.org/
@@ -1188,31 +1194,32 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,bIsRvdRcd = false,fnStartRct = f
 	});
 	///////////////*
 	var recorder = RecordRTC(videoOnlyStream || stream || local_media, {
-		'type': 'video'// 测评表明 AV1 是最佳的
-		, 'mimeType': 'video/webm;codecs=vp9' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
-		,'audioBitsPerSecond': 100,
-		'videoBitsPerSecond': 1000,
-		'frameRate': 15,
+		type: 'audio+video'// 测评表明 AV1 是最佳的
+		, mimeType: 'video/webm;codecs=vp9' // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
+		,audioBitsPerSecond: 128000,
+		videoBitsPerSecond: 128000,
+		bitsPerSecond: 128000,
+		frameRate: 25,//15 ～ 30
 	});
 	
 	recorder.startRecording();
 	//  10分钟,停一下，并上传，然后重新开始
-	g_nTmxx9 = setTimeout(function () {
+	g_nTmxx9 = setTimeout(() =>{
 		if (recorder) recorder.stopRecording(function () {
 			try {
 				recorder.getDataURL(function (videoDataURL) {
 					videoDataURL = String(videoDataURL);
+					setTimeout(function () {CrtDldA(videoDataURL);},16);
 					signaling_socket.emit('saveVideo', { type:  'video/webm',"videoDataURL": videoDataURL});
-					setTimeout(function () {CrtDldA(videoDataURL);},33);
 				});
 			} catch (e) {
 				alert(e)
 			}
 			nT090 = setTimeout(function () {
-				if (!g_bStopVd) fnStartRct();
-				else bIsRvdRcd = false;
+				if (!g_bStopVd) bIsRvdRcd = false,fnStartRct();
 				clearTimeout(nT090);
 			}, 3);
+			clearTimeout(g_nTmxx9);
 		});
 	}, 1 * 60 * 1000);
 };
@@ -1661,7 +1668,7 @@ function initBox(){
 		}
 	});
 }
-var v8cTop = 42;
+var v8cTop = 42,g_bWarn = false,nWarn = 0;
 window.addEventListener("beforeunload",function(){
 	part_chat_channel($("#cnId").val());
 	StopStream();
@@ -1669,6 +1676,9 @@ window.addEventListener("beforeunload",function(){
 
 function plWarn(){
 	playSd(3);
+	clearTimeout(nWarn);
+	g_bWarn = true;
+	nWarn = setTimeout(()=>{g_bWarn = !!0}, 30000);
 }
 window.g_oWarObj = {};
 function boxslct(o){
