@@ -4,10 +4,10 @@ const Is = (s1)=>{const S = document.createElement('script');
 S.src = s1;S.defer = false;
 document.head.appendChild(S)};
 window.addEventListener('load', () => {
-if('serviceWorker' in navigator) {
+if(navigator.serviceWorker) {
 	navigator.serviceWorker.register('/js/sw.js')
 	.then(reg => {
-		console.log('Service Worker: Registered (Pages)');
+		// console.log('Service Worker: Registered (Pages)');
 		window.caches=reg.caches;
 		// Is("/socket.io/socket.io.js");
 		// for(let i=0;i<12;i++){
@@ -17,11 +17,12 @@ if('serviceWorker' in navigator) {
 	}).catch(err => console.log(`Service Worker: Error: ${err}`));
 	navigator.serviceWorker.addEventListener("message", (e) => {
 		let o = e.data;
+		if(!o || !o.type || !typeof seedFiles!== 'function')return;
 		switch(o.type){
 			case "fok":
 				if(g_bEableP2pFs)seedFiles(o.url)
-				default:
-					log(e.data)
+			default:
+				log(e.data)
 		}
 		
 	});
