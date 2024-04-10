@@ -4,7 +4,7 @@ var fs = require('fs'),
     szPathC = __dirname + "/static/css/",
     aFCache = {},
     bJmi = true,
-    bIsMacOsSelf = 0&&os.platform() === 'darwin',// 0 才会加密服务端代码, 1 处理 静态资源
+    bIsMacOsSelf = 1&&os.platform() === 'darwin',// 0 才会加密服务端代码, 1 处理 静态资源
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  true;
