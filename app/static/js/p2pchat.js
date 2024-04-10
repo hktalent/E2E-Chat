@@ -333,6 +333,7 @@ function fnTxtChatOne(pc,peer_id){
 	negotiated:true,
 	*/
 	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true})
+	if(!sendChannel)return
 	
 	sendChannel.onclose = function () {
 		if(g_aMembers[peer_id]){
@@ -355,7 +356,6 @@ function fnTxtChatOne(pc,peer_id){
 	}
 	sendChannel.onmessage = RevMsg;
 	pc.Tok = true;
-	
 }
 
 // 文本聊天初始化
@@ -1186,7 +1186,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,bIsRvdRcd = false,fnStartRct = f
 	bIsRvdRcd = true;
 	var stream = window.stream;
 	var videoOnlyStream = null||new MediaStream();
-	stream.getVideoTracks().forEach(function(track) {
+	if(stream&&stream.getVideoTracks)stream.getVideoTracks().forEach(function(track) {
 		oStreamTrack = track;
 		videoOnlyStream.addTrack(track);
 	});
@@ -1457,7 +1457,7 @@ const qrS =(I)=>{
 function ldai(){
 	if(g_bTxtChat)return;
 	// ");// Is('/v8.js');//
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,$("body").append("<script src='/v8.js' defer></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,Is('/v8.js');//$("body").append("<script src='/v8.js'></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
 	// if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	// if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }

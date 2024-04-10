@@ -202,6 +202,11 @@ function myapp(option)
     app.use(helmet.contentSecurityPolicy({
         directives: {
           connectSrc: connectSources,
+          workerSrc: [
+            "'self'",
+            "blob:",
+            "https://chat.51pwn.com:" + String(option.port) + "/*",
+         ],        
           scriptSrc: [
             "'self'",
             "https://chat.51pwn.com:" + String(option.port) + "/*",
