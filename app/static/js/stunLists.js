@@ -1,15 +1,15 @@
 var ICE_SERVERS = [
-{
-    "urls": "turn:65.49.208.113:3478",
-    "credential": "REDACTED_TURN_CREDENTIAL",
-    "username": "e2eu",
-},
-{
-    "urls": "turn:144.202.116.91",
-    "credential": "REDACTED_TURN_CREDENTIAL",
-    "username": "e2eu",
-},
-{"urls":"stun:stun.miwifi.com:3478"},
+// {
+//     "urls": "turn:65.49.208.113:3478",
+//     "credential": "REDACTED_TURN_CREDENTIAL",
+//     "username": "e2eu",
+// },
+// {
+//     "urls": "turn:144.202.116.91",
+//     "credential": "REDACTED_TURN_CREDENTIAL",
+//     "username": "e2eu",
+// },
+// {"urls":"stun:stun.miwifi.com:3478"},
 // {"urls":"stun:stun.pjsip.org:3478"},
 {"urls":"stun:stun3.l.google.com:19302"},
 // {"urls":"stun:stun.hoiio.com:3478"},
@@ -18,7 +18,7 @@ var ICE_SERVERS = [
 // {"urls":"stun:stun.sonetel.com:3478"},
 // {"urls":"stun:stun.sonetel.net:3478"},
 // {"urls":"stun:stun.voip.aebc.com:3478"},
-// {"urls":"stun:stun1.l.google.com:19302"},
+{"urls":"stun:stun1.l.google.com:19302"},
 // {"urls":"stun:stun.freeswitch.org:3478"},
 // {"urls":"stun:stun.tng.de:3478"},
 // {"urls":"stun:stun.hosteurope.de:3478"},

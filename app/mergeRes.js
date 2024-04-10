@@ -7,7 +7,7 @@ var fs = require('fs'),
     bIsMacOsSelf = 1&&os.platform() === 'darwin',// 0 才会加密服务端代码, 1 处理 静态资源
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
-    useCc =  true;
+    useCc =  1;
 
 if(process.env['DEBUG'])useCc = false;
 function fnWc () {
