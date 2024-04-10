@@ -1166,8 +1166,6 @@ const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
 	return blob;
 }
 function CrtDldA(s){
-	// 开启人脸识别的情况，只在检测到人时保存
-	if($("#eAi").attr("checked") && !g_bWarn)return;
 	var a1 = s.split(";base64,");
 	var link = document.createElement("a");
 	const blob = b64toBlob(a1[1],a1[0].substr(5));
@@ -1206,14 +1204,17 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,bIsRvdRcd = false,fnStartRct = f
 	//  10分钟,停一下，并上传，然后重新开始
 	g_nTmxx9 = setTimeout(() =>{
 		if (recorder) recorder.stopRecording(function () {
-			try {
-				recorder.getDataURL(function (videoDataURL) {
-					videoDataURL = String(videoDataURL);
-					setTimeout(function () {CrtDldA(videoDataURL);},16);
-					signaling_socket.emit('saveVideo', { type:  'video/webm',"videoDataURL": videoDataURL});
-				});
-			} catch (e) {
-				alert(e)
+			// 开启人脸识别的情况，只在检测到人时保存
+			if($("#eAi").attr("checked") && !g_bWarn);else{
+				try {
+					recorder.getDataURL(function (videoDataURL) {
+						videoDataURL = String(videoDataURL);
+						setTimeout(function () {CrtDldA(videoDataURL);},16);
+						signaling_socket.emit('saveVideo', { type:  'video/webm',"videoDataURL": videoDataURL});
+					});
+				} catch (e) {
+					alert(e)
+				}
 			}
 			nT090 = setTimeout(function () {
 				if (!g_bStopVd) bIsRvdRcd = false,fnStartRct();
