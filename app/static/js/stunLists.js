@@ -5,10 +5,11 @@ var ICE_SERVERS = [
     "username": "e2eu",
 },
 {
-    "urls": "turn:144.202.116.91",
+    "urls": "turn:turn.example.com:3478",
     "credential": "REDACTED_TURN_CREDENTIAL",
     "username": "e2eu",
 },
+
 // {"urls":"stun:stun.miwifi.com:3478"},
 // {"urls":"stun:stun.pjsip.org:3478"},
 {"urls":"stun:stun3.l.google.com:19302"},
@@ -19,6 +20,11 @@ var ICE_SERVERS = [
 // {"urls":"stun:stun.sonetel.net:3478"},
 // {"urls":"stun:stun.voip.aebc.com:3478"},
 {"urls":"stun:stun1.l.google.com:19302"},
+{
+    "urls": "turn:144.202.116.91:3478",
+    "credential": "REDACTED_TURN_CREDENTIAL",
+    "username": "e2eu",
+},
 // {"urls":"stun:stun.freeswitch.org:3478"},
 // {"urls":"stun:stun.tng.de:3478"},
 // {"urls":"stun:stun.hosteurope.de:3478"},
