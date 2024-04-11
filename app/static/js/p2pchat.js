@@ -1239,8 +1239,9 @@ function setup_local_media (callback, errorback) {
 		// echoCancellation: {exact: false},
 		// fix chrome 不支持facingMode
 		appSet();
-		window._xxgetUserMedia = window._xxgetUserMedia || navigator.mediaDevices && navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-		window._xxgetUserMedia(g_Constraints).then((stream) => {
+		window["_xxgetUserMedia"] = window["_xxgetUserMedia"] || navigator.mediaDevices && navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+		
+		let fnThen=(stream) => {
 			navigator.mediaDevices.getUserMedia = function(o,cbk){
 				try{
 					if(cbk)cbk(stream);
@@ -1254,6 +1255,7 @@ function setup_local_media (callback, errorback) {
 			window.webcam = local_media = fnCreateVid(bNbg,"webcam");
 			window.webcam.srcObject = stream;
 			localVvId = local_media.id
+			
 			fnAddTmGps();
 			// hidden me、self
 			var oXv = $("#Pmt" + local_media.id),oCps = $("div.compass-circle");
@@ -1268,13 +1270,19 @@ function setup_local_media (callback, errorback) {
 			// attachMediaStream(local_media, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
 			if (callback) callback();
-			return navigator.mediaDevices.enumerateDevices();
-		}).then(gotDevices).catch((e) => {
-			// console.log(e)
-			fnMyLogs(e);
-			fnMyLogs2("This site will not work without camera/microphone access.");
-			if (errorback) errorback();
-		});
+			return navigator.mediaDevices.enumerateDevices()
+		};
+		if(document.getElementById("rScreen").checked && (navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia||navigator.getDisplayMedia)){
+			g_Constraints={video: {frame_rate:15,cursor:"always",display_surface:"monitor",logical_surface:true,width:screen.width,height:screen.height}};
+			navigator.mediaDevices.getDisplayMedia(g_Constraints).then(fnThen)
+		}else{
+			window["_xxgetUserMedia"](g_Constraints).then(fnThen).then(gotDevices).catch((e) => {
+				// console.log(e)
+				fnMyLogs(e);
+				fnMyLogs2("This site will not work without camera/microphone access.");
+				if (errorback) errorback();
+			});
+		}
 	} catch (e) { fnMyLogs(e) }
 	if (callback) callback()
 }
