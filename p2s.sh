@@ -17,6 +17,7 @@ rcp app/static/plyr.svg /root/${xxx}/app/static/
 rcp app/static/js/pmap.json /root/${xxx}/app/static/js/
 rcp app/static/index.html /root/${xxx}/app/static/
 rcp app/static/js.js /root/${xxx}/app/static/
+rcp app/static/js/p2pchat.js /root/${xxx}/app/static/js/
 rcp app/static/css.css /root/${xxx}/app/static/
 rcp app/static/v8.js /root/${xxx}/app/static/
 
