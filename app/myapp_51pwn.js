@@ -221,6 +221,7 @@ function myapp(option)
                 "'unsafe-inline'",
                 "'unsafe-eval'",
                 "blob:", // 允许加载 blob：URL
+                "https://static.cloudflareinsights.com/*"
             ],
             scriptSrcElem: "*"
         },
