@@ -289,9 +289,10 @@ function myapp(option)
 [ '11', '/js/stunLists.js' ]
 [ '12', '/js/p2pfs.js' ]
 [ '13', '/js/html2canvas.min.js' ]
+[ '14', '/js/face-api.min.js' ]
 
         */
-        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/crypto-js.min.js,/js/fix.js,/js/tfjs.js,/js/webtorrent.min.js,/js/stunLists.js,/js/p2pfs.js,/js/html2canvas.min.js".split(",");
+        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/crypto-js.min.js,/js/fix.js,/js/tfjs.js,/js/webtorrent.min.js,/js/stunLists.js,/js/p2pfs.js,/js/html2canvas.min.js,/js/face-api.js".split(",");
         // for(var k in aj){
         //     console.log([k,aj[k]])
         // }
@@ -379,11 +380,12 @@ function myapp(option)
         
         if(!ss){
             ss=fs.readFileSync(szFl);
-            if(/\.js$/g.test(szFl)){
-                if(/sw\.js$/g.test(szFl)){
-                    ss = await mergeRes.HxJs1(ss.toString("utf-8"));
-                }else if(/i\.js$/g.test(szFl))ss = await mergeRes.HxJs(ss.toString("utf-8"));
-            }
+            // if(/\.js$/g.test(szFl)){
+            //     if(/sw\.js$/g.test(szFl)){
+            //         ss = await mergeRes.HxJs1(ss.toString("utf-8"));
+            //     }else if(/i\.js$/g.test(szFl))ss = await mergeRes.HxJs(ss.toString("utf-8"));
+            // }
+            ss = ss.toString("utf-8");
         }
         oHtmlCc[szFl] = ss;
         // var ss = fs.createReadStream(szFl,{autoClose:true});

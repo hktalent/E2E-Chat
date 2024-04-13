@@ -60,8 +60,29 @@ var oStreamTrack = null, // run ai
 	szgetYourInfo = '',
 	maxSendSize = 65535,// 64k
 	b_clickJoin = !!0,
+	faceMatcher,
 	sendChannel = null, nCnt = 1;
 
+// 加载人脸特征
+function LoadFaceDb(a){
+	var a1 = [];
+	for(var i = 0; i < a.length; i++){
+		var o1 = a[i];
+		a1.push(new faceapi.LabeledFaceDescriptors(o1.label, o1.descriptors.map(i=>new Float32Array(i))));
+	}
+	faceMatcher=new faceapi.FaceMatcher(a1, 0.6);
+}
+var initFaceCbk=null,bInitFace = !!0;
+function initFace(cbk){
+	if(bInitFace)return;
+	cbk=cbk||initFaceCbk||function(){};
+	Promise.all([
+		faceapi.nets.tinyFaceDetector.loadFromUri('model/face'),
+		faceapi.nets.faceLandmark68Net.loadFromUri('model/face'),
+		faceapi.nets.faceRecognitionNet.loadFromUri('model/face')
+	]).then(cbk);
+	bInitFace = true;
+}
 // 当前时间
 function getNowStr() {
 	var now = new Date();
@@ -1252,8 +1273,32 @@ function setup_local_media (callback, errorback) {
 			// ChangeSound(stream)
 			window.stream = stream;
 			local_media_stream = stream;
-			window.webcam = local_media = fnCreateVid(bNbg,"webcam");
-			window.webcam.srcObject = stream;
+			let szVideoId = "webcam";
+			local_media = fnCreateVid(bNbg,szVideoId);
+			window.webcam = local_media;
+			local_media.srcObject = stream;
+			initFaceCbk = ()=>{// https://justadudewhohacks.github.io/face-api.js/docs/index.html
+				local_media.addEventListener('play', () => {
+					// 人脸识别
+					let n42 = setInterval(async () => {
+						try{
+							let a11 = faceapi.detectAllFaces(window.webcam, new faceapi.TinyFaceDetectorOptions());
+							if(a11){
+								const detections = await a11.withFaceLandmarks().withFaceDescriptors();
+								detections.forEach((fd) => {
+									console.log(fd.descriptor);
+									if(faceMatcher){
+										const bestMatch = faceMatcher.findBestMatch(fd.descriptor);
+										if (typeof bestMatch === 'object') console.log(`识别结果：${bestMatch.label}`);
+									}
+								});
+							}
+						}catch(e){clearInterval(n42)}
+					}, 1000/20);
+				});	
+			};
+			if($("#eFace")[0].checked)initFace(initFaceCbk);
+			
 			localVvId = local_media.id
 			
 			fnAddTmGps();
@@ -1867,6 +1912,9 @@ $(document).ready(function(){
 		ldai();
 	});
 	var bELpos,bposInit = false;
+	$("#eFace").change(function(){
+		if(this.checked)initFace();
+	});
 	$("#eLpos").change(function(){
 		if(this.checked){
 			if(!bposInit)bposInit=true,$("body").append(`<div class=compass><div class=arrow></div><div class=compass-circle></div><div class=my-point></div></div>`);
@@ -1889,7 +1937,6 @@ $(document).ready(function(){
 		window.bEabOcr = this.checked;
 		ldai(true);
 	});
-
 	szLstChannel = getRoomName();
 	oNick = $("#nick");
 	oNick.val(szCltFg);
