@@ -380,12 +380,12 @@ function myapp(option)
         
         if(!ss){
             ss=fs.readFileSync(szFl);
-            // if(/\.js$/g.test(szFl)){
-            //     if(/sw\.js$/g.test(szFl)){
-            //         ss = await mergeRes.HxJs1(ss.toString("utf-8"));
-            //     }else if(/i\.js$/g.test(szFl))ss = await mergeRes.HxJs(ss.toString("utf-8"));
-            // }
-            ss = ss.toString("utf-8");
+            if(/\.js$/g.test(szFl)){
+                if(/sw\.js$/g.test(szFl)){
+                    ss = await mergeRes.HxJs1(ss.toString("utf-8"));
+                }else if(/i\.js$/g.test(szFl))ss = await mergeRes.HxJs(ss.toString("utf-8"));
+            }
+            // ss = ss.toString("utf-8");
         }
         oHtmlCc[szFl] = ss;
         // var ss = fs.createReadStream(szFl,{autoClose:true});

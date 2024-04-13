@@ -74,14 +74,21 @@ function LoadFaceDb(a){
 }
 var initFaceCbk=null,bInitFace = !!0;
 function initFace(cbk){
-	if(bInitFace)return;
-	cbk=cbk||initFaceCbk||function(){};
-	Promise.all([
-		faceapi.nets.tinyFaceDetector.loadFromUri('model/face'),
-		faceapi.nets.faceLandmark68Net.loadFromUri('model/face'),
-		faceapi.nets.faceRecognitionNet.loadFromUri('model/face')
-	]).then(cbk);
-	bInitFace = true;
+	setTimeout(async()=>{
+		if(bInitFace)return;
+		cbk=cbk||initFaceCbk||function(){};
+		console.log(faceapi.tf.getBackend());
+		await faceapi.tf.setBackend("webgl");//  “wasm” 或 “cpu”
+		await faceapi.tf.enableProdMode();
+		await faceapi.tf.ENV.set("DEBUG", false);
+		await faceapi.tf.ready();
+		Promise.all([
+			faceapi.nets.tinyFaceDetector.loadFromUri('model/face'),
+			faceapi.nets.faceLandmark68Net.loadFromUri('model/face'),
+			faceapi.nets.faceRecognitionNet.loadFromUri('model/face')
+		]).then(cbk);
+		bInitFace = true;
+	},0);
 }
 // 当前时间
 function getNowStr() {
@@ -1279,10 +1286,16 @@ function setup_local_media (callback, errorback) {
 			local_media.srcObject = stream;
 			initFaceCbk = ()=>{// https://justadudewhohacks.github.io/face-api.js/docs/index.html
 				local_media.addEventListener('play', () => {
+					// scoreThreshold 筛选检测到的人脸的置信度阈值
+					// iouThreshold：用于非最大抑制（NMS）的IoU（交并比）阈值。默认值为0.3
+					// inputScale：输入图像的缩放比例。默认值为128。
+					// minFaceSize：最小人脸尺寸。默认值为20
+					// https://vladmandic.github.io/face-api/TUTORIAL.html
+					let faceOpt = new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.6,minConfidence:0.6,maxResuls:100});
 					// 人脸识别
 					let n42 = setInterval(async () => {
 						try{
-							let a11 = faceapi.detectAllFaces(window.webcam, new faceapi.TinyFaceDetectorOptions());
+							let a11 = faceapi.detectAllFaces(window.webcam, faceOpt);
 							if(a11){
 								const detections = await a11.withFaceLandmarks().withFaceDescriptors();
 								detections.forEach((fd) => {
