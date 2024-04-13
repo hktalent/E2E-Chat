@@ -37,7 +37,9 @@ var fs = require('fs'),
     credentials = {};
 
 // fix: UnhandledPromiseRejectionWarning: Error: The client is closed  Commander._RedisClient_sendCommand (node_modules/@node-redis/client/dist/lib/client/index.js:387:31)
-const pubClient = createClient({ url: "redis://localhost:6379" });
+const pubClient = createClient({ url: "redis://localhost:6379" ,socket:{
+    connectTimeout: 10000 // 设置连接超时为 10 秒
+}});
 (async () => {
     pubClient.on('error', (err) => console.log('Redis Client Error', err));
     await pubClient.connect();
@@ -534,7 +536,7 @@ function myapp(option)
 
     // 100M
     var server = null,nMxsize = 100 * 1024 * 1024,oSvOpt = {maxHttpBufferSize:nMxsize};
-
+    // spdy=require('http2');
     if(bUseHttps)server = spdy.createServer(credentials,app,oSvOpt);// require('https').createServer(credentials,app);
     else server = require('http').createServer(app,oSvOpt);
     server.on('stream', (stream, reqHeaders) => {

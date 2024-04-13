@@ -1293,7 +1293,7 @@ var captureImage = (v,w) =>{
 	c.height = v.videoHeight * w;
 	c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
 	// 图片品质为0.6
-	var s = c.toDataURL('image/webp', 1);
+	var s = c.toDataURL('image/jpeg', 1);
 	// var img = document.createElement("img");img.src = szImgData;
 	return s;
 };
