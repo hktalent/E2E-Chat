@@ -72,11 +72,11 @@ function LoadFaceDb(a){
 	}
 	faceMatcher=new faceapi.FaceMatcher(a1, 0.6);
 }
-var initFaceCbk=null,bInitFace = !!0;
+var bInitFace = !!0;
 function initFace(cbk){
 	setTimeout(async ()=>{
 		if(bInitFace)return;
-		cbk=cbk||initFaceCbk||function(){};
+		cbk=cbk||function(){};
 		console.log(faceapi.tf.getBackend());
 		await faceapi.tf.setBackend("webgl");//  “wasm” 或 “cpu”
 		await faceapi.tf.enableProdMode();
@@ -1291,14 +1291,14 @@ function setup_local_media (callback, errorback) {
 			local_media = fnCreateVid(bNbg,szVideoId);
 			window.webcam = local_media;
 			local_media.srcObject = stream;
-			initFaceCbk = ()=>{// https://justadudewhohacks.github.io/face-api.js/docs/index.html
+			const initFaceCbk = ()=>{// https://justadudewhohacks.github.io/face-api.js/docs/index.html
+				// scoreThreshold 筛选检测到的人脸的置信度阈值
+				// iouThreshold：用于非最大抑制（NMS）的IoU（交并比）阈值。默认值为0.3
+				// inputScale：输入图像的缩放比例。默认值为128。
+				// minFaceSize：最小人脸尺寸。默认值为20
+				// https://vladmandic.github.io/face-api/TUTORIAL.html
+				const faceOpt = new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.6,minConfidence:0.6,maxResults:100});
 				local_media.addEventListener('play', async () => {
-					// scoreThreshold 筛选检测到的人脸的置信度阈值
-					// iouThreshold：用于非最大抑制（NMS）的IoU（交并比）阈值。默认值为0.3
-					// inputScale：输入图像的缩放比例。默认值为128。
-					// minFaceSize：最小人脸尺寸。默认值为20
-					// https://vladmandic.github.io/face-api/TUTORIAL.html
-					const faceOpt = new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.6,minConfidence:0.6,maxResults:100});
 					// 人脸识别
 					const n42 = setInterval(async () => {
 						try{
