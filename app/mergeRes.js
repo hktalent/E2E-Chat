@@ -10,6 +10,7 @@ var fs = require('fs'),
     useCc =  true;
 
 if(process.env['DEBUG'])useCc = false;
+console.log(["debug",process.env['DEBUG'],"useCc",useCc])
 function fnWc () {
     var a = [szPath, szPathC];
     for (var i = 0; i < a.length; i++)
@@ -205,7 +206,9 @@ async function fnMerg (s, t) {
         fs.writeFileSync(szXf,g_cache[s]);
         if("js" == t)console.log("加密js已经初始化完毕 " + szXf)
     }
-    return g_cache[s];
+    const k1 = g_cache[s];
+    if(!useCc)g_cache[s] = null;
+    return k1;
 }
 
 if(bIsMacOsSelf){// 启动时预处理，提高速度
