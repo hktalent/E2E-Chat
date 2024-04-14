@@ -74,7 +74,7 @@ function LoadFaceDb(a){
 }
 var initFaceCbk=null,bInitFace = !!0;
 function initFace(cbk){
-	setTimeout(async()=>{
+	setTimeout(async ()=>{
 		if(bInitFace)return;
 		cbk=cbk||initFaceCbk||function(){};
 		console.log(faceapi.tf.getBackend());
@@ -82,10 +82,17 @@ function initFace(cbk){
 		await faceapi.tf.enableProdMode();
 		await faceapi.tf.ENV.set("DEBUG", false);
 		await faceapi.tf.ready();
+		const mdP = '/model/face/';
+
 		Promise.all([
-			faceapi.nets.tinyFaceDetector.loadFromUri('model/face'),
-			faceapi.nets.faceLandmark68Net.loadFromUri('model/face'),
-			faceapi.nets.faceRecognitionNet.loadFromUri('model/face')
+			faceapi.nets.ssdMobilenetv1.loadFromUri(mdP),
+			faceapi.nets.mtcnn.loadFromUri(mdP),
+			faceapi.nets.faceExpressionNet.loadFromUri(mdP),
+			faceapi.nets.ageGenderNet.loadFromUri(mdP),
+			faceapi.nets.tinyFaceDetector.loadFromUri(mdP),
+			faceapi.nets.faceLandmark68Net.loadFromUri(mdP),
+			faceapi.nets.faceLandmark68TinyNet.loadFromUri(mdP),
+			faceapi.nets.faceRecognitionNet.loadFromUri(mdP)
 		]).then(cbk);
 		bInitFace = true;
 	},0);
@@ -1285,27 +1292,26 @@ function setup_local_media (callback, errorback) {
 			window.webcam = local_media;
 			local_media.srcObject = stream;
 			initFaceCbk = ()=>{// https://justadudewhohacks.github.io/face-api.js/docs/index.html
-				local_media.addEventListener('play', () => {
+				local_media.addEventListener('play', async () => {
 					// scoreThreshold 筛选检测到的人脸的置信度阈值
 					// iouThreshold：用于非最大抑制（NMS）的IoU（交并比）阈值。默认值为0.3
 					// inputScale：输入图像的缩放比例。默认值为128。
 					// minFaceSize：最小人脸尺寸。默认值为20
 					// https://vladmandic.github.io/face-api/TUTORIAL.html
-					let faceOpt = new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.6,minConfidence:0.6,maxResuls:100});
+					const faceOpt = new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.6,minConfidence:0.6,maxResults:100});
 					// 人脸识别
-					let n42 = setInterval(async () => {
+					const n42 = setInterval(async () => {
 						try{
-							let a11 = faceapi.detectAllFaces(window.webcam, faceOpt);
-							if(a11){
-								const detections = await a11.withFaceLandmarks().withFaceDescriptors();
-								detections.forEach((fd) => {
-									console.log(fd.descriptor);
-									if(faceMatcher){
-										const bestMatch = faceMatcher.findBestMatch(fd.descriptor);
-										if (typeof bestMatch === 'object') console.log(`识别结果：${bestMatch.label}`);
-									}
-								});
-							}
+							// withFaceLandmarks 是必须的，否则会报错
+							const detections = await faceapi.detectAllFaces(window.webcam, faceOpt).withFaceLandmarks().withFaceDescriptors();
+							if(detections&&detections.length>0)
+							detections.forEach((fd) => {
+								console.log(fd.descriptor);
+								if(faceMatcher){
+									const bestMatch = faceMatcher.findBestMatch(fd.descriptor);
+									if (typeof bestMatch === 'object') console.log(`识别结果：${bestMatch.label}`);
+								}
+							});
 						}catch(e){clearInterval(n42)}
 					}, 1000/20);
 				});	
@@ -1521,7 +1527,7 @@ const qrS =(I)=>{
 function ldai(){
 	if(g_bTxtChat)return;
 	// ");// Is('/v8.js');//
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,Is('/v8.js');//$("body").append("<script src='/v8.js'></scr"+"ipt>");//<script src=/js/face-api.min.js></script>"),initFc();
+	if(window.bEaV8 && !window.v8Load)window.v8Load = true,Is('/v8.js');//<script src=/js/face-api.min.js></script>"),initFc();
 	// if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -1925,9 +1931,9 @@ $(document).ready(function(){
 		ldai();
 	});
 	var bELpos,bposInit = false;
-	$("#eFace").change(function(){
-		if(this.checked)initFace();
-	});
+	// $("#eFace").change(function(){
+	// 	if(this.checked)initFace();
+	// });
 	$("#eLpos").change(function(){
 		if(this.checked){
 			if(!bposInit)bposInit=true,$("body").append(`<div class=compass><div class=arrow></div><div class=compass-circle></div><div class=my-point></div></div>`);
