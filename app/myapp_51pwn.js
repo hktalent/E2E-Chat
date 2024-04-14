@@ -349,7 +349,7 @@ function myapp(option)
             var szEn = String(res.getHeader("accept-language") || ""),szFn = "/index.html";
             if(0 == szEn.indexOf("en"))szFn = "/index_en.html";
             html = oHtmlCc[szFn] || minify(fs.readFileSync("static" + szFn).toString("utf-8"), mOpt);
-            oHtmlCc[szFn] = html;
+            if(!process.env['DEBUG'])oHtmlCc[szFn] = html;
             // 创建一个 MD5 哈希对象
             // const hash = crypto.createHash("md5");
             // hash.update(html);
@@ -387,7 +387,7 @@ function myapp(option)
             }
             // ss = ss.toString("utf-8");
         }
-        oHtmlCc[szFl] = ss;
+        if(!process.env['DEBUG'])oHtmlCc[szFl] = ss;
         // var ss = fs.createReadStream(szFl,{autoClose:true});
         // console.log(szFl)
         // if(bZip)ss = ss.pipe(zlib.createGzip())
