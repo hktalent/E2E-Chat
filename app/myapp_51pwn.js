@@ -58,8 +58,6 @@ function myapp(option)
     var key = option.caKey || szCurPath + '/../ca/domain.key',
         cert = option.caCert || szCurPath + '/../ca/chained.pem';
     bUseHttps = option.useHttps || false;
-
-    wtHosts = option.wtHosts || ["127.0.0.1"];
     if(option.useHttps && fs.existsSync(key) && fs.existsSync(cert))
     {
         if(bUseHttps == true)
@@ -149,32 +147,14 @@ function myapp(option)
     }));
     app.use(function(req, res, next){
         res.setHeader("Alt-Svc", 'h3=":'+option.port+'"; ma=2592000');
-        /* 推荐的写法
-    摄像头 - camera
-    麦克风 - microphone
-    地理位置 - geolocation
-    陀螺仪 - gyroscope
-
-    () - 表示不允许,禁止访问该权限
-    self - 表示仅允许同源使用
-    * 表示允许任意来源使用
-        */
         res.setHeader("Permissions-Policy", 'camera=*, microphone=*, geolocation=*,gyroscope=*');
         next();
     });
     
-    
-    // cache静态资源等时间，这个对性能影响很大，缓冲客户端后，在设置等时间范围内、刷新不再请求
-    // Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+
     expressOptions.maxAge = (7*24*60*60) + 's';//'31536000s';//'3600s';
     var reRes = /(?:\/(js|css|model)\/(.*)$)|(\/tagmgmt\/bs\.js$)|(\.mp3$)/,g_oPmap;
-    // app.get(/\/tagmgmt\/bs\.js$/,function(req,res,next){
-    //     console.log([req.path,req.headers])
-    //     res.setHeader("Content-Type","application/javascript");
-    //     res.end("alert(333)")
-    //     console.log("xxxxx")
-    //     return
-    // })
+    
     app.get("/tfjs-backend-wasm-simd.wasm",function(req,res,next){
         res.setHeader("Content-Type","application/wasm");
         // console.log(szSSP+"model/tfjs-backend-wasm-simd.wasm")
@@ -258,24 +238,13 @@ function myapp(option)
             if(0 == szEn.indexOf("en"))szFn = "/index_en.html";
             html = oHtmlCc[szFn] || minify(fs.readFileSync("static" + szFn).toString("utf-8"), mOpt);
             if(!process.env['DEBUG'])oHtmlCc[szFn] = html;
-            // 创建一个 MD5 哈希对象
-            // const hash = crypto.createHash("md5");
-            // hash.update(html);
-            // res.setHeader("Content-MD5",crypto.digest("md5", hash.digest()));
+           
             res.send(html);
             return
         }
-        // console.log(szPath,"xxxxx")
         next();
     });
-    // app.use(express.limit('4M')),app.use(express.bodyParser());
-    // app.use(bodyParser.json({limit: '150mb'}));
-    // app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-    //     limit: '150mb',
-    //     extended: true
-    // })); 
-    // app.use(express.json());app.use(express.urlencoded());
-
+   
     async function doZipSFl(szFl,res){
         szFl = szFl.replace(/\/+/g,"/")
         // var szT = mime.lookup(szFl);
@@ -334,22 +303,6 @@ function myapp(option)
     });
     
     app.use(express.static(szSSP, expressOptions));
-    // app.use('/stunLists.js', browserify(['fs',{'./readstunlist.js':{run: true,precompile:true,minify:true,gzip:true,debug:false}}]));
-    // apt-get install coturn
-    // yum install coturn
-    // /etc/turnserver.conf
-    // 需要关闭，否则报错： Refused to execute a script because its hash, its nonce, or 'unsafe-inline' does not appear in the script-src directive of the Content Security Policy.
-    // app.use(function(req, res, next)
-    // {
-    //     // console.log(req.url);
-    //     if(bUseHttps)
-    //     {
-    //         if(!res.locals.nonce)res.locals.nonce = uuid.v4();
-    //     }
-    //     // if(fnCheckUa(req,res))next();// else 
-    //     next();
-    // });
-
     // https://www.npmjs.com/package/express-session
     if(bUseHttps)app.set('trust proxy', 1),fnOnLog("open https SSL");
 
@@ -358,22 +311,6 @@ function myapp(option)
     {
         res.end();
     });
-
-    
-    // app.set('view engine', 'html');
-    // app.engine('html', function(path, options, fn){
-    //     // console.log(options);
-    // 	fs.readFile(path, 'utf8', function(err, str){
-    // 		if (err) return fn(err);
-    // 		str = juicer(str, options);
-    // 		fn(null, str);
-    // 	});
-    // });
-    // app.get('/', function(req, res){
-    //     //try{
-    //         res.sendFile(path.join(path.join(szSSP, 'index.html')));
-    //     //}catch(e){console.log(e)}
-    // });
     
     if(option.cbkApp)option.cbkApp(app);
 
@@ -413,11 +350,6 @@ function myapp(option)
             next();
             return;
         }
-        // if(err)
-        // console.log("destroy: " + req.url)
-        // console.log(req.headers)
-        // req.connection.destroy();
-        // console.log("404: " + req.url)
         next()
     })
     var nPort = option.port || 3000;
