@@ -1397,7 +1397,7 @@ async function getImgFromStream(){
 // 人脸相关处理都注册到这里
 var imgOldCbk = [];
 function videoImgOnload(){
-	imgOldCbk.map(function(fn){
+	imgOldCbk.map((fn)=>{
 		if("function" == typeof fn)try{fn(oImgOcr)}catch(e){log(e)}
 	});
 }
