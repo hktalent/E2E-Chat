@@ -4,6 +4,7 @@ function setNoCache(res) {
   res.setHeader("Expires", date.toUTCString());
   res.setHeader("Pragma", "no-cache");
   res.setHeader("maxAge", "0");
+  res.setHeader("Accept-Ranges", "none");
   // res.setHeader("Cache-Control", "public, no-cache");// 导致sw.js刷新时没有被更新
 }
 var oNow = new Date(),sz1 = oNow.toUTCString();
@@ -12,6 +13,7 @@ function setLongTermCache(res,stat) {
   // res.setHeader("Expires", sz1);
   res.setHeader("Cache-Control", "public, max-age=31536000");
   res.setHeader("Date", sz1);
+  // res.setHeader("Accept-Ranges", "none");
   var szL = sz1;
   if(stat && stat.mtime){
     szL = stat.mtime.toUTCString();

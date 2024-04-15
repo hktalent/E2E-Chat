@@ -14,6 +14,8 @@ function rcp(){
 
 # reset;ssh -i ~/.ssh/id_rsa -C -p ${rport} root@${rip}
 
+ls app/*.js|xargs -I % ./rcp.sh % /root/${xxx}/%
+
 rcp app/static/js/pmap.json /root/${xxx}/app/static/js/
 rcp app/package.json /root/${xxx}/app/
 rcp app/nodemon.json /root/${xxx}/app/

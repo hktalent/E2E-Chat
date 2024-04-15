@@ -918,7 +918,7 @@ function init () {
 				oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 				attachMediaStream(remote_media, event.stream);
 				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0 0 0 0"});
-				if(typeof SaveMp4 == "function"){
+				if(isSvLc()){
 					setTimeout(()=>{
 						fnStartRct(remote_media)
 					},1)
@@ -1218,6 +1218,9 @@ function CrtDldA(s){
 	// 这里应该做一些处理，如果没有发生报警，也就是没有检测到人，就不保存，这样可以节省空间
 	if(!g_bWarn&&a.length > 100)a[0].remove();
 }
+let isSvLc = ()=>{
+	return typeof SaveMp4 == "function"
+}
 // 触发保存
 var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs) {// https://recordrtc.org/
 	var stream = vSs||window.stream||window.webcam||local_media,oC1 = $(stream);
@@ -1229,9 +1232,8 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs) {// h
 		return;
 	}
 	oC1.attr("bIsRvdRcd","true");
-	const isSvLc = typeof SaveMp4 == "function";
 	const szT1 = "video/webm;codecs=vp9";
-	// if(isSvLc)szT1="video/webm;codecs=h264";// Chromium不支持264 video/x-matroska;codecs=avc1 // https://pixelpoint.io/blog/web-optimized-video-ffmpeg/
+	// if(isSvLc())szT1="video/webm;codecs=h264";// Chromium不支持264 video/x-matroska;codecs=avc1 // https://pixelpoint.io/blog/web-optimized-video-ffmpeg/
 	var recorder = RecordRTC(stream||local_media, {
 		type: 'audio+video'// 测评表明 AV1 是最佳的
 		, mimeType: szT1 // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
@@ -1242,7 +1244,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs) {// h
 	});
 	
 	recorder.startRecording();
-	const nT3 = 60 * 1000 *(isSvLc ? 5 : 1);
+	const nT3 = 60 * 1000 *(isSvLc() ? 5 : 1);
 	//  10分钟,停一下，并上传，然后重新开始
 	setTimeout(() =>{
 		if (recorder) recorder.stopRecording(() =>{
@@ -1251,7 +1253,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs) {// h
 				try {
 					recorder.getDataURL(function (videoDataURL) {
 						videoDataURL = String(videoDataURL);
-						if(isSvLc)setTimeout(()=> {SaveMp4(videoDataURL)},0);
+						if(isSvLc())setTimeout(()=> {SaveMp4(videoDataURL)},0);
 						else{
 							setTimeout(()=> {CrtDldA(videoDataURL);},0);
 							signaling_socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
