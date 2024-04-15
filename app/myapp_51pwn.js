@@ -426,4 +426,3 @@ function myapp(option)
 }
 // myapp = Object.setPrototypeOf(myapp,EventEmitter.prototype)
 module.exports = myapp;
-
