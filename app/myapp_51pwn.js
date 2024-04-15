@@ -1,24 +1,18 @@
-process.setMaxListeners(5000);
 var fs = require('fs'),
     os = require('os'),
+    socketIo=new require('socket.io'),
     // crypto = require("crypto"),
-    spdy = require('spdy'),
     // brotli = require('brotli'),
     express = require('express'),
-    destroy = require('destroy'),
-    onFinished = require('on-finished'),
     app = express(),
-    mime = require('mime'),
+    serverRootPath = __dirname + "/",
+    Mime = require(serverRootPath +'Mime'),
     minify = require('html-minifier').minify, 
-    expresslimiter = require('express-limiter'),
     webStaticPath = __dirname + "/static/",
     mergeRes = require('./mergeRes'),
     os = require('os'),
     szCurPath = __dirname + "/",
-    uuid  = require('node-uuid'),
     EventEmitter = require('events').EventEmitter,
-    // juicer = require("juicer"),
-    useragent = require('useragent'),
     // yum install redis;systemctl start redis.service;systemctl status redis.service
     // apt install redis;service redis-server start
     // brew install redis;brew services restart redis
@@ -28,65 +22,9 @@ var fs = require('fs'),
     // session = require('express-session'),
     expressOptions = require('./expressOptions'),
     compression = require('compression'),
-    path = require('path'),
     bUseHttps = true,
-    // 白名单host
-    wtHosts = [],
-    { createClient } = require("redis"),
-    { createAdapter } = require("@socket.io/redis-adapter"),
     credentials = {};
 
-// fix: UnhandledPromiseRejectionWarning: Error: The client is closed  Commander._RedisClient_sendCommand (node_modules/@node-redis/client/dist/lib/client/index.js:387:31)
-const pubClient = createClient({ url: "redis://localhost:6379" ,socket:{
-    connectTimeout: 10000 // 设置连接超时为 10 秒
-}});
-(async () => {
-    pubClient.on('error', (err) => console.log('Redis Client Error', err));
-    await pubClient.connect();
-})();
-
-const subClient = pubClient.duplicate();
-const zlib = require('zlib');
-
-var szCjs = "/js/,.js",szCcss = "/css/,.css";
-
-function closeStream(res, stream){
-    onFinished(res, function () {
-        destroy(stream)
-    });
-}
-
-function doPush(res,urlPath){
-    var szRfp = urlPath;
-    if(szCjs == szRfp)szRfp = "js.js";
-    else if(szCcss == szRfp)szRfp = "css.css";
-    else if("/socket.io/socket.io.js" ==szRfp)szRfp = "/js/socket.io.js";
-    var o = {
-        status: 200,
-        method: 'GET',
-        request: {
-          accept: '*/*'
-        },
-        response: {
-            // 'Content-Encoding': 'gzip',
-            'content-type': mime.lookup(szRfp)
-        }
-    };
-    var stream = res.push(urlPath,o,function(err,ss){
-        if(err){
-            console.log(urlPath," ==> ",err);
-            return;
-        }
-        // chrome Error: PUSH_PROMISE disabled by other side
-        // firfox Error: Got RST: REFUSED_STREAM
-        // if("/js/," == urlPath)console.log(o,err)
-        var ss = fs.createReadStream(webStaticPath + szRfp,{autoClose:true});
-        ss.pipe(zlib.createGzip()).pipe(ss);
-        closeStream(res,ss);
-    });
-    
-    return stream;
-}
 function getNowStr() {
 	var now = new Date();
 	var year = now.getFullYear(),
@@ -131,23 +69,6 @@ function myapp(option)
                 "cert": fs.readFileSync(cert, 'utf8'),
                 minVersion: "TLSv1.2",
                 zlib: true,
-              // **optional** SPDY-specific options
-              spdy: {
-                protocols: ['h2','spdy/3.1', 'spdy/3', 'spdy/2'],
-                plain: false,
-                ssl: true,
-                // **optional**
-                // Parse first incoming X_FORWARDED_FOR frame and put it to the
-                // headers of every request.
-                // NOTE: Use with care! This should not be used without some proxy that
-                // will *always* send X_FORWARDED_FOR
-                'x-forwarded-for': true,
-                connection: {
-                  windowSize: 1024 * 1024, // Server's window size
-                  // **optional** if true - server will send 3.1 frames on 3.0 *plain* spdy
-                  autoSpdy31: false
-                }
-              }
             };
         }
     }
@@ -254,9 +175,13 @@ function myapp(option)
     //     console.log("xxxxx")
     //     return
     // })
-    app.get(reRes,function(req,res,next)
+    app.get("/tfjs-backend-wasm-simd.wasm",function(req,res,next){
+        res.setHeader("Content-Type","application/wasm");
+        // console.log(szSSP+"model/tfjs-backend-wasm-simd.wasm")
+        res.sendFile(szSSP+"model/tfjs-backend-wasm-simd.wasm");
+    })
+    app.get(reRes,async function(req,res,next)
     {
-        // var s11 = mime.lookup(req.path);
         if(req.path.match(/sw\.js$/)){
             expressOptions.setNoCache(res);
             doZipSFl(szSSP + "js/sw.js",res);
@@ -267,9 +192,18 @@ function myapp(option)
             return
         }
         if(req.path.match(/\.mp3$/)){
-            res.setHeader("Content-Type","audio/mp3");
+            // res.setHeader("Content-Type","audio/mp3");
+            res.contentType(Mime.getMime(req.path));
             var s4 = String(szSSP + req.path).replace(/\/+/g,"/");
-            res.sendFile(s4);
+            // console.log(req.path,s4,"ddddd 1");
+            // req.headers["range"]
+            // res.setHeader("Accept-Ranges", "none");
+            // var data = fs.readFileSync(s4);// 大文件处理比较慢
+            // res.end(data);
+            res.sendFile(s4); // 使用 sendFile 会导致 range 多次触发而支持不友好
+            // try{
+            //     throw(new Error("dd"))
+            // }catch(e){console.log(e)}
             // doZipSFl(szSSP + req.path,res);
             return
         }
@@ -320,32 +254,6 @@ function myapp(option)
         szPath = req.path;
         
         if("" == szPath || "/" == szPath || "/index.html" == szPath){
-            // if(String(req.headers["user-agent"]||"").indexOf("Safari") > -1){
-            //     // 静态资源
-            //     var a09 = [ szCjs,
-            //     szCcss,
-            //     "/js/client.min.js",
-            //     "/js/client.min.js.map",
-            //     "/socket.io/socket.io.js",
-            //     "/js/jquery.js",
-            //     "/plyr.svg",
-            //     "/js/sw.js",
-            //     "/js/RecordRTC.min.js",
-            //     "/js/adapter-latest.js",
-            //     "/js/qrcode.min.js",
-            //     "/js/plyr.js",
-            //     "/js/html5-qrcode.min.js",
-            //     "/js/aes.js",
-            //     "/js/fix.js",
-            //     "/js/bundle.js"];
-            //     for(var i = 0; i < a09.length; i++){
-            //         try{
-            //             var szFn = a09[i];
-            //             doPush(res,szFn);
-            //         }catch(e){break;}
-            //     }
-            // }
-
             var szEn = String(res.getHeader("accept-language") || ""),szFn = "/index.html";
             if(0 == szEn.indexOf("en"))szFn = "/index_en.html";
             html = oHtmlCc[szFn] || minify(fs.readFileSync("static" + szFn).toString("utf-8"), mOpt);
@@ -357,6 +265,7 @@ function myapp(option)
             res.send(html);
             return
         }
+        // console.log(szPath,"xxxxx")
         next();
     });
     // app.use(express.limit('4M')),app.use(express.bodyParser());
@@ -369,11 +278,12 @@ function myapp(option)
 
     async function doZipSFl(szFl,res){
         szFl = szFl.replace(/\/+/g,"/")
-        var szT = mime.lookup(szFl);
-        if(/\.mp3$/.test(szFl)){
-            szT = "audio/mp3"
-        }
-        res.setHeader("Content-Type",szT);
+        // var szT = mime.lookup(szFl);
+        // if(/\.mp3$/.test(szFl)){
+        //     szT = "audio/mp3"
+        // }
+        // res.setHeader("Content-Type",szT);
+        res.contentType(Mime.getMime(szFl));
         var bZip = -1 == szFl.indexOf("/model") && -1 == szFl.indexOf(".json")
         // if(bZip)res.setHeader('Content-Encoding', 'gzip');
         var ss = oHtmlCc[szFl];
@@ -388,54 +298,9 @@ function myapp(option)
             // ss = ss.toString("utf-8");
         }
         if(!process.env['DEBUG'])oHtmlCc[szFl] = ss;
-        // var ss = fs.createReadStream(szFl,{autoClose:true});
-        // console.log(szFl)
-        // if(bZip)ss = ss.pipe(zlib.createGzip())
-        // ss.pipe(res);
-        // closeStream(res,ss);
+        // console.log(szFl,ss.length)// 这里 js
         res.end(ss);
         // res.end();
-    }
-    // 检查user-agent，避免工具、攻击，不合法的ua拒绝访问
-    function fnCheckUa(req,res)
-    {
-        // if(true)return true;
-        // console.log(req.headers);
-        // console.log('IP:' + [String(req.connection.remoteAddress),req.headers['user-agent']].join(', '));
-        // 记录访问者信息
-        var obj = {
-            "ip":/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g.exec(String(req.connection.remoteAddress))[1],
-            "user-agent": req.headers['user-agent'],
-            href:req.href
-        };
-        fs.appendFile("db/" + obj.ip,JSON.stringify(obj),function(){});
-        
-        var ua = useragent.is(req.headers['user-agent'] || ""), 
-            bFlg = req.headers['user-agent'] == 'acme-tiny' || ua.opera || ua.webkit || ua.ie || ua.chrome || ua.safari || ua.mobile_safari || ua.firefox || ua.mozilla || ua.android;
-
-        var szOrigin = req.headers['origin'],fnCls=function(szKey){
-            fnOnLog(ua);
-            fnOnLog('close:' + [String(req.connection.remoteAddress),req.headers[szKey]].join(', '));
-            req.connection.destroy();
-            return false;
-        };
-
-        if(szOrigin)
-        {
-            szOrigin=szOrigin.split(/http[s]?:\/\//);
-            if(2 != szOrigin.length)
-                return fnCls('origin');
-            szOrigin = szOrigin[1].split(/[\/:#\?;]/)[0];
-            if(bFlg && !wtHosts.find(function(s0){
-                return s0 == szOrigin;
-            }))return fnCls('origin');
-        }
-        var fnFh = function(h1)
-        {
-            return h1 == req.headers['host'];
-        };
-        if(bFlg && wtHosts.find(fnFh))return true;
-        return fnCls('user-agent');
     }
 
     // 避免js转义
@@ -488,31 +353,6 @@ function myapp(option)
     // https://www.npmjs.com/package/express-session
     if(bUseHttps)app.set('trust proxy', 1),fnOnLog("open https SSL");
 
-    // 并发限制
-    var limiter = expresslimiter(app, pubClient);
-    limiter({
-        path: '*',// "post"
-        method: 'all',
-        lookup: ['connection.remoteAddress'],
-        // 本机访问不受并发限制
-        whitelist:function (req) 
-        {
-            var eRg = /^(127\.0\.0\.1|192\.168\.|localhost|172\.17\.0\.[1-10]).*/g,s = String(req.connection.remoteAddress),
-                eGetIp = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gmi;
-            s = eGetIp.exec(s) || '';
-            if(s)s = s[1];
-            return !!eRg.exec(s);
-        },
-        onRateLimited: function (req, res, next)
-        {
-            req.connection.destroy();
-            // next({ message: '客户端1分钟内只允许并发连接' + nMaxConn, status: nCd });// 429
-        },
-        // 150 requests per hour
-        total: nMaxConn,
-        skipHeaders: false,
-        expire: 1000 * 60 * 60
-    });
     // Content-Type: application/csp-report
     app.post("/rptv",function(req,res)
     {
@@ -539,8 +379,9 @@ function myapp(option)
 
     // 100M
     var server = null,nMxsize = 100 * 1024 * 1024,oSvOpt = {maxHttpBufferSize:nMxsize};
-    // spdy=require('http2');
-    if(bUseHttps)server = spdy.createServer(credentials,app,oSvOpt);// require('https').createServer(credentials,app);
+    if(bUseHttps){
+        server = require('https').createServer(credentials,app);
+    }
     else server = require('http').createServer(app,oSvOpt);
     server.on('stream', (stream, reqHeaders) => {
         if(reqHeaders[http2.constants.HTTP2_HEADER_PATH]) {
@@ -549,62 +390,17 @@ function myapp(option)
         }
       });
     // 不能加，否则rdp不正常：, { serveClient: false }
-    var io = new require('socket.io')(server, {
+    var io = socketIo(server, {
         // path:'/x',// 如果设置了需要修改相关静态的路径
         secure: bUseHttps,
         autoConnect:true,
         maxHttpBufferSize: 1e8// 100M
     });
-    // https://github.com/muaz-khan/WebRTC-Experiment/blob/master/socketio-over-nodejs/signaler.js
-    // 不能加下面代码，否则报错
-    // io.set('transports', [
-    // // 'websocket',
-    // 'xhr-polling',
-    // 'jsonp-polling'
-    // ]);
+    
 
-    // 集群下用同一个redis
-        io.adapter(createAdapter(pubClient, subClient));
-    // }catch(e){
-    //     io.adapter(redisAdapter({ host: 'docker.for.mac.localhost', port: 6379 }));
-    // }
-
-
-    var szSsh = [],aSsh = {},oNoRpt = {};
-    var fnGetSsh = function(k)
-    {
-        pubClient.get(k,function(e,r)
-        {
-            r = JSON.parse(r);
-            szSsh.push(r.id);
-            var szK = [r.host,r.port,r.username].join("_");
-            if(oNoRpt[szK])
-            {
-                console.log("del :");
-                // console.log(r);
-                pubClient.del(r.id,function(e,r1)
-                {
-                    // console.log(r1);
-                });
-                return;
-            }
-            else aSsh[r.id] = r;
-            oNoRpt[szK] = r;
-        });
-    }
+    var aSsh = {},oNoRpt = {};
     global.aSsh = aSsh;
     global.oNoRpt = oNoRpt;
-    pubClient.keys('*', function (err, keys)
-    {
-        if (err) return console.log(err);
-        for(var i = 0, len = keys.length; i < len; i++)
-        {
-            if(0 == keys[i].indexOf("ssh"))
-            {
-                fnGetSsh(keys[i]);
-            }
-        }
-    });
 
     //*/ 实际上这里等数据只发送当前连接等客户端一次，因此是可以直接关闭等
     if(option.cbk4ServerAppIo)option.cbk4ServerAppIo(server,app,io);
@@ -621,6 +417,7 @@ function myapp(option)
         // console.log("destroy: " + req.url)
         // console.log(req.headers)
         // req.connection.destroy();
+        // console.log("404: " + req.url)
         next()
     })
     var nPort = option.port || 3000;
