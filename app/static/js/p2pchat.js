@@ -896,7 +896,7 @@ function init () {
 				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0 0 0 0"});
 				if(isSvLc()){
 					setTimeout(()=>{
-						fnStartRct(remote_media)
+						fnStartRct(remote_media,1)
 					},1)
 				}
 			} catch (e) { 
@@ -1199,7 +1199,7 @@ let isSvLc = ()=>{
 	return typeof SaveMp4 == "function"
 }
 // 触发保存
-var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs) {// https://recordrtc.org/
+var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT) {// https://recordrtc.org/
 	var stream = vSs||window.stream||window.webcam||local_media,oC1 = $(stream);
 	if(!stream){
 		setTimeout(()=>{fnStartRct(vSs)},1);
@@ -1221,7 +1221,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs) {// h
 	});
 	
 	recorder.startRecording();
-	const nT3 = 60 * 1000 *(isSvLc() ? 5 : 1);
+	const nT3 = 60 * 1000 * (nT||(isSvLc() ? 5 : 1));
 	//  10分钟,停一下，并上传，然后重新开始
 	setTimeout(() =>{
 		if (recorder) recorder.stopRecording(() =>{
