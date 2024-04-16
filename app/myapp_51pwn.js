@@ -275,6 +275,7 @@ fix.js`).split("\n")
             if(0 == szEn.indexOf("en"))szFn = "/index_en.html";
             html = oHtmlCc[szFn] || minify(fs.readFileSync("static" + szFn).toString("utf-8"), mOpt);
             if(!process.env['DEBUG'])oHtmlCc[szFn] = html;
+            // console.log(szFn)
             res.send(html);
             return
         }
@@ -282,7 +283,7 @@ fix.js`).split("\n")
     });
    
     async function doZipSFl(szFl,res){
-        szFl = szFl.replace(/\/+/g,"/")
+        szFl = szFl.replace(/\/+/g,"/");
         // var szT = mime.lookup(szFl);
         // if(/\.mp3$/.test(szFl)){
         //     szT = "audio/mp3"
@@ -304,6 +305,7 @@ fix.js`).split("\n")
         }
         if(!process.env['DEBUG'])oHtmlCc[szFl] = ss;
         // console.log(szFl,ss.length)// 这里 js
+        // console.log(szFl)
         res.end(ss);
         // res.end();
     }
