@@ -894,9 +894,10 @@ function init () {
 				oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 				attachMediaStream(remote_media, event.stream);
 				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0 0 0 0"});
+				
 				if(isSvLc()){
-					setTimeout(()=>{
-						fnStartRct(remote_media,1)
+					setTimeout(async()=>{
+						fnStartRct(remote_media,1);
 					},1)
 				}
 			} catch (e) { 
@@ -1202,16 +1203,18 @@ let isSvLc = ()=>{
 var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT) {// https://recordrtc.org/
 	var stream = vSs||window.stream||window.webcam||local_media,oC1 = $(stream);
 	if(!stream){
-		setTimeout(()=>{fnStartRct(vSs)},1);
+		setTimeout(()=>{fnStartRct(vSs,nT)},1);
 		return;
 	}
+	if(nT)alert(["bIsRvdRcd start",nT])
 	if("true"==oC1.attr("bIsRvdRcd")){
 		return;
 	}
+	if(nT)alert(["bIsRvdRcd in",nT])
 	oC1.attr("bIsRvdRcd","true");
 	const szT1 = "video/webm;codecs=vp9";
 	// if(isSvLc())szT1="video/webm;codecs=h264";// Chromium不支持264 video/x-matroska;codecs=avc1 // https://pixelpoint.io/blog/web-optimized-video-ffmpeg/
-	var recorder = RecordRTC(stream||local_media, {
+	var recorder = RecordRTC(stream, {
 		type: 'audio+video'// 测评表明 AV1 是最佳的
 		, mimeType: szT1 // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
 		,audioBitsPerSecond: 128000,
@@ -1221,27 +1224,29 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT) {/
 	});
 	
 	recorder.startRecording();
+	if(nT)alert(["startRecording in",nT,!!recorder])
 	const nT3 = 60 * 1000 * (nT||(isSvLc() ? 5 : 1));
 	//  10分钟,停一下，并上传，然后重新开始
-	setTimeout(() =>{
-		if (recorder) recorder.stopRecording(() =>{
+	setTimeout(async() =>{
+		if (recorder) recorder.stopRecording(async() =>{
 			// 开启人脸识别的情况，只在检测到人时保存
 			if($("#eAi").attr("checked") && !g_bWarn);else{
 				try {
-					recorder.getDataURL(function (videoDataURL) {
+					recorder.getDataURL(async (videoDataURL) =>{
 						videoDataURL = String(videoDataURL);
-						if(isSvLc())setTimeout(()=> {SaveMp4(videoDataURL)},0);
+						if(isSvLc())setTimeout(async()=> {SaveMp4(videoDataURL)},0);
 						else{
-							setTimeout(()=> {CrtDldA(videoDataURL);},0);
+							setTimeout(async()=> {CrtDldA(videoDataURL);},0);
 							socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
 						}
+						if(nT)alert("save other ok")
 					});
 				} catch (e) {
 					console.log(e)
 				}
 			}
-			setTimeout(() =>{
-				if (!g_bStopVd) oC1.attr("bIsRvdRcd","false"),fnStartRct(vSs);
+			setTimeout(async() =>{
+				if (!g_bStopVd) oC1.attr("bIsRvdRcd","false"),fnStartRct(vSs,nT);
 			}, 0);
 		});
 	}, nT3);
@@ -1265,7 +1270,7 @@ function setup_local_media (callback, errorback) {
 		appSet();
 		window["_xxgetUserMedia"] = window["_xxgetUserMedia"] || navigator.mediaDevices && navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 		
-		let fnThen=(stream) => {
+		let fnThen=async(stream) => {
 			navigator.mediaDevices.getUserMedia = function(o,cbk){
 				try{
 					if(cbk)cbk(stream);

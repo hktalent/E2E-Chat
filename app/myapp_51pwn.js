@@ -110,7 +110,7 @@ fix.js`).split("\n")
                             fs.readFile(k1,async (err, data) => {
                                 if(err)return;
                                 oHtmlCc[k1] = await mergeRes.HxJs1(data.toString("utf-8"));
-                                console.log("init",k1, new Date().getTime() - n1, "ms");
+                                console.log("init",s, new Date().getTime() - n1, "ms");
                             });
                         }
                     }else if(!oHtmlCc[s]){
