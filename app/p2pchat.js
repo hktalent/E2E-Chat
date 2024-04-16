@@ -17,7 +17,7 @@ cat /etc/turnserver/turnserver.conf |grep -Ev "(^#)|(^$)"
 
 https://gist.github.com/sagivo/3a4b2f2c7ac6e1b5267c2f1f59ac6c6b
 */
-var channels = {},
+var channels = {},// 全局频道
     sockets = {},
     https = require('https'),
     db = new Level('dbChat', { valueEncoding: 'json' }),
@@ -107,6 +107,8 @@ Date.prototype.Format = function (fmt) {
     return fmt;
   };
 var nOnline = 0,szP2f = "p2f.json";
+
+// 分布式文件存储
 var g_oP2f = {};
 if(fs.existsSync(szP2f)){
     g_oP2f = JSON.parse(fs.readFileSync(szP2f).toString('utf-8'));
@@ -199,7 +201,7 @@ function fnInit(io){
     io.on('connection', (socket) => 
 {
     nOnline++;
-    socket.channels = {};
+    socket.channels = {};// 当前频道
     sockets[socket.id] = socket;
 
     // https://github.com/nkzawa/socket.io-stream#readme
@@ -278,31 +280,37 @@ function fnInit(io){
     });
 
     if(!fs.existsSync('resImg'))fs.mkdirSync('resImg');
-    // 保存照片
+    
+    // 保存照片,需要考虑存储空间不足的情况
     socket.on('saveImg', (data) => {
         var szFileName = new Date().Format('yyyy-MM-dd_HH.mm.ss');
         var o = Buffer.from(data.substr(23),'base64')
         fs.writeFileSync("resImg/" + szFileName + '.jpg',o)
     });
 
+    // 分布式文件 magnet:?xt=urn:btih:2 信息
     socket.emit('p2f', g_oP2f);
 
+    // date nick channel fingerprint， 这些信息嵌入到保存的图片文件中
     socket.on("svCurImgInfo",function(oM1){
         // console.log(oM1);
+        socket.CurImgInfo = oM1;
     });
     socket.on("ocerror",function(s){
         console.error(s);
-        // process.stdout.write(s);
     });
 
+    // 需要考虑空间不足的情况
+    // 剩余空间不足1G时，删除最早的文件，空间还是不足，不保存文件
     socket.on('saveVideo', (data) => {
         var szFileName = new Date().Format('yyyy-MM-dd_HH.mm.ss'),oD = data['videoDataURL'];
         var n1 = oD.indexOf(';base64,') + 8;
-        console.log([oD.length,oD.substr(0,n1)])
+        console.log([oD.length,oD.substr(0,n1)]);
         var o = Buffer.from(oD.substr(n1),'base64')
-        fs.writeFileSync("resImg/" + szFileName + '.mp4',o)
-        
+        fs.writeFileSync("resImg/" + szFileName + '.webm',o)
+        oD = null;o = null;data=null; // 释放内存
     });
+    // 获取过去保存的昵称，通过浏览器指纹的唯一性
     socket.on("getNick",function(s,s2){
         if(s){
             if(!s2){
@@ -319,28 +327,6 @@ function fnInit(io){
             }
         }
     })
-
-    // 获取当前online用户信息
-    socket.on('getinfo', () => {
-        var cnCnt = 0,oInfo = {};
-        for (const k in channels)
-        {
-            cnCnt++;
-        }
-        oInfo["channels"] = cnCnt;
-        cnCnt = 0;
-        for (const x in sockets) {
-            cnCnt++;
-        }
-        oInfo["sockets"] = cnCnt;
-        socket.emit("upInfo",oInfo);
-        // 分发给当前会话中的channels
-        //if(imgStream)
-        // for (id in channels[channel])
-        // {
-        //     channels[channel][id].emit('addPeer', {'peer_id': socket.id, 'should_create_offer': false});
-        // }
-    });
 
     //console.log("["+ socket.id + "] connection accepted");
     socket.on('disconnect', () => {
@@ -364,7 +350,7 @@ function fnInit(io){
             socket.emit('removePeer', {'peer_id': id});
         }
     })
-    var oSelfXx = {'4137534939':1, '596679876':1, '439186272':1}
+    var oSelfXx = {'826548212':1, '492752905':1, '1117383528':1}
     var g_ggM = {},g_sMsg = `<w class=smsg>欢迎使用安全、私密（高强度加密）、无监管、零注册的聊天系统,管理员提醒您:<br>
 1、尽量使用手机网络,不要使用Wi-Fi,那样会暴露你的准确ip位置,而手机网络的 ip 是动态的<br>
 2、使用本系统的电脑、手机不要安装微信、QQ、搜狗输入法等国产软件,这些软件可能会暗中收集你的信息、安全得不到保障<br>
@@ -386,19 +372,20 @@ function fnInit(io){
         if (!(channel in channels)) {
             channels[channel] = {};
         }
+        let oC = channels[channel];
         
         var o1 = {'peer_id': socket.id, 'should_create_offer': false,'userdata':userdata,"nOnline":nOnline},nCnt01 = 0,nCnt02 = 0;
-        for (id in channels[channel]) {
-            channels[channel][id].emit('addPeer', o1);
-            socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true,'userdata':{'nick':channels[channel][id].nick},"nOnline":nOnline});
+        for (id in oC) {
+            oC[id].emit('addPeer', o1);// 向其他人发送自己的信息
+            socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true,'userdata':{'nick':oC[id].nick},"nOnline":nOnline});// 向自己发送其他人的信息
         }
 
-        channels[channel][socket.id] = socket;
+        oC[socket.id] = socket;
         socket.channels[channel] = channel;
         // console.log("["+ socket.id + "] joined ", channel);
+        
         // 自己，就默认开启视频记录
         if(oSelfXx[userdata.nick]){
-            socket.emit('recodeSelf');
             try{
                 nCnt01 = Object.keys(channels).length;
                 for(x in channels){
@@ -408,9 +395,7 @@ function fnInit(io){
             }catch(e){
                 console.log(e)
             }
-            // console.log("["+ socket.id + "] recodeSelf");
         }
-        // console.log(channels)
     });
 
     // 离开调用
@@ -430,10 +415,9 @@ function fnInit(io){
     }
     socket.on('part', part);
     // 保存客户端的信息：fingerprint、ip
-    socket.on('svClientInfo', function(o,szCltFg)
-    {
+    socket.on('svClientInfo', function(o,szCltFg){
         if(o.ip){
-            if(szCltFg)o["fingerprint"] = szCltFg;
+            if(szCltFg)o["fingerprint"] = szCltFg;// 客户端 指纹信息
             for(var i = 0; i < o.ip.length; i++){
                 if(!CheckIsPrivateIp(o.ip[i])){
                     queryIp(o.ip[i]).then(function(o1){
@@ -444,7 +428,8 @@ function fnInit(io){
                     })
                 }
             }
-            console.log(o)
+            // 可以考虑 查了 ip 的归宿信息一起保存
+            console.log(o);
             db.put(szCltFg + "_" + new Date().getTime(),o);
             // 发公告，每个人每天只发1次
             if(!g_ggM[szCltFg]){
@@ -454,19 +439,18 @@ function fnInit(io){
                     delete g_ggM[szCltFg];
                 },1000 * 60 *60 * 24)
             }
-            // console.log("svClientInfo",o)
         }
     });
     
     socket.on('msg4One', function(o){
-        if(socket.id == o.peer_id){
+        if(socket.id == o.peer_id){// 不能给自己发消息
             console.log("msg4One socket.id == o.peer_id",o.peer_id);
             return
         }
         if(o.peer_id && sockets[o.peer_id]){
             sockets[o.peer_id].emit('msg4One', o);
         }else{
-            console.log("msg4One 没有找到有效 的sockets",o.peer_id)
+            console.log("msg4One 没有找到有效 的 sockets",o.peer_id)
         }
     });
     socket.on('relayICECandidate', (config) => {

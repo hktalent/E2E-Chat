@@ -27,12 +27,7 @@ var fs = require('fs'),
 
 function getNowStr() {
 	var now = new Date();
-	var year = now.getFullYear(),
-		month = now.getMonth() + 1,
-		date = now.getDate(),
-		hour = now.getHours(),
-		minute = now.getMinutes(),
-		second = now.getSeconds();
+	var year = now.getFullYear(),month = now.getMonth() + 1,date = now.getDate(),hour = now.getHours(),minute = now.getMinutes(),second = now.getSeconds();
 	function p (s) {
 		return s < 10 ? '0' + s : s;
 	}
@@ -55,8 +50,7 @@ function myapp(option)
     szCurPath = (option.serverRootPath || __dirname);
     nMaxConn = option.singleIpMaxConnect || nMaxConn;
     webStaticPath = (option.webStaticPath || webStaticPath);
-    var key = option.caKey || szCurPath + '/../ca/domain.key',
-        cert = option.caCert || szCurPath + '/../ca/chained.pem';
+    var key = option.caKey || szCurPath + '/../ca/domain.key',cert = option.caCert || szCurPath + '/../ca/chained.pem';
     bUseHttps = option.useHttps || false;
     if(option.useHttps && fs.existsSync(key) && fs.existsSync(cert))
     {
@@ -86,7 +80,56 @@ function myapp(option)
         minifyCSS:                 true,
         minifyJS:                  true
     };
-    oHtmlCc = {};
+    // 缓存
+    let oHtmlCc = {};
+    // 并发、快速 初始化
+    (async ()=>{
+        var a = String(`/index.html
+i.js
+client.min.js
+jquery.min.js
+RecordRTC.min.js
+adapter-latest.js
+qrcode.min.js
+plyr.js
+html5-qrcode.min.js
+crypto-js.min.js
+fix.js
+tfjs.js
+webtorrent.min.js
+html2canvas.min.js
+face-api.js
+client.min.js
+jquery.min.js
+RecordRTC.min.js
+adapter-latest.js
+qrcode.min.js
+plyr.js
+html5-qrcode.min.js
+crypto-js.min.js
+fix.js
+tfjs.js
+webtorrent.min.js
+html2canvas.min.js
+face-api.js`).split("\n")
+        for(var k in a){
+            var s = a[k];
+            if(!s)continue;
+            ((s,k)=>{
+                setTimeout(async ()=>{
+                    if(k > 0){
+                        var k1 = webStaticPath+"js/" + s;
+                        oHtmlCc[k1] = await mergeRes.HxJs1(fs.readFileSync(k1).toString("utf-8"));
+                        console.log("init",k1);
+                    }else{
+                        oHtmlCc[s] = minify(fs.readFileSync("static" + s).toString("utf-8"), mOpt);
+                        console.log("init",s);
+                    }
+                },1);
+            })(s,k);
+        }
+        console.log("init ok");
+    })();
     app.disable('x-powered-by');
     app.set('etag', true); 
     // gzip压缩数据
@@ -238,7 +281,6 @@ function myapp(option)
             if(0 == szEn.indexOf("en"))szFn = "/index_en.html";
             html = oHtmlCc[szFn] || minify(fs.readFileSync("static" + szFn).toString("utf-8"), mOpt);
             if(!process.env['DEBUG'])oHtmlCc[szFn] = html;
-           
             res.send(html);
             return
         }

@@ -45,7 +45,7 @@ var oStreamTrack = null, // run ai
 	isChrome,isFirefox,bIsMobile,
 	// detect node-webkit
 	isNodeWebkit = window.process && (typeof window.process == 'object') && window.process.versions && window.process.versions['node-webkit'],
-	signaling_socket = null, /* our socket.io connection to our webserver */
+	socket = null, /* our socket.io connection to our webserver */
 	local_media_stream = null, /* our own microphone / webcam */
 	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
 	peer_media_elements = {}, /* keep track of our <video>/<audio> tags, indexed by peer_id */
@@ -73,12 +73,14 @@ function LoadFaceDb(a){
 	faceMatcher=new faceapi.FaceMatcher(a1, 0.6);
 }
 var bInitFace = !!0;
+// 人脸识别；初始化 加载模型
 function initFace(cbk){
 	setTimeout(async ()=>{
 		if(bInitFace)return;
 		cbk=cbk||function(){};
 		console.log(faceapi.tf.getBackend());
-		await faceapi.tf.setBackend("webgl");//  “wasm” 或 “cpu”
+		// 使用 WebGL 后端时，模型会在浏览器中利用 GPU 进行计算；如果用户的设备支持 WebGL，这通常是性能最佳的选项之一
+		// await faceapi.tf.setBackend("“wasm”");//  “wasm” 或 “cpu” 
 		await faceapi.tf.enableProdMode();
 		await faceapi.tf.ENV.set("DEBUG", false);
 		await faceapi.tf.ready();
@@ -113,20 +115,6 @@ function getNowStr() {
 	return timeFormat;
 }
 
-function PikIp(){
-	const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
-	const rtc = new RTCPeerConnection({iceServers:ICE_SERVERS});
-	rtc.createDataChannel('', {reliable:false});
-	rtc.onicecandidate = function(evt) {
-		if (evt.candidate) {
-			getYourInfo(evt.candidate.candidate.split(' ')[4]);
-		}
-	};
-	rtc.createOffer(function(offerDesc) {
-		rtc.setLocalDescription(offerDesc);
-	}, function(e) {});
-}
-
 // 客户端p2p-ip信息
 function getYourInfo(s) {
 	let ip = String(s||"").split(' ')[4];
@@ -134,10 +122,10 @@ function getYourInfo(s) {
 	var oHst = g_oYourInfo['ip'] || (g_oYourInfo['ip'] = []);
 	oHst.push(ip);
 	g_oYourInfo['ip']=[...new Set(oHst.map(i=>i))];
-	if (signaling_socket && 1 < g_oYourInfo['ip'].length) {
+	if (socket && 1 < g_oYourInfo['ip'].length) {
 		s1 = JSON.stringify(g_oYourInfo);
 		if (s1 != szgetYourInfo) {
-			signaling_socket.emit('svClientInfo', g_oYourInfo, szCltFg)
+			socket.emit('svClientInfo', g_oYourInfo, szCltFg)
 			szgetYourInfo = s1
 		}
 	}
@@ -172,8 +160,8 @@ setInterval(() => {
 }, 1000);
 
 function doCErr(s){
-	if(bIsMobile && signaling_socket && "function" == typeof signaling_socket.emit){
-		signaling_socket.emit('ocerror', s)
+	if(bIsMobile && socket && "function" == typeof socket.emit){
+		socket.emit('ocerror', s + " "+$("#nick").val())
 	}
 }
 function LogMsg(s){
@@ -443,7 +431,7 @@ function SendMsg(s,t,n,nL,szFileName) {
 		
 		nL = s01.length;
 		if( 0 == s.indexOf("@")){
-			signaling_socket.emit('csys',s,szCltFg)
+			socket.emit('csys',s,szCltFg)
 		}else{
 			for(var k in g_aMembers){
 				try{
@@ -474,7 +462,7 @@ function SendMsg(s,t,n,nL,szFileName) {
 								var nMin = 10 * 1024;// 10k
 								s = s01.substring(0,nMin);
 								s01 = s01.substring(nMin);
-								signaling_socket.emit('msg4One', {"peer_id":k, "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s });
+								socket.emit('msg4One', {"peer_id":k, "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s });
 								n++;
 							}catch(e){console.log(e);break}
 						}
@@ -545,7 +533,7 @@ const onScanSuccess =(decodedText, decodedResult) =>{
 
 // 离开群聊
 part_chat_channel =(channel)=> {
-	signaling_socket.emit('part', channel);
+	socket.emit('part', channel);
 },
 
 JoinRoom=()=>{
@@ -565,7 +553,6 @@ join_chat_channel =(channel, userdata) =>{
 	}
 	g_aMembers={};
 	join_chat_channel1(channel, userdata)
-	
 },
 join_chat_channel1 =(channel, userdata) =>{
 	if(!b_clickJoin)return;
@@ -581,7 +568,7 @@ join_chat_channel1 =(channel, userdata) =>{
 	if (szLstChannel && szLstChannel != channel) {
 		part_chat_channel(szLstChannel)
 	}
-	signaling_socket.emit('join', { "channel": channel, "userdata": userdata ,f:szCltFg});
+	socket.emit('join', { "channel": channel, "userdata": userdata ,f:szCltFg});
 	szLstChannel = channel
 },
 
@@ -761,53 +748,43 @@ const setTips = (t,s,o) => {
 };
 var g_aMembers = {},bIoIsOk = false;
 function setNickInfo(v){
-	if (szCltFg && signaling_socket) signaling_socket.emit("getNick", szCltFg,JSON.stringify({id:szCltFg,nick:v||szCltFg,vlst:vlst}));
+	if (szCltFg && socket) socket.emit("getNick", szCltFg,JSON.stringify({id:szCltFg,nick:v||szCltFg,vlst:vlst}));
 }
 function init () {
 	s1 = appURL()
 	s1 = s1.replace("https://", "wss://")
-	signaling_socket = io("/pChat");
-	signaling_socket.on('p2f', function (o) {
+	socket = io("/pChat");
+	// 下面的代码可以让socket.io在浏览器中始终尝试重连
+	socket.io.reconnection = true;
+	socket.io.reconnectionAttempts(Infinity); // 无限次尝试重新连接
+	socket.io.reconnectionDelay(1000); // 1秒延迟
+	socket.io.reconnectionDelayMax(5000); // 最大5秒延迟
+	socket.on('p2f', function (o) {
 		if(g_bEableP2pFs)
 		Object.entries(o).map(async([k,v]) => {
 			download(k);
 		});
 	});
 	//重试失败后会调用reconnect_failed事件
-	signaling_socket.on('reconnect_failed', function () {
+	socket.on('reconnect_failed', function () {
 		log('reconnect_failed');
+		bIoIsOk = false;
 	});
-
-	signaling_socket.on("recodeSelf",function(){
-		var o109 = $('#saveMeVD');
-		// o109.attr("checked",true);o109.change();
-		// window.bEabOcr = 
-		// window.bRunAi = window.bEabOcr = !!1;
-
-		// window.bEaV8 = !!1;
-		// ldai();
-		// $("#eOcr").attr("checked",window.bEabOcr);
-		// $("#eAi").attr("checked",window.bEaV8||window.bRunAi);
-		// $("div.yzhd").removeClass("yzhd");
-	});
-	// if (g_bUseUpInfo) {
-	// 	signaling_socket.emit("upInfo",{});
-	// }
-	signaling_socket.on("onIpInfo",function (o) {
+	// 处理服务器端的消息
+	socket.on("onIpInfo",function (o) {
 		if(0 == o.t){
 			o.t = szSelfK
 			CreateMsgDiv(szSelfK,JSON.stringify(o))
 		}
 	});
-	signaling_socket.on('connect', function () {
-		PikIp();
+	socket.on('connect', function () {
 		// LogMsg("成功连接服务器");
 		bIoIsOk=true;
 		// get nick
-		if(szCltFg)signaling_socket.emit("getNick", szCltFg)
+		if(szCltFg)socket.emit("getNick", szCltFg)
 		JoinRoom();
 	});
-	signaling_socket.on('disconnect', function () {
+	socket.on('disconnect', function () {
 		bIoIsOk = false;
 		for (peer_id in peer_media_elements) {
 			peer_media_elements[peer_id].remove();
@@ -820,7 +797,7 @@ function init () {
 		peers = {};
 		peer_media_elements = {};
 	});
-	signaling_socket.on('msg4One',function (o) {
+	socket.on('msg4One',function (o) {
 		// log("接收到 msg4One 消息",o)
 		// console.log(["msg4One",o])
 		RevMsg({"data":JSON.stringify(o)})
@@ -840,15 +817,14 @@ function init () {
 			'priority': priority
 		};
 	}
-
-	signaling_socket.on('addPeer', function (config) {
+	let addPeerCbk=(config)=>{
 		var peer_id = config.peer_id;
 		if(config.userdata && config.userdata.nick){
 			g_aMembers[peer_id] = {nick:config.userdata.nick};
 			// if(config.userdata.nick)setTips("Online",config.userdata.nick);
 			upListMb()
 		}
-		if (peer_id in peers)return;
+		if (peer_id in peers)return;// 避免重复添加
 		if(!config.should_create_offer){
 			playSd(1);
 			// safari 会报错 https://juejin.cn/post/6844903741838082062
@@ -891,7 +867,7 @@ function init () {
 				}
 				getYourInfo(event.candidate.candidate);
 				var c = parseCandidate(event.candidate.candidate);
-				signaling_socket.emit('relayICECandidate', {
+				socket.emit('relayICECandidate', {
 					'peer_id': peer_id,
 					'ice_candidate': {
 						'sdpMLineIndex': event.candidate.sdpMLineIndex,
@@ -936,14 +912,14 @@ function init () {
 		if (config.should_create_offer) {
 			// LogMsg("Creating RTC offer to "+ peer_id);
 			peer_connection.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true,}).then(
-				function (local_description) {
+				(lds) =>{
 					// log("Local offer description is: ", local_description);
-					peer_connection.setLocalDescription(local_description,
-						function () {
-							signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
+					peer_connection.setLocalDescription(lds,
+						() =>{
+							socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
 						},
-						function () {
-							fnMyLogs("Offer setLocalDescription failed!");
+						()=> {
+							fnMyLogs("Offer setLocalDescription failed!",lds);
 						}
 					);
 				});//,{ iceRestart: true }
@@ -958,9 +934,10 @@ function init () {
 		// 	peer_connection.ontrack=log;
 		// 	peer_connection.onerror=log;
 		}catch(e){log("onclose::",e)}
-	});
+	};
+	socket.on('addPeer', addPeerCbk);
 
-	signaling_socket.on('sessionDescription', function (config) {
+	socket.on('sessionDescription', function (config) {
 		var peer_id = config.peer_id;
 		var peer = peers[peer_id];
 		var remote_description = config.session_description;
@@ -984,7 +961,7 @@ function init () {
 					function (local_description) {
 						peer.setLocalDescription(local_description,
 							function () {
-								signaling_socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
+								socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
 								g_aMembers[peer_id]["pcok"]=true
 								fnTxtChatOne(peer_connection,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 								// log("setRemoteDescription -> createAnswer -> setLocalDescription - > relaySessionDescription")
@@ -1002,12 +979,12 @@ function init () {
 		});
 	});
 
-	signaling_socket.on('iceCandidate', function (config) {
+	socket.on('iceCandidate', function (config) {
 		var peer = peers[config.peer_id];
 		var ice_candidate = config.ice_candidate;
 		peer.addIceCandidate(new RTCIceCandidate(ice_candidate));
 	});
-	signaling_socket.on('setNick', function (s) {
+	socket.on('setNick', function (s) {
 		oNk = $("#nick")
 		if (s && szCltFg == oNk.val()){
 			if(0 == s.indexOf("{"))try{s=JSON.parse(s)}catch(e){}
@@ -1016,7 +993,7 @@ function init () {
 		}
 	})
 
-	signaling_socket.on('removePeer', function (config) {
+	socket.on('removePeer', function (config) {
 		var peer_id = config.peer_id;
 		if (peer_id in peer_media_elements) {
 			peer_media_elements[peer_id].remove();
@@ -1256,7 +1233,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs) {// h
 						if(isSvLc())setTimeout(()=> {SaveMp4(videoDataURL)},0);
 						else{
 							setTimeout(()=> {CrtDldA(videoDataURL);},0);
-							signaling_socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
+							socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
 						}
 					});
 				} catch (e) {
@@ -1487,7 +1464,7 @@ window['doODetcCbk'] = (oDtc)=>{
 };
 
 function fnSendSvMsg(){
-	if(signaling_socket)
+	if(socket)
 	{
 		var oTm42 = JSON.parse(JSON.stringify(g_oSdMsg)),a1 = [oLst1,oLst2,oLst3,oLst4],a2 = ['ocr','object','gps','compass'];
 		for(var i = 0; i < a1.length;i++){
@@ -1505,7 +1482,7 @@ function fnSendSvMsg(){
 				oTm42["nick"] = $("#nick").val();
 				oTm42["channel"] = $("#cnId").val();
 				if(szCltFg)oTm42["fingerprint"] = szCltFg;
-				signaling_socket.emit('svCurImgInfo',oTm42);
+				socket.emit('svCurImgInfo',oTm42);
 				break;
 			}
 		}
@@ -1848,9 +1825,9 @@ $(document).ready(function(){
 	
 
 	$('#saveMe').on("change", function () {
-		if (signaling_socket && local_media && this.checked) {// 3秒一保存
+		if (socket && local_media && this.checked) {// 3秒一保存
 			bTm = setInterval(function () {
-				if(local_media)signaling_socket.emit('saveImg', fnV2I(local_media.id), g_LbsIps);
+				if(local_media)socket.emit('saveImg', fnV2I(local_media.id), g_LbsIps);
 			}, 1000);
 		}
 		else clearInterval(bTm);
