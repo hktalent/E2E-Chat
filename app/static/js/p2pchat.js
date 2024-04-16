@@ -77,6 +77,8 @@ var bInitFace = !!0;
 function initFace(cbk){
 	setTimeout(async ()=>{
 		if(bInitFace)return;
+		Is("/js/14.js");
+		bInitFace = true;
 		cbk=cbk||function(){};
 		console.log(faceapi.tf.getBackend());
 		// 使用 WebGL 后端时，模型会在浏览器中利用 GPU 进行计算；如果用户的设备支持 WebGL，这通常是性能最佳的选项之一
@@ -96,7 +98,6 @@ function initFace(cbk){
 			faceapi.nets.faceLandmark68TinyNet.loadFromUri(mdP),
 			faceapi.nets.faceRecognitionNet.loadFromUri(mdP)
 		]).then(cbk);
-		bInitFace = true;
 	},0);
 }
 // 当前时间
@@ -1077,7 +1078,7 @@ const quickScan = [{"label": "4K(UHD)","width": 3840,"height": 2160,"ratio": "16
 {"label": "360p(nHD)","width": 640,"height": 360,"ratio": "16:9"},{"label": "CIF","width": 352,"height": 288,"ratio": "4:3"},
 {"label": "QVGA","width": 320,"height": 240,"ratio": "4:3"},{"label": "QCIF","width": 176,"height": 144,"ratio": "4:3"},
 {"label": "QQVGA","width": 160,"height": 120,"ratio": "4:3"}];
-var g_Constraints = 0,n001 = 5,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
+var g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
 
 // 构建、初始化全局 变量 g_Constraints，必须运行，否则视频聊天无法启动 https://webrtchacks.github.io/WebRTC-Camera-Resolution/
 function appSet() {
@@ -1201,55 +1202,52 @@ let isSvLc = ()=>{
 }
 // 触发保存
 var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT) {// https://recordrtc.org/
-	var stream = vSs||window.stream||window.webcam||local_media,oC1 = $(stream);
-	if(!stream){
-		setTimeout(()=>{fnStartRct(vSs,nT)},1);
-		return;
-	}
-	if(nT)alert(["bIsRvdRcd start",nT])
-	if("true"==oC1.attr("bIsRvdRcd")){
-		return;
-	}
-	if(nT)alert(["bIsRvdRcd in",nT])
-	oC1.attr("bIsRvdRcd","true");
-	const szT1 = "video/webm;codecs=vp9";
-	// if(isSvLc())szT1="video/webm;codecs=h264";// Chromium不支持264 video/x-matroska;codecs=avc1 // https://pixelpoint.io/blog/web-optimized-video-ffmpeg/
-	var recorder = RecordRTC(stream, {
-		type: 'audio+video'// 测评表明 AV1 是最佳的
-		, mimeType: szT1 // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
-		,audioBitsPerSecond: 128000,
-		videoBitsPerSecond: 128000,
-		bitsPerSecond: 128000,
-		frameRate: 24,//15 ～ 30
-	});
-	
-	recorder.startRecording();
-	if(nT)alert(["startRecording in",nT,!!recorder])
-	const nT3 = 60 * 1000 * (nT||(isSvLc() ? 5 : 1));
-	//  10分钟,停一下，并上传，然后重新开始
-	setTimeout(async() =>{
-		if (recorder) recorder.stopRecording(async() =>{
-			// 开启人脸识别的情况，只在检测到人时保存
-			if($("#eAi").attr("checked") && !g_bWarn);else{
-				try {
-					recorder.getDataURL(async (videoDataURL) =>{
-						videoDataURL = String(videoDataURL);
-						if(isSvLc())setTimeout(async()=> {SaveMp4(videoDataURL)},0);
-						else{
-							setTimeout(async()=> {CrtDldA(videoDataURL);},0);
-							socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
-						}
-						if(nT)alert("save other ok")
-					});
-				} catch (e) {
-					console.log(e)
-				}
-			}
-			setTimeout(async() =>{
-				if (!g_bStopVd) oC1.attr("bIsRvdRcd","false"),fnStartRct(vSs,nT);
-			}, 0);
+	try{
+		var stream = vSs||window.stream||window.webcam||local_media,oC1 = $(stream);
+		if(!stream){
+			setTimeout(()=>{fnStartRct(vSs,nT)},1);
+			return;
+		}
+		if("true"==oC1.attr("bIsRvdRcd")){
+			return;
+		}
+		oC1.attr("bIsRvdRcd","true");
+		const szT1 = "video/webm;codecs=vp9";
+		// if(isSvLc())szT1="video/webm;codecs=h264";// Chromium不支持264 video/x-matroska;codecs=avc1 // https://pixelpoint.io/blog/web-optimized-video-ffmpeg/
+		var recorder = RecordRTC(stream, {
+			type: (!!nT?"":"audio+")+'video'// 测评表明 AV1 是最佳的
+			, mimeType: szT1 // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
+			,audioBitsPerSecond: 128000,
+			videoBitsPerSecond: 128000,
+			bitsPerSecond: 128000,
+			frameRate: 24,//15 ～ 30
 		});
-	}, nT3);
+		recorder.startRecording();
+		const nT3 = 60 * 1000 * (nT||(isSvLc() ? 5 : 1));
+		//  10分钟,停一下，并上传，然后重新开始
+		setTimeout(async() =>{
+			if (recorder) recorder.stopRecording(async() =>{
+				// 开启人脸识别的情况，只在检测到人时保存
+				if($("#eAi").attr("checked") && !g_bWarn);else{
+					try {
+						recorder.getDataURL(async (videoDataURL) =>{
+							videoDataURL = String(videoDataURL);
+							if(isSvLc())setTimeout(async()=> {SaveMp4(videoDataURL)},0);
+							else{
+								setTimeout(async()=> {CrtDldA(videoDataURL);},0);
+								socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
+							}
+						});
+					} catch (e) {
+						console.log(e)
+					}
+				}
+				setTimeout(async() =>{
+					if (!g_bStopVd) oC1.attr("bIsRvdRcd","false"),fnStartRct(vSs,nT);
+				}, 0);
+			});
+		}, nT3);
+	}catch(e){alert(e)}
 };
 window['fnStartRct'] = fnStartRct;
 // 初始化本地视频
