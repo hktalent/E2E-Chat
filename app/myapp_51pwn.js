@@ -84,7 +84,11 @@ function myapp(option)
     let oHtmlCc = {};
     // 并发、快速 初始化
     (async ()=>{
-        var a = String(`/index.html
+        const a = String(`/index.html
+tfjs.js
+face-api.js
+html2canvas.min.js
+webtorrent.min.js
 i.js
 client.min.js
 jquery.min.js
@@ -94,41 +98,31 @@ qrcode.min.js
 plyr.js
 html5-qrcode.min.js
 crypto-js.min.js
-fix.js
-tfjs.js
-webtorrent.min.js
-html2canvas.min.js
-face-api.js
-client.min.js
-jquery.min.js
-RecordRTC.min.js
-adapter-latest.js
-qrcode.min.js
-plyr.js
-html5-qrcode.min.js
-crypto-js.min.js
-fix.js
-tfjs.js
-webtorrent.min.js
-html2canvas.min.js
-face-api.js`).split("\n")
-        for(var k in a){
-            var s = a[k];
-            if(!s)continue;
-            ((s,k)=>{
+fix.js`).split("\n")
+        a.map(async (s, k) => {
+            if(s)
+            (async (s,k)=>{
                 setTimeout(async ()=>{
+                    const n1 = new Date().getTime();
                     if(k > 0){
                         var k1 = webStaticPath+"js/" + s;
-                        oHtmlCc[k1] = await mergeRes.HxJs1(fs.readFileSync(k1).toString("utf-8"));
-                        console.log("init",k1);
-                    }else{
-                        oHtmlCc[s] = minify(fs.readFileSync("static" + s).toString("utf-8"), mOpt);
-                        console.log("init",s);
+                        if(!oHtmlCc[k1]){
+                            fs.readFile(k1,async (err, data) => {
+                                if(err)return;
+                                oHtmlCc[k1] = await mergeRes.HxJs1(data.toString("utf-8"));
+                                console.log("init",k1, new Date().getTime() - n1, "ms");
+                            });
+                        }
+                    }else if(!oHtmlCc[s]){
+                        fs.readFile("static" + s,async (err, data) => {
+                            if(err)return;
+                            oHtmlCc[s] = minify(data.toString("utf-8"), mOpt);
+                            console.log("init",s, new Date().getTime() - n1, "ms");
+                        });
                     }
-                },1);
+                },0);
             })(s,k);
-        }
-        console.log("init ok");
+        });
     })();
     app.disable('x-powered-by');
     app.set('etag', true); 

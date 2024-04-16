@@ -119,16 +119,18 @@ if(bIsMacOsSelf){
 //     unicodeEscapeSequence: false
 // };
 async function MakeN(){
-    x11 = "p2pchat.js"
-    console.log("开始初始化加密js:"+x11)
-    s111 = fs.readFileSync(x11).toString("utf-8");
-    s111 = (await minify(s111, minifyOptions)).code;
-    var oTmp1 = {};
-    Object.assign(oTmp1, JsHxOpt);
-    delete oTmp1.domainLock;
-    delete oTmp1.debugProtection;
-    s1 = JavaScriptObfuscator.obfuscate(s111, oTmp1);
-    fs.writeFileSync(x11 + "_1", String(s1));
+    setTimeout(async ()=>{
+        x11 = "p2pchat.js"
+        console.log("开始初始化加密js:"+x11)
+        s111 = fs.readFileSync(x11).toString("utf-8");
+        s111 = (await minify(s111, minifyOptions)).code;
+        var oTmp1 = {};
+        Object.assign(oTmp1, JsHxOpt);
+        delete oTmp1.domainLock;
+        delete oTmp1.debugProtection;
+        s1 = JavaScriptObfuscator.obfuscate(s111, oTmp1);
+        fs.writeFileSync(x11 + "_1", String(s1));
+    },1);
 }
 
 
@@ -212,11 +214,9 @@ async function fnMerg (s, t) {
 }
 
 if(bIsMacOsSelf){// 启动时预处理，提高速度
-    (async()=>{
-    await fnMerg(",.js", "js");
-    await fnMerg("v,.js", "js");
-    await fnMerg(",.css", "css");
-    })()
+    setTimeout(async ()=>{fnMerg(",.js", "js")},1);
+    setTimeout(async ()=>{fnMerg("v,.js", "js")},1);
+    setTimeout(async ()=>{fnMerg(",.css", "css")},1);
 }
 function setLongTermCache (res) {
     const date = new Date();
