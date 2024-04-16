@@ -1205,7 +1205,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT) {/
 	try{
 		var stream = vSs||window.stream||window.webcam||local_media,oC1 = $(stream);
 		if(!stream){
-			setTimeout(()=>{fnStartRct(vSs,nT)},1);
+			setTimeout(async()=>{fnStartRct(vSs,nT)},1);
 			return;
 		}
 		if("true"==oC1.attr("bIsRvdRcd")){
