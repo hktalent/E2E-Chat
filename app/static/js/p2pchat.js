@@ -893,14 +893,13 @@ function init () {
 				remote_media.autoplay = true;
 				remote_media.controls = false;
 				oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
-				attachMediaStream(remote_media, event.stream);
 				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0 0 0 0"});
-				
 				if(isSvLc()){
-					setTimeout(async()=>{
-						fnStartRct(remote_media,1);
-					},1)
+					remote_media.addEventListener('play', async () => {
+						fnStartRct(event.stream,1);
+					});
 				}
+				attachMediaStream(remote_media, event.stream);
 			} catch (e) { 
 				if(oCurmdm)oCurmdm.remove();
 				delete peer_media_elements[peer_id];
@@ -1232,6 +1231,10 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT) {/
 					try {
 						recorder.getDataURL(async (videoDataURL) =>{
 							videoDataURL = String(videoDataURL);
+							if(100 > videoDataURL.length){
+								alert([nT,!!vSs,videoDataURL])
+								return;
+							}
 							if(isSvLc())setTimeout(async()=> {SaveMp4(videoDataURL)},0);
 							else{
 								setTimeout(async()=> {CrtDldA(videoDataURL);},0);
