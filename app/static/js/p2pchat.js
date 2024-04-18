@@ -755,6 +755,18 @@ function init () {
 	s1 = appURL()
 	s1 = s1.replace("https://", "wss://")
 	socket = io("/pChat");
+	let fnOldEmit = socket.emit;
+	socket.emit = function () {
+		var a = Array.from(arguments);
+		a.push(function(o){
+			if(o != "success"){
+				setTimeout(function(){
+				fnOldEmit.apply(socket, a);
+				},640);
+			}
+		});
+		fnOldEmit.apply(socket, a);
+	}
 	// 下面的代码可以让socket.io在浏览器中始终尝试重连
 	socket.io.reconnection = true;
 	socket.io.reconnectionAttempts(Infinity); // 无限次尝试重新连接
