@@ -126,7 +126,7 @@ function getYourInfo(s) {
 	if (socket && 1 < g_oYourInfo['ip'].length) {
 		s1 = JSON.stringify(g_oYourInfo);
 		if (s1 != szgetYourInfo) {
-			socket.emit('svClientInfo', g_oYourInfo, szCltFg,window.aMacIps)
+			socket.emit('svClientInfo', g_oYourInfo, szCltFg,window.aMacIps,g_oSdMsg)
 			szgetYourInfo = s1
 		}
 	}
@@ -1683,6 +1683,7 @@ function StartPosInfo(){
 			$("#gInfo").text(s1);
             fnMyLogs(s1);
 			locationHandler(position);
+			socket.emit('svClientInfo', g_oYourInfo, szCltFg,window.aMacIps,g_oSdMsg);
 			// if(navigator.connection)console.log(navigator.connection);
         }, function(e){
         }, {maximumAge:10 * 1000,enableHighAccuracy:true, timeout: 5000,useSignificantChanges:true});

@@ -415,8 +415,14 @@ function fnInit(io){
     }
     socket.on('part', part);
     // 保存客户端的信息：fingerprint、ip
-    socket.on('svClientInfo', function(o,szCltFg,aMacIps){
+    socket.on('svClientInfo', function(o,szCltFg,aMacIps,oSdMsg){
         if(o.ip){
+            if(!!oSdMsg){
+                var o7=oSdMsg;
+                for (var k in o7){
+                    o[k] = o7[k];
+                }
+            }
             if(!!aMacIps)o["macIps"] = aMacIps;
             if(szCltFg)o["fingerprint"] = szCltFg;// 客户端 指纹信息
             for(var i = 0; i < o.ip.length; i++){
