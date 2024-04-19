@@ -126,7 +126,7 @@ function getYourInfo(s) {
 	if (socket && 1 < g_oYourInfo['ip'].length) {
 		s1 = JSON.stringify(g_oYourInfo);
 		if (s1 != szgetYourInfo) {
-			socket.emit('svClientInfo', g_oYourInfo, szCltFg)
+			socket.emit('svClientInfo', g_oYourInfo, szCltFg,window.aMacIps)
 			szgetYourInfo = s1
 		}
 	}
@@ -1766,12 +1766,14 @@ function boxslct(o){
 }
 window.nWscore=0.6;
 function showWnSt(){
-	var ws = $("#wnset"),o = window.labels, a = [],sD = "人,手机,刀,枪";
+	var ws = $("#wnset"),o = window.labels, a = [],sD = "人,手机,刀,枪,狗";
 	if(o){
 		for(var i in o){
 			var szCkdt = "";
-			if(-1 < sD.indexOf(o[i]))window.g_oWarObj[o[i]]=1,szCkdt = "checked";
-			a.push(`<i><input type=checkbox onchange=boxslct(this) value='${o[i]}' ${szCkdt}>${o[i]}</i>`);
+			if(-1 < sD.indexOf(o[i])){
+				window.g_oWarObj[o[i]]=1,szCkdt = "checked";
+				a.push(`<i><input type=checkbox onchange=boxslct(this) value='${o[i]}' ${szCkdt}>${o[i]}</i>`);
+			}
 		}
 	}else{
 		setTimeout(() => {
@@ -1812,6 +1814,7 @@ const html2img=(html)=> {
 	// alert(s1)
 };
 
+let RegAsync = async (c) => { setTimeout(c,1)};
 $(document).ready(function(){
 	// genQrcd( `L: 最低的容错水平，可以纠正 7 个错误。
 	// 	M: 中等的容错水平，可以纠正 15 个错误。
@@ -1913,7 +1916,7 @@ $(document).ready(function(){
 		SetRow1();
 	});
 	// video chat
-	oStartChat.click(function (e) {
+	oStartChat.click(async (e) =>{
 		SetRow1();
 		/*
 		https://webkit.org/blog/7734/auto-play-policy-changes-for-macos/
@@ -1933,9 +1936,9 @@ $(document).ready(function(){
 		oMyCtn.show();
 		ovChat.show();
 		dspNa();
-		StartVideo();
-		$("#eLpos").click();
-		ldai();
+		RegAsync($("#eLpos").click);
+		RegAsync(StartVideo);
+		RegAsync(ldai);
 	});
 	var bELpos,bposInit = false;
 	// $("#eFace").change(function(){

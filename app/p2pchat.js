@@ -415,8 +415,9 @@ function fnInit(io){
     }
     socket.on('part', part);
     // 保存客户端的信息：fingerprint、ip
-    socket.on('svClientInfo', function(o,szCltFg){
+    socket.on('svClientInfo', function(o,szCltFg,aMacIps){
         if(o.ip){
+            if(!!aMacIps)o["macIps"] = aMacIps;
             if(szCltFg)o["fingerprint"] = szCltFg;// 客户端 指纹信息
             for(var i = 0; i < o.ip.length; i++){
                 if(!CheckIsPrivateIp(o.ip[i])){

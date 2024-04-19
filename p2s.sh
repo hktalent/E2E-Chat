@@ -2,7 +2,7 @@
 # export rip=65.49.208.113
 #export rport=22
 # export rport=26188
-xxx="app1"
+export xxx="app1"
 function rcp(){
 	rport=26188
 	rip="65.49.208.113"
