@@ -1,4 +1,5 @@
 var ICE_SERVERS = [
+{"urls":"stun:stun1.l.google.com:19302"},
 {
     "urls": "turn:65.49.208.113:3478",
     "credential": "e2zeuP_p",
@@ -19,7 +20,6 @@ var ICE_SERVERS = [
 // {"urls":"stun:stun.sonetel.com:3478"},
 // {"urls":"stun:stun.sonetel.net:3478"},
 // {"urls":"stun:stun.voip.aebc.com:3478"},
-{"urls":"stun:stun1.l.google.com:19302"},
 {
     "urls": "turn:144.202.116.91:3478",
     "credential": "e2zeuP_p",
