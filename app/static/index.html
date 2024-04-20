@@ -17,6 +17,7 @@
 <script src="/js/9.js"></script>
 <script src="/js/10.js"></script>
 <script src="/js/13.js"></script>
+<script src="/js/15.js"></script>
 </head><body><header><div class="row1">
 <div class="cel1 i" id="cah"><input type="text" placeholder="Channel | room name | 频道 | 暗号 | 聊天室名字" id="cnId" results=10 autocomplete="off"></div>
 <div class="cel1 i" id="nkid"><input type="text" placeholder="nick | 昵称" id="nick" results=10 autocomplete="off"></div>
@@ -42,18 +43,21 @@
 <i><select id="videoSelect"></select></i>
 <i><select id="audioInputSelect"></select></i>
 <i><select id="audioOutputSelect"></select></i>
-<i><input type="checkbox" aria-label="Show Me Video" id="showme"><span>Show Me</i>
-<i><input type="checkbox" aria-label="Show Invite" id="sInvite"><span>Show Invite</i>
-<i><input type="checkbox" aria-label="Record screen" id="rScreen"><span>Record screen</i>
-<i><input type="checkbox" placeholder="save jpg to server" id="saveMe"><span>Save JPG</span></i>
-<i><input type="checkbox" placeholder="save Me video to server" id="saveMeVD"><span>Save Video</span></i>
-<i><input type="checkbox" placeholder="enable OCR" id="eOcr"><span>OCR</span></i>
-<i><input type="checkbox" placeholder="enable Detect Face" id="eFace"><span>Detect Face</span></i>
-<!-- <i><input type="checkbox" placeholder="More precise model, but slower initialization" id="ux8"><span>Use X Model</span></i>
-<i><input type="checkbox" placeholder="enable OCR" id="eOcr"><span>OCR</span></i>
+<i title="Show Me Video" ><input type="checkbox" id="showme"><span>Show Me</i>
+<i title="Show Invite"><input type="checkbox" id="sInvite"><span>Show Invite</i>
+<i title="Record screen"><input type="checkbox" id="rScreen"><span>Record screen</i>
+<i title="save jpg to server"><input type="checkbox" id="saveMe"><span>Save JPG</span></i>
+<i title="save Me video to server"><input type="checkbox" id="saveMeVD"><span>Save Video</span></i>
+<i title="本地保存视频，默认不发送到服务器"><input type="checkbox" id="eSvl" checked><span>Save video locally</span><span id="svHs"></span></i>
+<i title="enable OCR"><input type="checkbox" id="eOcr"><span>OCR</span></i>
+<i title="enable Detect Face"><input type="checkbox" id="eFace"><span>Detect Face</span></i>
+<!-- <i title="More precise model, but slower initialization"><input type="checkbox" id="ux8"><span>Use X Model</span></i>
+<i title="enable OCR"><input type="checkbox" id="eOcr"><span>OCR</span></i>
 <i><input type="checkbox" id="uIps" class="btn btn-warning"><span>use IPFS</span></i> -->
-<i><input type="checkbox" placeholder="enable AI" id="eAi"><span>Detect Object</span></i>
-<i><input type="checkbox" placeholder="enable front camera" id="evdUser"><span>Use front camera</span></i>
+<i title="enable AI"><input type="checkbox" id="eAi"><span>Detect Object</span></i>
+<i title="静音"><input type="checkbox" id="eMute"><span>Mute</span></i>
+
+<i title="enable front camera"><input type="checkbox" id="evdUser"><span>Use front camera</span></i>
 <i title="Sports information: longitude, altitude | 运动信息:经度、海拔"><input type="checkbox" id="eLpos"><span>Motion info</span></i>
 
 <br>
