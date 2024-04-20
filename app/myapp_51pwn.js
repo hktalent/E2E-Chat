@@ -241,9 +241,10 @@ fix.js`).split("\n")
 [ '12', '/js/p2pfs.js' ]
 [ '13', '/js/html2canvas.min.js' ]
 [ '14', '/js/face-api.min.js' ]
+[ '15', '/js/dexie.js' ]
 
         */
-        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/crypto-js.min.js,/js/fix.js,/js/tfjs.js,/js/webtorrent.min.js,/js/stunLists.js,/js/p2pfs.js,/js/html2canvas.min.js,/js/face-api.js".split(",");
+        var aj = "/js/client.min.js,/js/jquery.min.js,/js/RecordRTC.min.js,/js/adapter-latest.js,/js/qrcode.min.js,/js/plyr.js,/js/html5-qrcode.min.js,/js/crypto-js.min.js,/js/fix.js,/js/tfjs.js,/js/webtorrent.min.js,/js/stunLists.js,/js/p2pfs.js,/js/html2canvas.min.js,/js/face-api.js,/js/dexie.js".split(",");
         // for(var k in aj){
         //     console.log([k,aj[k]])
         // }

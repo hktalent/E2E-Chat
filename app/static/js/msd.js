@@ -39,6 +39,7 @@ function loadSound (url) {
 // }
 
 async function playSd (n) {
+  if(document.getElementById("eMute").checked) return;
   let s = "";
   switch (n) {
     case 1:
