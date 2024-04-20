@@ -19,6 +19,10 @@ ls app/static/*.js|xargs -I % ./rcp.sh % /root/${xxx}/%
 ls app/static/js/*.js|xargs -I % ./rcp.sh % /root/${xxx}/%
 
 rcp app/static/js/pmap.json /root/${xxx}/app/static/js/
+rcp app/static/v8.js /root/${xxx}/app/static/
+ls app/static/js/*.js|xargs -I % ./rcp.sh % /root/${xxx}/%
+rcp app/static/index.html /root/${xxx}/app/static/
+
 rcp app/package.json /root/${xxx}/app/
 rcp app/nodemon.json /root/${xxx}/app/
 # rcp app/static/index_en.html /root/${xxx}/app/static/
@@ -32,7 +36,7 @@ rcp app/static/index.html /root/${xxx}/app/static/
 rcp app/static/js.js /root/${xxx}/app/static/
 rcp app/static/js/p2pchat.js /root/${xxx}/app/static/js/
 rcp app/static/css.css /root/${xxx}/app/static/
-rcp app/static/v8.js /root/${xxx}/app/static/
+
 
 rcp app/static/js/bundle.js /root/${xxx}/app/static/js/
 rcp app/static/js/ocr.js /root/${xxx}/app/static/js/

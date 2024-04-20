@@ -1,4 +1,6 @@
 # brew services  start redis
+find . -name ".DS_Store*" -delete
+find tmp -empty -delete
 # cd /app/
 # npm install
 # npm prune --production=true

@@ -1827,11 +1827,6 @@ const html2img=function(html) {
 };
 
 $(document).ready(function(){
-	db=new Dexie("_p2pchat_");
-	if(!!db)db.version(1).stores({
-		friends: "++id,date,video"
-	});
-	cntVideo();
 	// genQrcd( `L: 最低的容错水平，可以纠正 7 个错误。
 	// 	M: 中等的容错水平，可以纠正 15 个错误。
 	// 	Q: 较高的容错水平，可以纠正 25 个错误。
@@ -2127,4 +2122,11 @@ $(document).ready(function(){
 		useTitle: true
 	});	  
 	// $("script").remove();
+	try{
+		db=new Dexie("_p2pchat_");
+		if(!!db)db.version(1).stores({
+			friends: "++id,date,video"
+		});
+		cntVideo();
+	}catch(e){}
 });

@@ -108,8 +108,8 @@ fix.js`).split("\n")
                         var k1 = webStaticPath+"js/" + s;
                         if(!oHtmlCc[k1]){
                             fs.readFile(k1,async (err, data) => {
-                                if(err)return;
-                                oHtmlCc[k1] = await mergeRes.HxJs1(data.toString("utf-8"));
+                                if(err)return;// await mergeRes.HxJs1(data.toString("utf-8"));
+                                oHtmlCc[k1] = data.toString("utf-8");
                                 console.log("init",s, new Date().getTime() - n1, "ms");
                             });
                         }
@@ -197,8 +197,29 @@ fix.js`).split("\n")
         // console.log(szSSP+"model/tfjs-backend-wasm-simd.wasm")
         res.sendFile(szSSP+"model/tfjs-backend-wasm-simd.wasm");
     })
+    let doBrGzip = function(szFl,req,res){
+        var a = {},szRt = __dirname+"/tmp/static"+szFl;
+        
+        String(req.headers["accept-encoding"]||"").replace(/ /g,"").split(",").map(s=>{a[s.toLowerCase()]=!!1});
+        if(a["br"] && fs.existsSync(szRt+".br")){
+            res.contentType(Mime.getMime(szFl));
+            res.setHeader('Content-Encoding', 'br');
+            res.sendFile(szRt+".br");
+            // console.log("send file:" +szFl+".br")
+            return true
+        }
+        if((a["gzip"]||a["deflate"]) && fs.existsSync(szRt+".gzip")){
+            res.contentType(Mime.getMime(szFl));
+            res.setHeader('Content-Encoding', 'gzip');
+            res.sendFile(szRt+".gzip");
+            // console.log("send file:" +szFl+".gzip")
+            return true
+        }
+        return false
+    }
     app.get(reRes,async function(req,res,next)
     {
+        if(doBrGzip(req.path,req,res))return;
         if(req.path.match(/sw\.js$/)){
             expressOptions.setNoCache(res);
             doZipSFl(szSSP + "js/sw.js",res);
@@ -254,6 +275,7 @@ fix.js`).split("\n")
         // console.log([n12,aj[n12]])
         
         if(aj[n12] && fs.existsSync(szSSP + aj[n12])){
+            if(doBrGzip(aj[n12],req,res))return;
             var stt = fs.statSync(szSSP + aj[n12]);
             expressOptions.setLongTermCache(res,stt);
             doZipSFl(szSSP + aj[n12],res);
@@ -270,6 +292,7 @@ fix.js`).split("\n")
     });
     app.use(function(req, res, next){
         szPath = req.path;
+        if(doBrGzip(req.path,req,res))return;
         
         if("" == szPath || "/" == szPath || "/index.html" == szPath){
             var szEn = String(res.getHeader("accept-language") || ""),szFn = "/index.html";
@@ -331,6 +354,7 @@ fix.js`).split("\n")
                 // mergeRes.setJm();
                 g_oPmap[req.url]=1;
                 fs.writeFileSync(szPm,JSON.stringify(g_oPmap));
+                console.log("需要发布",szPm)
                 // req.connection.destroy();
             }
         }else if(!g_oPmap[req.url]){
@@ -346,10 +370,10 @@ fix.js`).split("\n")
     if(bUseHttps)app.set('trust proxy', 1),fnOnLog("open https SSL");
 
     // Content-Type: application/csp-report
-    app.post("/rptv",function(req,res)
-    {
-        res.end();
-    });
+    // app.post("/rptv",function(req,res)
+    // {
+    //     res.end();
+    // });
     
     if(option.cbkApp)option.cbkApp(app);
 
