@@ -159,6 +159,7 @@ async function fnMerg (s, t) {
             szXf = "static/"+s + "." + t
         }else{ 
             s = "msd,stunLists,tipso.min,p2pchat";
+            szXf = "static/js/,." + t
         }
     }
     else s = "plyr,tipso.min,p2pchat";
@@ -249,4 +250,4 @@ function fnSetPath (s) {
         szPathC = s + "css/";
 }
 
-module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc,setJm:setJm,HxJs:HxJs,HxJs1:HxJs1 };
+module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc,setJm:setJm,HxJs:HxJs,HxJs1:HxJs1,fnMerg:fnMerg };
