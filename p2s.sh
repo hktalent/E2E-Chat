@@ -12,7 +12,7 @@ function rcp(){
 	scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -C -r -P ${rport} "$1"  root@${rip}:"$2"
 }
 
-# reset;ssh -i ~/.ssh/id_rsa -C -p ${rport} root@${rip}
+# reset;ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -C -p ${rport} root@${rip}
 
 ls app/*.js|xargs -I % ./rcp.sh % /root/${xxx}/%
 ls app/static/*.js|xargs -I % ./rcp.sh % /root/${xxx}/%
