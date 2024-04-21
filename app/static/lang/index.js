@@ -13,7 +13,6 @@ var aLang = [
     ["ag","Antigua and Barbuda","en"],
     ["ai","Anguilla","en"],
     ["al","Shqipëria","sq"],
-    ["am","Հայաստան","hy"],
     ["ao","Angola","pt"],
     ["aq","Antarctica,Antártico,Antarctique,Антарктике","en,es,fr,ru"],
     ["ar","Argentina","es"],

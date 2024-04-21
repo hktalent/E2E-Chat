@@ -1,6 +1,6 @@
 var language=[
     {
-        obj:[{id:"visualViewport",attr:"content"},{"tag":"title"}],
+        obj:[{id:"dscc",attr:"content"},{"tag":"title"}],
         des:"무료 설치, 웹 브라우저 온라인 E2E/P2P 보안, 개인 정보, 숨김, 등록 불필요. 다운로드 불필요, 감독되지 않은 텍스트, 비디오 채팅 시스템, AI(인공 지능) 비디오 감시 경보 시스템."
     },
     {obj:[{id:"cnId",attr:"placeholder"}],des:"채널 | 방 이름 | 암호"},

@@ -1844,22 +1844,21 @@ function initLang(){
 	});
 	
 	if(!!language){
-		for(k in language){
+		for(let k = 0; k < language.length;k++){
 			try{
 				let oT1 = language[k];
-				if(!oT1["des"])continue;
 				let o1 = oT1["obj"];
-				for(x in o1){
+				if(!oT1["des"] || !o1 || !o1.length)continue;
+				for(let x = 0;x < o1.length;x++){
 					let o7 = o1[x];
 					let  o2;
-					if(!!o7["tag"] && "title" == o7["tag"]){
+					if(o7["tag"] && "title" == o7["tag"]){
 						document.title = oT1["des"];
 						continue;
 					}
-					if(!!o7["id"]){
-						console.log(o7["id"]);
-						o2 = $("#"+o7["id"]);
-						if(o7["attr"] == "text")o2[0].innerText(oT1["des"]);
+					o2 = $("#"+o7["id"]);
+					if(o2 && 0 < o2.length && o7["id"] && o7["attr"]){
+						if(o7["attr"] == "text")o2[0].innerText=oT1["des"];
 						else o2.attr(o7["attr"],oT1["des"])
 					}
 				}
@@ -1873,7 +1872,7 @@ function initLang(){
 		var a = [],m1 = {};
 		for(k in aLang){
 			if(m1[aLang[k][0]])continue;m1[aLang[k][0]] = 1;
-			a.push("<div dt="+ aLang[k][2].split(",")[0] +" flg="+aLang[k][0]+"><img src=/flags/"+aLang[k][0]+".svg>"+aLang[k][1]+"</div>");
+			a.push("<div dt="+ aLang[k][2].split(",")[0] +" flg="+aLang[k][0]+" class=w><img src=/flags/"+aLang[k][0]+".svg>"+aLang[k][1].split(",")[0]+"</div>");
 		}
 		oMs.html(a.join(""));
 		$("#slctMtl div").click(function(){
@@ -2191,4 +2190,8 @@ $(document).ready(function(){
 		});
 		cntVideo();
 	}catch(e){}
+	var e = document.querySelectorAll('[id],[class]');
+	for (var i = 0; i < e.length; i++) {
+		e[i].style.transition = 'box-shadow 0.5s ease-in-out';
+	}
 });

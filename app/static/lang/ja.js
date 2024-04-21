@@ -1,6 +1,6 @@
 var language=[
     {
-        obj:[{id:"visualViewport",attr:"content"},{"tag":"title"}],
+        obj:[{id:"dscc",attr:"content"},{"tag":"title"}],
         des:"無料インストール、webブラウザオンラインE2E/P2P セキュア、プライベート、秘密、登録不要。 ダウンロード不要、規制されていないテキスト、ビデオチャットシステム、AI（人工知能）ビデオ監視警報システム。"
     },
     {obj:[{id:"cnId",attr:"placeholder"}],des:"チャンネル | ルーム名 | パスワード"},
