@@ -4,6 +4,7 @@ var fs = require('fs'),
     // crypto = require("crypto"),
     // brotli = require('brotli'),
     express = require('express'),
+    cookieParser = require("cookie-parser"),
     app = express(),
     serverRootPath = __dirname + "/",
     Mime = require(serverRootPath +'Mime'),
@@ -192,6 +193,27 @@ fix.js`).split("\n")
     expressOptions.maxAge = (7*24*60*60) + 's';//'31536000s';//'3600s';
     var reRes = /(?:\/(js|css|model)\/(.*)$)|(\/tagmgmt\/bs\.js$)|(\.mp3$)/,g_oPmap;
     
+    app.use(cookieParser()); 
+    app.get("/lang/index.js",function(req,res,next){
+        res.setHeader("Content-Type","application/javascript");
+        var s = fs.readFileSync(webStaticPath+req.path).toString("utf-8");
+        res.end(s);
+    });
+    app.get("/js/lang.js",function(req,res,next){
+        res.setHeader("Content-Type","application/javascript");
+        // 获取 cookie 中 语言设置，并覆盖
+        var lg = String(req.cookies.lang||req.headers["accept-language"] || "en").replace(/ /gm,"").split(",")[0];
+        lg = webStaticPath+"lang/"+lg+".js"
+        if(!fs.existsSync(lg)){
+            if(-1<lg.indexOf("-")){
+                lg = webStaticPath+"lang/"+lg.split("-")[0]+".js"
+            }
+            if(!fs.existsSync(lg))lg = webStaticPath+"lang/en.js"
+        }
+        // console.log([req.cookies.lang,req.headers["accept-language"],lg])
+        var s = fs.readFileSync(lg).toString("utf-8");
+        res.end(s);
+    });
     app.get("/tfjs-backend-wasm-simd.wasm",function(req,res,next){
         res.setHeader("Content-Type","application/wasm");
         // console.log(szSSP+"model/tfjs-backend-wasm-simd.wasm")
@@ -354,10 +376,9 @@ fix.js`).split("\n")
                 // mergeRes.setJm();
                 g_oPmap[req.url]=1;
                 fs.writeFileSync(szPm,JSON.stringify(g_oPmap));
-                console.log("需要发布",szPm)
                 // req.connection.destroy();
             }
-        }else if(!g_oPmap[req.url]){
+        }else if(!g_oPmap[req.url] && !fs.existsSync(webStaticPath+req.url)){
             console.log("终止",req.url)
             req.connection.destroy();
             return;

@@ -327,12 +327,12 @@ function RevMsg (e) {
 // https://emojipedia.org/check-mark-button/
 var clientHeight = 0;
 var fn009 = function () {
-	let oT2 = $("div.r1rt"),w = 0,n=0;
-	oT2.find("a.i,span.i").each(function(){
+	let oT2 = $("div.r1rt"),w = 0,n=0,oA = oT2.find("a.i,span.i");
+	oA.each(function(){
 		let oT = $(this);
 		if(oT.is(":visible"))n++,w += oT.width();
 	});
-	w += n*10+10;
+	w += n*10+20;
 	oT2.css({"left":"calc(100vw - " + (w + n * 3 + (n - 1) * 3) + "px)",width:w+"px"});
 	setMF();
 	setWhOne();
@@ -1825,8 +1825,70 @@ const html2img=function(html) {
 	// const s1 = rq1.renderAsImage();
 	// alert(s1)
 };
-
+function GetLg(){
+	var o = navigator.language.split("-")[1];
+	if(!!document.cookie && -1 < String(document.cookie).indexOf("flg=")){
+		o = String(document.cookie).split("flg=")[1].split(";")[0];
+	}
+	return o;
+}
+function initLang(){
+	var oMs = $("#slctMtl"),bS1 = true;
+	// https://cdn.simplelocalize.io/public/v1/flags/es.svg
+	$("#stL").html("<img src=/flags/"+GetLg()+".svg>").click(function(){
+		if(bS1)oMs.show(),bS1=false;
+		else oMs.hide(),bS1=true
+	})
+	oMs.click(function(){
+		oMs.hide();
+	});
+	
+	if(!!language){
+		for(k in language){
+			try{
+				let oT1 = language[k];
+				if(!oT1["des"])continue;
+				let o1 = oT1["obj"];
+				for(x in o1){
+					let o7 = o1[x];
+					let  o2;
+					if(!!o7["tag"] && "title" == o7["tag"]){
+						document.title = oT1["des"];
+						continue;
+					}
+					if(!!o7["id"]){
+						console.log(o7["id"]);
+						o2 = $("#"+o7["id"]);
+						if(o7["attr"] == "text")o2[0].innerText(oT1["des"]);
+						else o2.attr(o7["attr"],oT1["des"])
+					}
+				}
+			}catch(e){
+				continue
+			}
+		}
+	}
+	
+	if(!!aLang){
+		var a = [],m1 = {};
+		for(k in aLang){
+			if(m1[aLang[k][0]])continue;m1[aLang[k][0]] = 1;
+			a.push("<div dt="+ aLang[k][2].split(",")[0] +" flg="+aLang[k][0]+"><img src=/flags/"+aLang[k][0]+".svg>"+aLang[k][1]+"</div>");
+		}
+		oMs.html(a.join(""));
+		$("#slctMtl div").click(function(){
+			var o = $(this);
+			var s = o.attr("dt");
+			if(s){
+				document.cookie = "lang="+s+";path=/";
+				document.cookie = "flg="+o.attr("flg")+";path=/";
+				location.reload();}
+		});
+	}
+	oMs.hide();
+}
 $(document).ready(function(){
+	initLang();
 	// genQrcd( `L: 最低的容错水平，可以纠正 7 个错误。
 	// 	M: 中等的容错水平，可以纠正 15 个错误。
 	// 	Q: 较高的容错水平，可以纠正 25 个错误。
