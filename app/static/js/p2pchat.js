@@ -1827,8 +1827,8 @@ const html2img=function(html) {
 };
 function GetLg(){
 	var o = navigator.language.split("-")[1];
-	if(!!document.cookie && -1 < String(document.cookie).indexOf("flg=")){
-		o = String(document.cookie).split("flg=")[1].split(";")[0];
+	if(!!document.cookie && -1 < String(document.cookie).indexOf("lang=")){
+		o = String(document.cookie).split("lang=")[1].split(";")[0];
 	}
 	return o;
 }
@@ -1869,19 +1869,15 @@ function initLang(){
 	}
 	
 	if(!!aLang){
-		var a = [],m1 = {};
+		var a = [],m = {};
 		for(k in aLang){
-			if(m1[aLang[k][0]])continue;m1[aLang[k][0]] = 1;
-			a.push("<div dt="+ aLang[k][2].split(",")[0] +" flg="+aLang[k][0]+" class=w><img src=/flags/"+aLang[k][0]+".svg>"+aLang[k][1].split(",")[0]+"</div>");
+			if(m[aLang[k][0]])continue;m[aLang[k][0]]=1;
+			a.push("<div dt="+aLang[k][0]+" class=w>"+aLang[k][1]+"</div>");
 		}
 		oMs.html(a.join(""));
 		$("#slctMtl div").click(function(){
-			var o = $(this);
-			var s = o.attr("dt");
-			if(s){
-				document.cookie = "lang="+s+";path=/";
-				document.cookie = "flg="+o.attr("flg")+";path=/";
-				location.reload();}
+			var s = $(this).attr("dt");
+			if(s){document.cookie = "lang="+s+";path=/";location.reload();}
 		});
 	}
 	oMs.hide();
