@@ -1,6 +1,6 @@
 var language=[
     {
-        obj:[{id:"visualViewport",attr:"content"},{"tag":"title"}],
+        obj:[{id:"dscc",attr:"content"},{"tag":"title"}],
         des:"Bezpłatna instalacja, przeglądarka internetowa online E2E/P2P, bezpieczna, prywatna, ukryta, nie wymaga rejestracji. Nie ma potrzeby pobierania, SMS-y bez nadzoru, system czatu wideo, system alarmowy nadzoru wideo AI (sztuczna inteligencja)"
     },
     {obj:[{id:"cnId",attr:"placeholder"}],des:"Kanał |. Nazwa pokoju"},

@@ -1,6 +1,6 @@
 var language=[
     {
-        obj:[{id:"visualViewport",attr:"content"},{"tag":"title"}],
+        obj:[{id:"dscc",attr:"content"},{"tag":"title"}],
         des:"免费安装、web浏览器在线E2E/P2P 安全、私密、隐蔽、无需注册。 无需下载、不受监管的文字、视频聊天系统、AI（人工智能）视频监控报警系统。"
     },
     {obj:[{id:"cnId",attr:"placeholder"}],des:"频道 | 房间名称 | 暗号"},

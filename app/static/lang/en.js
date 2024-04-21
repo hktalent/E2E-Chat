@@ -1,6 +1,6 @@
 var language=[
     {
-        obj:[{id:"visualViewport",attr:"content"},{"tag":"title"}],
+        obj:[{id:"dscc",attr:"content"},{"tag":"title"}],
         des:"free installation,web online E2E/P2P Secure, private, covert, No signups. No downloads, unregulated text, video chat system, AI(artificial intelligence) video monitoring and alarm system. 免费的、免安装的web HTML5 在线 E2E/P2P 安全、私密、隐蔽、不受监管的文本、视频聊天系统、AI(人工智能)视频监控报警系统。"
     },
     {obj:[{id:"cnId",attr:"placeholder"}],des:"Channel | room name"},

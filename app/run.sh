@@ -5,7 +5,8 @@ find tmp -empty -delete
 # npm install
 # npm prune --production=true
 # npm prune --omit=dev
-rm -rf static/js.js static/v8.js static/css.css;
+rm -rf tmp
+rm -rf static/js.js static/v8.js static/css.css static/js/,.js;
 # DEBUG=true 
 # NODE_DEBUG=true 
 # node --inspect --trace-deprecation server.js

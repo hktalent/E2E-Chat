@@ -1,6 +1,6 @@
 var language=[
     {
-        obj:[{id:"visualViewport",attr:"content"},{"tag":"title"}],
+        obj:[{id:"dscc",attr:"content"},{"tag":"title"}],
         des:"Installation gratuite, navigateur Web en ligne E2E/P2P, sécurisé, privé, caché, aucune inscription requise. Pas besoin de téléchargement, texte non supervisé, système de chat vidéo, système d'alarme de vidéosurveillance IA (intelligence artificielle)"
     },
     {obj:[{id:"cnId",attr:"placeholder"}],des:"Chaîne | Nom de la salle | Mot de passe"},
