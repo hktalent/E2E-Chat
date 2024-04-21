@@ -10,7 +10,7 @@ var fs = require('fs'),
     useCc =  true;
 
 if(process.env['DEBUG'])useCc = false;
-console.log(["debug",process.env['DEBUG'],"useCc",useCc])
+// console.log(["debug",process.env['DEBUG'],"useCc",useCc])
 function fnWc () {
     var a = [szPath, szPathC];
     for (var i = 0; i < a.length; i++)

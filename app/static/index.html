@@ -18,19 +18,22 @@
 <script src="/js/10.js"></script>
 <script src="/js/13.js"></script>
 <script src="/js/15.js"></script>
+<script src="/lang/index.js"></script>
+<script src="/js/lang.js"></script>
 </head><body><header><div class="row1">
 <div class="cel1 i" id="cah"><input type="text" placeholder="Channel | room name | 频道 | 暗号 | 聊天室名字" id="cnId" results=10 autocomplete="off"></div>
 <div class="cel1 i" id="nkid"><input type="text" placeholder="nick | 昵称" id="nick" results=10 autocomplete="off"></div>
 <div class="cel2"></div>
 </div>
 <div class="r1rt">
-	<a class="i" href=# id="shRow1" title="show/hiden Channel/nich">&lt;</a>
-	<span class="txtChat i" title="Set the countdown minutes for automatic destruction after message reading"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">Min</span>
-	<span class="txtChat i" title="Automatic reading and destruction/Destroy">♻️<input type="checkbox" id="atRd" checked></span>
+	<a class="i" href=# id="shRow1" title="show/hiden Channel/nick">&lt;</a>
+	<span id="sI1" class="txtChat i" title="Set the countdown minutes for automatic destruction after message reading"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">Min</span>
+	<span id="sI2" class="txtChat i" title="Automatic reading and destruction/Destroy">♻️<input type="checkbox" id="atRd" checked></span>
 	<a class="i" href=# id="clsId" title="Clean Up">🧹</a>
 	<a class="i" href=# id="stChat" title="Text Chat">💬</a>
 	<a class="i" href=# id="startChat"  title="Video Chat">🎦</a>
 	<a class="i" href=# id="its" title="show or hidden tools">⚙️</a>
+	<a class="i" href=# id="stL" title="语言"></a>
 </div>
 
 <div class="row" id="myCtn"><div id="rects" class="rects"></div></div>
@@ -43,28 +46,29 @@
 <i><select id="videoSelect"></select></i>
 <i><select id="audioInputSelect"></select></i>
 <i><select id="audioOutputSelect"></select></i>
-<i title="Show Me Video" ><input type="checkbox" id="showme"><span>Show Me</i>
-<i title="Show Invite"><input type="checkbox" id="sInvite"><span>Show Invite</i>
-<i title="Record screen"><input type="checkbox" id="rScreen"><span>Record screen</i>
-<i title="save jpg to server"><input type="checkbox" id="saveMe"><span>Save JPG</span></i>
-<i title="save Me video to server"><input type="checkbox" id="saveMeVD"><span>Save Video</span></i>
-<i title="本地保存视频，默认不发送到服务器"><input type="checkbox" id="eSvl" checked><span><span id="svHs"></span>Save Video Locally</span></i>
+<i title="Show Me Video" id="sI3"><input type="checkbox" id="showme"><span id="sI4">Show Me</i>
+<i title="Show Invite" id="sI5"><input type="checkbox" id="sInvite"><span id="sI6">Show Invite</i>
+<i title="Record screen" id="sI7"><input type="checkbox" id="rScreen"><span id="sI8">Record screen</i>
+<i title="save jpg to server" id="sI9"><input type="checkbox" id="saveMe"><span id="sI10">Save JPG</span></i>
+<i title="save Me video to server" id="sI11"><input type="checkbox" id="saveMeVD"><span id="sI12">Save Video</span></i>
+<i title="本地保存视频，默认不发送到服务器" id="sI13"><input type="checkbox" id="eSvl" checked><span id="svHs"></span><span id="sI14">Save Video Locally</span></i>
 <i title="enable OCR"><input type="checkbox" id="eOcr"><span>OCR</span></i>
-<i title="enable Detect Face"><input type="checkbox" id="eFace"><span>Detect Face</span></i>
+<i title="enable Detect Face" id="sI15"><input type="checkbox" id="eFace"><span id="sI16">Detect Face</span></i>
 <!-- <i title="More precise model, but slower initialization"><input type="checkbox" id="ux8"><span>Use X Model</span></i>
 <i title="enable OCR"><input type="checkbox" id="eOcr"><span>OCR</span></i>
 <i><input type="checkbox" id="uIps" class="btn btn-warning"><span>use IPFS</span></i> -->
-<i title="enable AI"><input type="checkbox" id="eAi"><span>Detect Object</span></i>
-<i title="静音"><input type="checkbox" id="eMute"><span>Mute</span></i>
+<i title="enable AI" id="sI17"><input type="checkbox" id="eAi"><span id="sI18">Detect Object</i>
+<i title="静音" id="sI19"><input type="checkbox" id="eMute"><span id="sI20">Mute</i>
 
-<i title="enable front camera"><input type="checkbox" id="evdUser"><span>Use front camera</span></i>
-<i title="Sports information: longitude, altitude | 运动信息:经度、海拔"><input type="checkbox" id="eLpos"><span>Motion info</span></i>
+<i title="use front camera" id="sI21"><input type="checkbox" id="evdUser"><span id="sI22">Use front camera</i>
+<i title="Sports information: longitude, altitude" id="sI23"><input type="checkbox" id="eLpos"><span id="sI24">Motion info</span></i>
 
 <br>
-<i>state: <span id="gInfo"></span></i>
+<i><k id="sI25">state</k>: <span id="gInfo"></span></i>
 <i id="ocrRst"></i>
 </div>
-<div id="intro" class="message overflow-x-hide overflow-y-hide shadow"><a href="#" id="closebtn">&times;</a>Invite Friends<i id="roomurl" data-toggle="tooltip" title="click copy"></i><i id="myQrcode"></i><div id="tooManyParticipants" class="message">Too many people may affect performance</div></div>
+<div id="intro" class="message overflow-x-hide overflow-y-hide shadow"><a href="#" id="closebtn">&times;</a><k id="sI26">Invite Friends</k><i id="roomurl" data-toggle="tooltip" title="click copy"></i><i id="myQrcode"></i><div id="tooManyParticipants" class="message">Too many people may affect performance</div></div>
 <img id="ocrImg"><div id="load"></div><div id="wnset"></div>
 <script src="/js/,.js"></script>
+<div id="slctMtl"></div>
 </body></html>
