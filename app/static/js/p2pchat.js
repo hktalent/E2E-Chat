@@ -1868,7 +1868,7 @@ function GetLg(){
 function initLang(){
 	var oMs = $("#slctMtl"),bS1 = true;
 	// https://cdn.simplelocalize.io/public/v1/flags/es.svg
-	$("#stL").html("<img src=/flags/"+GetLg()+".svg>").click(function(){
+	$("#stL").html("<img src=/flags/"+GetLg().toLowerCase()+".svg>").click(function(){
 		if(bS1)oMs.show(),bS1=false;
 		else oMs.hide(),bS1=true
 	})
@@ -1904,7 +1904,7 @@ function initLang(){
 	if(!!aLang){
 		var a = [];
 		for(var k in aLang){
-			a.push("<div dt="+k+" class=w lclg="+aLang[k]["contry"]+" title="+aLang[k]["desCn"]+"><img src=/flags/"+aLang[k]["contry"]+".svg>"+aLang[k]["des"]+"</div>");
+			a.push("<div dt="+k+" class=w lclg="+aLang[k]["contry"]+" title="+aLang[k]["desCn"]+"><img src=/flags/"+aLang[k]["contry"].toLowerCase()+".svg>"+aLang[k]["des"]+"</div>");
 		}
 		oMs.html(a.join(""));
 		$("#slctMtl div").click(function(){
