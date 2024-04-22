@@ -1,4 +1,5 @@
 let RegAsync = function(c){setTimeout(c,1)};
+let nVideoSn = 7; // 保留 最近 7 天
 String.prototype.trim = function(){return this.replace(/^\s*|\s*$/gmi,"")};
 String.prototype.hashCode = function() {
 	var hash = 0, i, chr;
@@ -37,12 +38,30 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
 window.MediaStream = window.MediaStream || window.webkitMediaStream;
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-var db;// 查询：db.friends.where("date").below(25).toArray();
+var db;
 // 删除历史数据
-function rmHisVideo(){}// delete
-function cntVideo(){// https://dexie.org/docs/Collection/Collection.count()
+// 保留 7 天数据
+function rmHisVideo(){
+	if(!!db){
+		var nT = new Date().getTime() - nVideoSn * 24 * 60 * 60 * 1000;
+		db.friends.each(function(i,c){
+			CrtDldA(i.video,0,i.id);
+			if(i.time < nT){
+				db.friends.delete(i.id);
+			}
+		});
+	}
+}// delete
+function cntVideo(cbk){// https://dexie.org/docs/Collection/Collection.count()
 	if(!!db)db.friends.count().then(function (count) {
-		try{if(0 < count)$("#svHs").text("("+count+")")}catch(e){alert(e)}
+		try{
+			var s1 = "";
+			if(0 < count){
+				s1 = "("+count+")";
+				if(typeof cbk == "function")cbk(count);
+			}
+			$("#svHs").text(s1);
+		}catch(e){alert(e)}
 	});
 }
 
@@ -1198,21 +1217,35 @@ const b64toBlob = function(b64Data, contentType='', sliceSize=512){
 	const blob = new Blob(byteArrays, {type: contentType});
 	return blob;
 }
+function crtDel(o,id){
+	let rm = document.createElement("span");
+	rm.className = "rm";
+	rm.innerText = " X";
+	rm.onclick = function(){
+		if(!!db && id){db.friends.delete(id);cntVideo()}
+		o.remove();
+		this.remove();
+	};
+	return rm;
+}
 // 本地浏览器保存
-function CrtDldA(s,beSvl){
-	var a1 = s.split(";base64,");
-	var link = document.createElement("a");
+function CrtDldA(s,beSvl,szId){
+	var nMax = document.getElementById("iVdnm").value||100;
+	let a1 = s.split(";base64,");
+	let link = document.createElement("a");
 	const blob = b64toBlob(a1[1],a1[0].substr(5));
-	var objectURL = window.URL.createObjectURL(blob)
-	$("#ocrRst").append(link);
+	const s11 = prettyBytes(blob.size);
+	let objectURL = window.URL.createObjectURL(blob)
+	$("#ocrRst").append(link).append(crtDel(link,szId));
 	link.className="mmMp4";
 	link.href = objectURL;
 	link.target = "_blank";
-	var s1 = getNowStr() +".mp4";
-	link.innerText = link.download = s1;
+	let s1 = getNowStr() +".webm";
+	link.download = s1;
+	link.innerText = s1+"("+s11+")";
 	let a = $("#ocrRst a.mmMp4");
 	// 这里应该做一些处理，如果没有发生报警，也就是没有检测到人，就不保存，这样可以节省空间
-	if(!g_bWarn&&a.length > 100)a[0].remove();
+	if(!g_bWarn&&a.length > nMax)a[0].remove();
 	if(beSvl)RegAsync(async function(){
 		try{
 			if(!!db)await db.friends.add({date:new Date().getTime(),video:s});
@@ -1256,7 +1289,6 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT) {/
 						recorder.getDataURL(async function(videoDataURL){
 							videoDataURL = String(videoDataURL);
 							if(100 > videoDataURL.length){
-								alert([nT,!!vSs,videoDataURL])
 								return;
 							}
 							if(isSvLc())RegAsync(async function(){SaveMp4(videoDataURL)});
@@ -2188,7 +2220,7 @@ $(document).ready(function(){
 		if(!!db)db.version(1).stores({
 			friends: "++id,date,video"
 		});
-		cntVideo();
+		cntVideo(rmHisVideo);
 	}catch(e){}
 	var e = document.querySelectorAll('[id],[class]');
 	for (var i = 0; i < e.length; i++) {
