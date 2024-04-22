@@ -1254,9 +1254,7 @@ function CrtDldA(s,beSvl,szId,nick){
 		}catch(e){log(e)}
 	});
 }
-let isSvLc = ()=>{
-	return typeof SaveMp4 == "function"
-}
+let isSvLc = ()=>{return typeof SaveMp4 == "function"};
 // 触发保存
 var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nick) {// https://recordrtc.org/
 	try{
