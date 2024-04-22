@@ -933,9 +933,9 @@ function init () {
 				remote_media.controls = false;
 				oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0 0 0 0"});
-				if(isSvLc()){
+				if(isSvLc()||document.getElementById("saveMeVD").checked){
 					remote_media.addEventListener('play', async function() {
-						fnStartRct(event.stream,1);
+						fnStartRct(event.stream,1,config.userdata.nick);
 					});
 				}
 				attachMediaStream(remote_media, event.stream);
@@ -1229,7 +1229,7 @@ function crtDel(o,id){
 	return rm;
 }
 // 本地浏览器保存
-function CrtDldA(s,beSvl,szId){
+function CrtDldA(s,beSvl,szId,nick){
 	var nMax = document.getElementById("iVdnm").value||100;
 	let a1 = s.split(";base64,");
 	let link = document.createElement("a");
@@ -1240,7 +1240,8 @@ function CrtDldA(s,beSvl,szId){
 	link.className="mmMp4";
 	link.href = objectURL;
 	link.target = "_blank";
-	let s1 = getNowStr() +".webm";
+	if(nick)nick+="_";else nick = "";
+	let s1 = nick+getNowStr() +".webm";
 	link.download = s1;
 	link.innerText = s1+"("+s11+")";
 	let a = $("#ocrRst a.mmMp4");
@@ -1257,7 +1258,7 @@ let isSvLc = ()=>{
 	return typeof SaveMp4 == "function"
 }
 // 触发保存
-var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT) {// https://recordrtc.org/
+var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nick) {// https://recordrtc.org/
 	try{
 		var stream = vSs||window.stream||window.webcam||local_media,oC1 = $(stream);
 		if(!stream){
@@ -1294,7 +1295,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT) {/
 							if(isSvLc())RegAsync(async function(){SaveMp4(videoDataURL)});
 							else{
 								let beSvl = document.getElementById("eSvl").checked
-								RegAsync(async function(){CrtDldA(videoDataURL,beSvl)});
+								RegAsync(async function(){CrtDldA(videoDataURL,beSvl,0,nick)});
 								if(!beSvl)socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
 							}
 						});
