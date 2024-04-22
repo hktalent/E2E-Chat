@@ -1858,16 +1858,17 @@ const html2img=function(html) {
 	// alert(s1)
 };
 function GetLg(){
-	var o = navigator.language.split("-")[1];
+	var o = "";
 	if(!!document.cookie && -1 < String(document.cookie).indexOf("lclg=")){
 		o = String(document.cookie).split("lclg=")[1].split(";")[0];
 	}
+	if(!o)o=navigator.language.split("-")[1];
 	return o;
 }
 function initLang(){
 	var oMs = $("#slctMtl"),bS1 = true;
 	// https://cdn.simplelocalize.io/public/v1/flags/es.svg
-	$("#stL").html(GetLg()).click(function(){
+	$("#stL").html("<img src=/flags/"+GetLg()+".svg>").click(function(){
 		if(bS1)oMs.show(),bS1=false;
 		else oMs.hide(),bS1=true
 	})
@@ -1901,10 +1902,9 @@ function initLang(){
 	}
 	
 	if(!!aLang){
-		var a = [],m = {};
-		for(var k = 0;k < aLang.length;k++){
-			if(m[aLang[k][0]])continue;m[aLang[k][0]]=1;
-			a.push("<div dt="+aLang[k][0]+" class=w lclg="+aLang[k][1]+">"+(k+1)+"、"+aLang[k][1]+"</div>");
+		var a = [];
+		for(var k in aLang){
+			a.push("<div dt="+k+" class=w lclg="+aLang[k]["contry"]+" title="+aLang[k]["desCn"]+"><img src=/flags/"+aLang[k]["contry"]+".svg>"+aLang[k]["des"]+"</div>");
 		}
 		oMs.html(a.join(""));
 		$("#slctMtl div").click(function(){
