@@ -1870,9 +1870,9 @@ function initLang(){
 	
 	if(!!aLang){
 		var a = [],m = {};
-		for(k in aLang){
+		for(var k = 0;k < aLang.length;k++){
 			if(m[aLang[k][0]])continue;m[aLang[k][0]]=1;
-			a.push("<div dt="+aLang[k][0]+" class=w lclg="+aLang[k][1]+">"+aLang[k][1]+"</div>");
+			a.push("<div dt="+aLang[k][0]+" class=w lclg="+aLang[k][1]+">"+(k+1)+"、"+aLang[k][1]+"</div>");
 		}
 		oMs.html(a.join(""));
 		$("#slctMtl div").click(function(){
