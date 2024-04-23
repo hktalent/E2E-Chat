@@ -526,11 +526,13 @@ i a:hover{ box-shadow: 6px 5px 24px #666;}
     background-color: #333;
     position: absolute;
     top: 2.5rem;
-    left: calc(100vw - 150px);
-    width: 150px;
-    height: calc(100% - 2.5rem) ;
+    left: calc(100vw - 233px);
+    height: calc(100% - 5rem) ;
     overflow: auto;
     z-index: 999999;
+}
+.rtool i{
+    white-space: nowrap;
 }
 .rtool input{
     margin:auto 5px auto 5px;
