@@ -1265,11 +1265,20 @@ function crtDel(o,id){
 	rm.className = "rm";
 	rm.innerText = " X";
 	rm.onclick = function(){
-		if(!!db && id){db.friends.delete(id);cntVideo()}
-		o.remove();
-		this.remove();
+		if(!!db && id){
+			db.friends.delete(id);
+			o.remove();
+			this.remove();
+			cntVideo()
+		}
 	};
 	return rm;
+}
+function rmAllVd(){
+	if(!!db)db.friends.clear();
+	$("#ocrRst a").remove();
+	$("#ocrRst").html("");
+	cntVideo();
 }
 // 本地浏览器保存
 function CrtDldA(s,beSvl,szId,nick){
@@ -1826,7 +1835,7 @@ function initBox(){
 			item[1]=decodeURIComponent(item[1])
 			if(o.type == "checkbox")(function(o){
 				RegAsync(async function(){
-					o.checked = "true" == String(item[1]).toLowerCase();
+					o.checked = "true" == String(item[1]||"").toLowerCase();
 					if(o.id != "atRd")o.click(); // atRd click会导致清空定时函数
 				});
 			})(o);
@@ -1910,7 +1919,7 @@ function GetLg(){
 function initLang(){
 	var oMs = $("#slctMtl"),bS1 = true;
 	// https://cdn.simplelocalize.io/public/v1/flags/es.svg
-	$("#stL").html("<img src=/flags/"+GetLg().toLowerCase()+".svg>").click(function(){
+	$("#stL").html("<img src=/flags/"+(GetLg()||"us").toLowerCase()+".svg>").click(function(){
 		if(bS1)oMs.show(),bS1=false;
 		else oMs.hide(),bS1=true
 	})
@@ -1946,7 +1955,7 @@ function initLang(){
 	if(!!aLang){
 		var a = [];
 		for(var k in aLang){
-			a.push("<div dt="+k+" class=w lclg="+aLang[k]["contry"]+" title="+aLang[k]["desCn"]+"><img src=/flags/"+aLang[k]["contry"].toLowerCase()+".svg>"+aLang[k]["des"]+"</div>");
+			a.push("<div dt="+k+" class=w lclg="+aLang[k]["contry"]+" title="+aLang[k]["desCn"]+"><img src=/flags/"+(aLang[k]["contry"]||"us").toLowerCase()+".svg>"+aLang[k]["des"]+"</div>");
 		}
 		oMs.html(a.join(""));
 		$("#slctMtl div").click(function(){
@@ -2218,6 +2227,8 @@ $(document).ready(function(){
 		if(o10.attr("show"))o10.hide(),o10.removeAttr("show");
 		else o10.show(),o10.attr("show",true);
 		dspNa();
+		let o = $("div.rtool");
+		o.css({"left":"calc(100vw -"+o.width()+"px)"});
 	});
 	if (szHs) {
 		oCnId.val(szHs.substring(1));
@@ -2269,4 +2280,5 @@ $(document).ready(function(){
 		e[i].style.transition = 'box-shadow 0.5s ease-in-out';
 	}
 	$("#sI55").click(dlAllVideo);
+	$("#sI56").click(rmAllVd);
 });
