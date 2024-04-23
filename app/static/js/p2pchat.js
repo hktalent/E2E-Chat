@@ -38,14 +38,57 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
 window.MediaStream = window.MediaStream || window.webkitMediaStream;
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-var db;
+let db;
+function saveAs(blob, fileName) {
+	const a = document.createElement('a');
+	a.href = window.URL.createObjectURL(blob);
+	a.download = fileName;
+	a.click();
+}
+async function dlAllVideo(){
+	const zip = new JSZip();
+	const videoFolderName = "51pwn_video";
+	const mp4Folder = zip.folder(videoFolderName);
+
+	const videoLinks = document.querySelectorAll("#ocrRst a");
+	var a3 = [];
+	a3.push.apply(a3,videoLinks);
+	await Promise.all(a3.map(async (vl) => {
+		const videoUrl = vl.href;
+		try {
+			let fileName = vl.innerText || videoUrl.substring(videoUrl.lastIndexOf("/") + 1);
+			fileName = fileName.split("(")[0];
+			await mp4Folder.file(fileName, await fetch(videoUrl).then(response => response.blob()), {binary: true});
+		} catch (error) {
+			console.error("Error processing video link:", videoUrl, error);
+		}
+	}));
+	
+	// for (let index = 0; index < videoLinks.length; index++) {
+	// 	const videoLink = videoLinks[index];
+	// 	const videoUrl = videoLink.href;
+	// 	try {
+	// 		let fileName = videoLink.innerText || videoUrl.substring(videoUrl.lastIndexOf("/") + 1);
+	// 		fileName = fileName.split("(")[0];
+	// 		await mp4Folder.file(fileName, await fetch(videoUrl).then(response => response.blob()), {binary: true,});
+	// 	} catch (error) {
+	// 		console.error("Error processing video link:", videoUrl, error);
+	// 	}
+	// }
+
+	zip.generateAsync({ type: "blob" }).then(content => {
+		saveAs(content, videoFolderName + ".zip");
+	}).catch(error => {
+		console.error("Error generating ZIP:", error);
+	});
+}
 // 删除历史数据
 // 保留 7 天数据
 function rmHisVideo(){
 	if(!!db){
 		var nT = new Date().getTime() - nVideoSn * 24 * 60 * 60 * 1000;
-		db.friends.each(function(i,c){
-			CrtDldA(i.video,0,i.id);
+		db.friends.each(async function(i,c){
+			RegAsync(async function(){CrtDldA(i.video,0,i.id)});
 			if(i.time < nT){
 				db.friends.delete(i.id);
 			}
@@ -2225,4 +2268,5 @@ $(document).ready(function(){
 	for (var i = 0; i < e.length; i++) {
 		e[i].style.transition = 'box-shadow 0.5s ease-in-out';
 	}
+	$("#sI55").click(dlAllVideo);
 });
