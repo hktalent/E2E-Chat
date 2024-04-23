@@ -158,6 +158,27 @@ fix.js`).split("\n")
     if(os.platform() === 'darwin'){
         connectSources.push("wss://192.168.0.107:" + String(option.port)+ "/*","wss://127.0.0.1:" + String(option.port)+ "/*")
     }
+    let doBrGzip = function(szFl,req,res){
+        var a = {},szRt = __dirname+"/tmp/static"+szFl;
+        
+        String(req.headers["accept-encoding"]||"").replace(/ /g,"").split(",").map(s=>{a[s.toLowerCase()]=!!1});
+        if(a["br"] && fs.existsSync(szRt+".br")){
+            res.contentType(Mime.getMime(szFl));
+            res.setHeader('Content-Encoding', 'br');
+            res.sendFile(szRt+".br");
+            // console.log("send file:" +szFl+".br")
+            return true
+        }
+        if((a["gzip"]||a["deflate"]) && fs.existsSync(szRt+".gzip")){
+            res.contentType(Mime.getMime(szFl));
+            res.setHeader('Content-Encoding', 'gzip');
+            res.sendFile(szRt+".gzip");
+            // console.log("send file:" +szFl+".gzip")
+            return true
+        }
+        return false
+    }
+    
     app.use(helmet());
     const images = [`https:`, `data:`];
     // 终于fixed 头部信息生效的bug
@@ -194,6 +215,19 @@ fix.js`).split("\n")
     var reRes = /(?:\/(js|css|model)\/(.*)$)|(\/tagmgmt\/bs\.js$)|(\.mp3$)/,g_oPmap;
     
     app.use(cookieParser()); 
+    app.use(function(req,res,next){
+        if(/^\/flags\/[^\.]+\.svg$/g.test(req.path)) {
+            let szP = webStaticPath + req.path;
+            if(!fs.existsSync(szP)){
+                szP = webStaticPath+"flags/us.svg";
+            }
+            if(doBrGzip(szP.substring(0,webStaticPath.length),req,res))return;
+            res.setHeader("Content-Type","image/svg+xml");
+            res.sendFile(szP);
+            return;
+        }
+        next();
+    })
     app.get("/lang/index.js",function(req,res,next){
         res.setHeader("Content-Type","application/javascript");
         var s = fs.readFileSync(webStaticPath+req.path).toString("utf-8");
@@ -219,26 +253,7 @@ fix.js`).split("\n")
         // console.log(szSSP+"model/tfjs-backend-wasm-simd.wasm")
         res.sendFile(szSSP+"model/tfjs-backend-wasm-simd.wasm");
     })
-    let doBrGzip = function(szFl,req,res){
-        var a = {},szRt = __dirname+"/tmp/static"+szFl;
-        
-        String(req.headers["accept-encoding"]||"").replace(/ /g,"").split(",").map(s=>{a[s.toLowerCase()]=!!1});
-        if(a["br"] && fs.existsSync(szRt+".br")){
-            res.contentType(Mime.getMime(szFl));
-            res.setHeader('Content-Encoding', 'br');
-            res.sendFile(szRt+".br");
-            // console.log("send file:" +szFl+".br")
-            return true
-        }
-        if((a["gzip"]||a["deflate"]) && fs.existsSync(szRt+".gzip")){
-            res.contentType(Mime.getMime(szFl));
-            res.setHeader('Content-Encoding', 'gzip');
-            res.sendFile(szRt+".gzip");
-            // console.log("send file:" +szFl+".gzip")
-            return true
-        }
-        return false
-    }
+    
     app.get(reRes,async function(req,res,next)
     {
         if(doBrGzip(req.path,req,res))return;
@@ -434,6 +449,7 @@ fix.js`).split("\n")
             next();
             return;
         }
+        console.log("404",req.url);
         next()
     })
     var nPort = option.port || 3000;

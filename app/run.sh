@@ -1,6 +1,9 @@
 # brew services  start redis
 find . -name ".DS_Store*" -delete
 find tmp -empty -delete
+echo "最近 1 天修改过文件 start"
+find . -type f -mtime -1|grep -v '.git'|grep -Ev 'node_modules|dbChat'
+echo "最近 1 天修改过文件 end"
 # cd /app/
 # npm install
 # npm prune --production=true

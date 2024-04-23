@@ -88,7 +88,7 @@ function rmHisVideo(){
 	if(!!db){
 		var nT = new Date().getTime() - nVideoSn * 24 * 60 * 60 * 1000;
 		db.friends.each(async function(i,c){
-			RegAsync(async function(){CrtDldA(i.video,0,i.id)});
+			CrtDldA(i.video,0,i.id);
 			if(i.time < nT){
 				db.friends.delete(i.id);
 			}
@@ -1125,7 +1125,7 @@ function MkQrcd () {
 	if($("#stChat").css("display")!="none")aP.push("startChat=1");
 	else if($("#startChat").css("display")!="none")aP.push("stChat=1");
 
-	var szCurUrl = document.location.href.split("#")[0] + "?" + aP.join("&");
+	var szCurUrl = document.location.href.split("#")[0].split("?")[0] + "?" + aP.join("&");
 	if(szLstQrcode == szCurUrl)return;
 	szLstQrcode = szCurUrl;
 	document.getElementById('roomurl').textContent = szCurUrl;
@@ -1267,10 +1267,10 @@ function crtDel(o,id){
 	rm.onclick = function(){
 		if(!!db && id){
 			db.friends.delete(id);
-			o.remove();
-			this.remove();
 			cntVideo()
 		}
+		o.remove();
+		this.remove();
 	};
 	return rm;
 }
