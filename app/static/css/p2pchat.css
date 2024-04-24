@@ -510,9 +510,14 @@ i{
     margin: 0 2rem 0 0;
     padding: 0.3rem;
     border-radius: 1.8rem;
-    display: block;
     cursor: pointer;
-    
+    display: block;
+}
+.x4{
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    white-space: nowrap;
 }
 i a{
     font-size: 1rem;
@@ -528,7 +533,7 @@ i a:hover{ box-shadow: 6px 5px 24px #666;}
     background-color: #333;
     position: absolute;
     top: 2.5rem;
-    left: calc(100vw - 233px);
+    left: calc(100vw - 260px);
     height: calc(100% - 5rem) ;
     overflow: auto;
     z-index: 999999;
@@ -656,3 +661,31 @@ i a:hover{ box-shadow: 6px 5px 24px #666;}
     border-bottom:0;
 }
 pre { white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word; width: 100%;}
+
+
+.loader {
+    margin-left:3px;
+    padding-left: 3px;
+    width: 120px;
+    height: 20px;
+    border-radius: 20px;
+    display: inline-block;
+    background:
+     linear-gradient(orange 0 0) 0/0% no-repeat
+     lightblue;
+    animation: l2 2s infinite steps(10);
+  }
+  @keyframes l2 {
+      100% {background-size:110%}
+  }
+  
+  #st2{
+    position: absolute;
+    display: flex;
+    left: 0;
+    top: calc(100vh - 68px);
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+  }
