@@ -39,11 +39,18 @@ window.MediaStream = window.MediaStream || window.webkitMediaStream;
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 let db;
+let vdCnt1 = 0;// 本地视频计数
 function saveAs(blob, fileName) {
 	const a = document.createElement('a');
 	a.href = window.URL.createObjectURL(blob);
 	a.download = fileName;
 	a.click();
+}
+function crtLoader(){
+	var l = document.createElement("div");
+	l.className = "loader";
+	$("#st2").append(l);
+	return l;
 }
 async function dlAllVideo(){
 	const zip = new JSZip();
@@ -53,16 +60,20 @@ async function dlAllVideo(){
 	const videoLinks = document.querySelectorAll("#ocrRst a");
 	var a3 = [];
 	a3.push.apply(a3,videoLinks);
+	var lT = crtLoader(),i = 0;
 	await Promise.all(a3.map(async (vl) => {
 		const videoUrl = vl.href;
 		try {
 			let fileName = vl.innerText || videoUrl.substring(videoUrl.lastIndexOf("/") + 1);
 			fileName = fileName.split("(")[0];
 			await mp4Folder.file(fileName, await fetch(videoUrl).then(response => response.blob()), {binary: true});
+			i++;
+			lT.innerText = "download zip:" + i + "/" + a3.length;
 		} catch (error) {
 			console.error("Error processing video link:", videoUrl, error);
 		}
 	}));
+	lT.remove();
 	
 	// for (let index = 0; index < videoLinks.length; index++) {
 	// 	const videoLink = videoLinks[index];
@@ -86,18 +97,26 @@ async function dlAllVideo(){
 // 保留 7 天数据
 function rmHisVideo(){
 	if(!!db){
-		var nT = new Date().getTime() - nVideoSn * 24 * 60 * 60 * 1000;
+		let lT = crtLoader(),x = 0;
+		let nT = new Date().getTime() - nVideoSn * 24 * 60 * 60 * 1000;
+		let aId = [];
 		db.friends.each(async function(i,c){
-			CrtDldA(i.video,0,i.id);
+			CrtDldA(i.video,0,i.id,i.name);
 			if(i.time < nT){
-				db.friends.delete(i.id);
+				aId.push(i.id);
 			}
+			x++;
+			lT.innerText = "init videos " + x + "/" + vdCnt1;
+		}).then(function(){
+			if(aId.length)db.friends.where('id').in(aId).delete();
+			lT.remove();
 		});
 	}
 }// delete
 function cntVideo(cbk){// https://dexie.org/docs/Collection/Collection.count()
 	if(!!db)db.friends.count().then(function (count) {
 		try{
+			vdCnt1 = count;
 			var s1 = "";
 			if(0 < count){
 				s1 = "("+count+")";
@@ -1260,40 +1279,68 @@ const b64toBlob = function(b64Data, contentType='', sliceSize=512){
 	const blob = new Blob(byteArrays, {type: contentType});
 	return blob;
 }
-function crtDel(o,id){
+function crtDel(o,id,oDv){
 	let rm = document.createElement("span");
 	rm.className = "rm";
 	rm.innerText = " X";
 	rm.onclick = function(){
-		if(!!db && id){
-			db.friends.delete(id);
+		if(!!db){
+			if(id)db.friends.delete(id);
+			else if(o.download) db.friends.where("name").anyOf(o.download).delete();
 			cntVideo()
 		}
 		o.remove();
 		this.remove();
+		oDv.remove();
 	};
 	return rm;
 }
 function rmAllVd(){
-	if(!!db)db.friends.clear();
-	$("#ocrRst a").remove();
-	$("#ocrRst").html("");
-	cntVideo();
+	let oXa = $("#sI56");
+	oXa.attr("disabled",true);
+	var lT = crtLoader(),x = 0;
+	let cbk1 = function(){
+		$("#ocrRst a").remove();
+		$("#ocrRst").html("");
+		lT.remove();
+	};
+	
+	if(!!db){
+		let ta;
+		db.friends.count().then(function(count) {
+			ta = count;
+			lT.innerText = `Deleting ${ta}`;
+		});
+		var aX = [];
+		db.friends.each(function(i,c){
+			aX.push(i.id);
+		}).then(function(){
+			if(aX.length)db.friends.bulkDelete(aX).then(function(){
+				cntVideo();
+				cbk1();
+			});
+			else cbk1();
+		});
+	}else cbk1();
+	oXa.attr("disabled",false);
 }
 // 本地浏览器保存
-function CrtDldA(s,beSvl,szId,nick){
+function CrtDldA(s,beSvl,szId,nick,szName){
 	var nMax = document.getElementById("iVdnm").value||100;
 	let a1 = s.split(";base64,");
 	let link = document.createElement("a");
 	const blob = b64toBlob(a1[1],a1[0].substr(5));
 	const s11 = prettyBytes(blob.size);
 	let objectURL = window.URL.createObjectURL(blob)
-	$("#ocrRst").append(link).append(crtDel(link,szId));
+	var oDv = document.createElement("div");
+	oDv.className = "x4";
+	$("#ocrRst").append(oDv);
+	$(oDv).append(crtDel(link,szId,oDv)).append(link);
 	link.className="mmMp4";
 	link.href = objectURL;
 	link.target = "_blank";
 	if(nick)nick+="_";else nick = "";
-	let s1 = nick+getNowStr() +".webm";
+	let s1 = szName||(nick+getNowStr() +".webm");
 	link.download = s1;
 	link.innerText = s1+"("+s11+")";
 	let a = $("#ocrRst a.mmMp4");
@@ -1301,8 +1348,9 @@ function CrtDldA(s,beSvl,szId,nick){
 	if(!g_bWarn&&a.length > nMax)a[0].remove();
 	if(beSvl)RegAsync(async function(){
 		try{
-			if(!!db)await db.friends.add({date:new Date().getTime(),video:s});
-			cntVideo();
+			if(!!db){
+				db.friends.add({date:new Date().getTime(),video:s,name:s1}).then(cntVideo);
+			}
 		}catch(e){log(e)}
 	});
 }
@@ -1312,13 +1360,13 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 	try{
 		var stream = vSs||window.stream||window.webcam||local_media,oC1 = $(stream);
 		if(!stream){
-			RegAsync(function(){fnStartRct(vSs,nT)});
+			RegAsync(function(){fnStartRct(vSs,nT,nick)});
 			return;
 		}
-		if("true"==oC1.attr("bIsRvdRcd")){
+		if(new Date().getTime() - (oC1.attr("bIsRvdRcd")||0) < 70000){
 			return;
 		}
-		oC1.attr("bIsRvdRcd","true");
+		oC1.attr("bIsRvdRcd",new Date().getTime());
 		const szT1 = "video/webm;codecs=vp9";
 		// if(isSvLc())szT1="video/webm;codecs=h264";// Chromium不支持264 video/x-matroska;codecs=avc1 // https://pixelpoint.io/blog/web-optimized-video-ffmpeg/
 		var recorder = RecordRTC(stream, {
@@ -1342,7 +1390,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 							if(100 > videoDataURL.length){
 								return;
 							}
-							if(isSvLc())RegAsync(async function(){SaveMp4(videoDataURL)});
+							if(isSvLc())RegAsync(async function(){SaveMp4({"data":videoDataURL,"name":nick})});
 							else{
 								let beSvl = document.getElementById("eSvl").checked
 								RegAsync(async function(){CrtDldA(videoDataURL,beSvl,0,nick)});
@@ -1354,7 +1402,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 					}
 				}
 				RegAsync(function(){
-					if (!g_bStopVd) oC1.attr("bIsRvdRcd","false"),fnStartRct(vSs,nT);
+					if (!g_bStopVd) oC1.attr("bIsRvdRcd","false"),fnStartRct(vSs,nT,nick);
 				});
 			});
 		}, nT3);
@@ -1995,7 +2043,7 @@ $(document).ready(function(){
 		bEaIpfs = this.checked;	
 	});
 	$('#saveMeVD').on("change", function () {
-		if (this.checked){g_bStopVd=false,fnStartRct();}
+		if (this.checked){g_bStopVd=false,fnStartRct(window.webcam,0,$("#nick").val());}
 		else g_bStopVd = true;
 	});
 	
@@ -2271,7 +2319,7 @@ $(document).ready(function(){
 	try{
 		db=new Dexie("_p2pchat_");
 		if(!!db)db.version(1).stores({
-			friends: "++id,date,video"
+			friends: "++id,date,video,name"
 		});
 		cntVideo(rmHisVideo);
 	}catch(e){}
