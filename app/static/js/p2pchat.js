@@ -248,7 +248,7 @@ setInterval(function(){
 			}
 		}
 	}
-	fnSendSvMsg();
+	// fnSendSvMsg();// 太频繁了
 }, 1000);
 
 function doCErr(s){
@@ -844,11 +844,13 @@ function init () {
 	s1 = appURL()
 	s1 = s1.replace("https://", "wss://")
 	socket = io("/pChat");
-	let fnOldEmit = socket.emit;
+	const fnOldEmit = socket.emit;
+	// 重载 socket.emit 方法，如果发送失败，会自动重试，这里是导致chrome崩溃的原因
+	// 这里有可以控制特定事件的频度、以及数据没有变化时不重复发送
 	socket.emit = function () {
 		var a = Array.from(arguments);
-		a.push(function(o){
-			if(o != "success"){
+		if(typeof a[a.length - 1] != "function")a.push(function(o){
+			if(o != "success"){console([a[0],o])
 				RegAsync(async function(){
 					fnOldEmit.apply(socket, a);
 				});
@@ -1626,35 +1628,35 @@ window['doODetcCbk'] = function(oDtc){
 	g_oSdMsg["object"] = oDtc;
 };
 
-function fnSendSvMsg(){
-	if(socket)
-	{
-		var oTm42 = JSON.parse(JSON.stringify(g_oSdMsg)),a1 = [oLst1,oLst2,oLst3,oLst4],a2 = ['ocr','object','gps','compass'];
-		for(var i = 0; i < a1.length;i++){
-			if(a1[i] == oTm42[a2[i]]){
-				oTm42[a2[i]] = null;
-				delete oTm42[a2[i]];
-			}
-		}
-		for(var i = 0; i < a1.length;i++){
-			if(oTm42[a2[i]])
-			{
-				if(g_oYourInfo['ip']?.length)oTm42["ip"] = g_oYourInfo['ip'];
-				oTm42["date"] = getNowStr();
-				// id: nick + fingerprint + channel + gps + date
-				oTm42["nick"] = $("#nick").val();
-				oTm42["channel"] = $("#cnId").val();
-				if(szCltFg)oTm42["fingerprint"] = szCltFg;
-				socket.emit('svCurImgInfo',oTm42);
-				break;
-			}
-		}
-		oLst1 = g_oSdMsg["ocr"];
-		oLst2 = g_oSdMsg["object"];
-		oLst3 = g_oSdMsg["gps"];
-		oLst4 = g_oSdMsg["compass"]
-	}
-}
+// function fnSendSvMsg(){
+// 	if(socket)
+// 	{
+// 		var oTm42 = JSON.parse(JSON.stringify(g_oSdMsg)),a1 = [oLst1,oLst2,oLst3,oLst4],a2 = ['ocr','object','gps','compass'];
+// 		for(var i = 0; i < a1.length;i++){
+// 			if(a1[i] == oTm42[a2[i]]){
+// 				oTm42[a2[i]] = null;
+// 				delete oTm42[a2[i]];
+// 			}
+// 		}
+// 		for(var i = 0; i < a1.length;i++){
+// 			if(oTm42[a2[i]])
+// 			{
+// 				if(g_oYourInfo['ip']?.length)oTm42["ip"] = g_oYourInfo['ip'];
+// 				oTm42["date"] = getNowStr();
+// 				// id: nick + fingerprint + channel + gps + date
+// 				oTm42["nick"] = $("#nick").val();
+// 				oTm42["channel"] = $("#cnId").val();
+// 				if(szCltFg)oTm42["fingerprint"] = szCltFg;
+// 				socket.emit('svCurImgInfo',oTm42);
+// 				break;
+// 			}
+// 		}
+// 		oLst1 = g_oSdMsg["ocr"];
+// 		oLst2 = g_oSdMsg["object"];
+// 		oLst3 = g_oSdMsg["gps"];
+// 		oLst4 = g_oSdMsg["compass"]
+// 	}
+// }
 // 扫码结果回调用
 const qrS =function(I){
 	if(!I)return;
@@ -1706,7 +1708,7 @@ function doEvt(event){
 	g_oSdMsg["compass"] = getObjInfo(event,o1);
 	fnMyLogs(JSON.stringify(g_oSdMsg["compass"],null," "));
 }
-var pointDegree;
+let pointDegree;
 function doGps(e) {
 	var compass = e.webkitCompassHeading || Math.abs(e.alpha - 360),compassCircle = document.querySelector(".compass-circle"),myPoint = document.querySelector(".my-point");
 	compassCircle.style.transform = `translate(-50%, -50%) rotate(${-compass}deg)`;
@@ -1817,10 +1819,11 @@ function fnAddTmGps(){
 	// 	// return false
 	// });
 }
+let idGps = 0;
 function StartPosInfo(){
-	var id;
+	try{if(idGps)stopPosInfo(idGps)}catch(e){}
 	if(navigator.geolocation) { // 经纬度信息
-		id = navigator.geolocation.watchPosition(function(position){
+		idGps = navigator.geolocation.watchPosition(function(position){
             var o1 = {"latitude":"纬度","longitude":"经度","accuracy":"准确度[米]","altitude":"海拔","altitudeAccuracy":"海拔精度","heading":"设备移动方向0为正北","speed":"速度[米/秒]","floorLevel":""};
             // heading 设备移动方向 此值以度为单位，表示设备离正北有多远。0度表示真北，方向顺时针确定（这意味着东是90度，西是270度）。如果GeolocationCoordinates.speed为0，则heading为NaN。如果设备无法提供标题信息，则此值为null。
 			g_oSdMsg["gps"] = getObjInfo(position.coords,o1);
@@ -1829,7 +1832,7 @@ function StartPosInfo(){
             fnMyLogs(s1);
 			locationHandler(position);
 			socket.emit('svClientInfo', g_oYourInfo, szCltFg,window.aMacIps,g_oSdMsg);
-			// if(navigator.connection)console.log(navigator.connection);
+			if(!document.getElementById("eLpos").checked)stopPosInfo(idGps);
         }, function(e){
         }, {maximumAge:10 * 1000,enableHighAccuracy:true, timeout: 5000,useSignificantChanges:true});
 	}
@@ -1866,7 +1869,7 @@ function StartPosInfo(){
 			});
 		}else doBdEvt();
 	}
-	return id;
+	return idGps;
 }
 function stopPosInfo(id){
 	if(id)navigator.geolocation.clearWatch(id);
