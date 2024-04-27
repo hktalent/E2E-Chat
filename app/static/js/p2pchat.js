@@ -1343,6 +1343,7 @@ function CrtDldA(s,beSvl,szId,nick,szName){
 	let s1 = szName||(nick+getNowStr() +".webm");
 	link.download = s1;
 	link.innerText = s1+"("+s11+")";
+	oDv.title = link.innerText;
 	let a = $("#ocrRst a.mmMp4");
 	// 这里应该做一些处理，如果没有发生报警，也就是没有检测到人，就不保存，这样可以节省空间
 	if(!g_bWarn&&a.length > nMax)a[0].remove();
@@ -1394,7 +1395,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 							else{
 								let beSvl = document.getElementById("eSvl").checked
 								RegAsync(async function(){CrtDldA(videoDataURL,beSvl,0,nick)});
-								if(!beSvl)socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
+								// if(!beSvl)socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
 							}
 						});
 					} catch (e) {
@@ -2068,13 +2069,14 @@ $(document).ready(function(){
 	let SetRow1=function(){
 		if(bHd){
 		   bHd=false;
-		   $("div.row1").hide();
+		   $("div.row1 *").hide();
 		   $("#shRow1")[0].innerText="<";
 		}else{
 			bHd=true;
-			$("div.row1").show();
+			$("div.row1 *").show();
 			$("#shRow1")[0].innerText=">";
 		}
+		return false;
 	};
 
 	listDivie();
@@ -2264,19 +2266,18 @@ $(document).ready(function(){
 	});
 	$(".rtool i").click(function(e){
 		var o = $(this).find("input[type=checkbox]");
-		if(0 < o.length)
+		if(o.length)
 		{
 			o[0].checked = !o[0].checked;
 			o.change();
 		}
 	});
 	$("#its").click(function(){
-		var o10 = $("div.rtool");
+		var o10 = $("body > div.rtool");
 		if(o10.attr("show"))o10.hide(),o10.removeAttr("show");
 		else o10.show(),o10.attr("show",true);
-		dspNa();
-		let o = $("div.rtool");
-		o.css({"left":"calc(100vw -"+o.width()+"px)"});
+		o10.css({"left":"calc(100vw -"+o10.width()+"px)"});
+		return false;
 	});
 	if (szHs) {
 		oCnId.val(szHs.substring(1));
