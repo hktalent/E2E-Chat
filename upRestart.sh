@@ -17,6 +17,7 @@ rip="65.49.208.113"
 ssh -o StrictHostKeyChecking=no -p $rport -i ~/.ssh/id_rsa -C root@$rip "
 cd /root/app1/app
 ./upTmp.sh
-pkill -9 node
+pkill -9 node;ps -ef|grep node
 tmux send -t 6 'NODE_ENV=production node server.js' enter
+ps -ef|grep node
 "

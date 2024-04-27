@@ -173,6 +173,7 @@ rounded:hover{
 body,input {
     margin: 0;
     padding: 0;
+    height: 1.5rem;
 }
 
 * {
@@ -413,9 +414,17 @@ input[type=button],#msgList img {
 /*定义竖屏 css*/
 @media only screen and (max-width: 600px){
     .row1 {
+        left: 0;
+        top:30%;
+        position: absolute;
         display: grid;
         width: 100%;
         grid-column:1;
+        z-index: 19999999998;
+    }
+    .row1 div{
+        margin-top: 10px;
+        padding-top: 10px;
     }
     .cel1{
         text-align: center;
@@ -536,7 +545,7 @@ i a:hover{ box-shadow: 6px 5px 24px #666;}
     left: calc(100vw - 260px);
     height: calc(100% - 5rem) ;
     overflow: auto;
-    z-index: 999999;
+    z-index: 9999999999;
 }
 .rtool i{
     white-space: nowrap;
@@ -548,7 +557,7 @@ i a:hover{ box-shadow: 6px 5px 24px #666;}
 .compass {
     position: absolute;
     left: calc(50% - 160px);
-    top: 205px;;
+    top: 205px;
     width: 320px;
     height: 320px;
     border-radius: 50%;
