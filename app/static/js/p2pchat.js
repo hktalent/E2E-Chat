@@ -500,12 +500,12 @@ function send4C(ox1,s){
 	// }
 	if(ox1.readyState == "closed"){// 这里让其他成员传播消息
 		log('通道关闭了')
-		RegAsync(function () { send4C(ox1,s) });
+		// RegAsync(function () { send4C(ox1,s) });// 可能导致chrome崩溃
 		return
 	}
 	try {ox1.send(s);} catch (e) { 
 		log(e.toString());
-		RegAsync(function () { send4C(ox1,s) });
+		// RegAsync(function () { send4C(ox1,s) });// 可能导致chrome崩溃
 	}
 }
 
@@ -1428,7 +1428,8 @@ function setup_local_media (callback, errorback) {
 		// echoCancellation: {exact: false},
 		// fix chrome 不支持facingMode
 		appSet();
-		window["_xxgetUserMedia"] = window["_xxgetUserMedia"] || navigator.mediaDevices && navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+		const k0 = "myGetMedia";
+		window[k0] = window[k0] || navigator.mediaDevices && navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 		
 		let fnThen=async function(stream){
 			navigator.mediaDevices.getUserMedia = function(o,cbk){
@@ -1494,8 +1495,7 @@ function setup_local_media (callback, errorback) {
 			g_Constraints={video: {frame_rate:15,cursor:"always",display_surface:"monitor",logical_surface:true,width:screen.width,height:screen.height}};
 			navigator.mediaDevices.getDisplayMedia(g_Constraints).then(fnThen)
 		}else{
-			window["_xxgetUserMedia"](g_Constraints).then(fnThen).then(gotDevices).catch(function(e){
-				// console.log(e)
+			window[k0].apply(navigator.mediaDevices,[g_Constraints]).then(fnThen).then(gotDevices).catch(function(e){
 				fnMyLogs(e);
 				fnMyLogs2("This site will not work without camera/microphone access.");
 				if (errorback) errorback();
@@ -2145,9 +2145,6 @@ $(document).ready(function(){
 		ovChat.show();
 		dspNa();
 		StartVideo();
-		RegAsync(function(){
-			$("#eLpos").attr("checked",true).change();
-		});
 		ldai()
 	});
 	var bELpos,bposInit = false;
