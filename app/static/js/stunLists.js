@@ -1,3 +1,4 @@
+// https://gist.github.com/mondain/b0ec1cf5f60ae726202e
 var ICE_SERVERS = [
 {"urls":"stun:stun1.l.google.com:19302"},
 {
