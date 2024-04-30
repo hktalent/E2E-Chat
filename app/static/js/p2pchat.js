@@ -443,7 +443,9 @@ function fnTxtChatOne(pc,peer_id){
 	/*
 	maxPacketLifeTime: 0, // 在不可靠模式下尝试传输消息的最大毫秒数。虽然此值是一个 16 位无符号数，但每个用户代理都可以将其限制在它认为合适的任何最大值
 	maxRetransmits: 0, // 用户代理尝试重新传输在不可靠模式下第一次失败的消息的最大次数。虽然这个值是一个 16 位无符号数，但每个用户代理都可以将它限制在它认为合适的任何最大值
-	negotiated:true,
+	negotiated:true, // 为 true 时，表示数据通道是由双方协商而来的，而不是由其中一方创建的
+	protocol 子协议名称
+	ordered:true 默认允许无序到达
 	*/
 	sendChannel = pc.createDataChannel(getRoomName(), { 'ordered': true})
 	if(!sendChannel)return
@@ -945,14 +947,24 @@ function init () {
 		// ,RtpDataChannels:true,preferSCTP:isFirefox
 		// iceTransportPolicy, iceCandidatePoolSize
 		// chrome 不支持：DtlsSrtpKeyAgreement "DtlsSrtpKeyAgreement": true
-		peer_connection = new RTCPeerConnection({ "iceServers": ICE_SERVERS,iceTransportPolicy: 'all'});
+		let nCIce = 0;
+		let getIceCfg = ()=>{
+			let oTp12 = { "iceServers": ICE_SERVERS.slice(nCIce,nCIce + 2),iceTransportPolicy: 'all'};
+			nCIce += 2;
+			if(nCIce >= ICE_SERVERS.length)nCIce = 0;
+			return oTp12;
+		}
+		peer_connection = new RTCPeerConnection(getIceCfg());
 		window.peer_connection = peer_connection;
 
 		peers[peer_id] = peer_connection;
 		
 		peer_connection.onicegatheringstatechange = function(event){
 			if (peer_connection.iceConnectionState === 'failed') {
-				try{peer_connection.restartIce()}catch(e){log('peer_connection.restartIce ',e)}
+				try{
+					peer_connection.setConfiguration(getIceCfg());
+					peer_connection.restartIce()
+				}catch(e){log('peer_connection.restartIce ',e)}
 			}
 			// log("peer_connection.iceGatheringState = " + peer_connection.iceGatheringState)
 			if (peer_connection.iceGatheringState !== 'complete') {

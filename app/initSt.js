@@ -9,6 +9,7 @@ let fs = require('fs'),
 // 并发、快速 初始化
 (async ()=>{
     const a = String(`tfjs.js
+adapter-latest.js
 face-api.js
 html2canvas.min.js
 webtorrent.min.js
@@ -16,7 +17,6 @@ i.js
 client.min.js
 jquery.min.js
 RecordRTC.min.js
-adapter-latest.js
 qrcode.min.js
 plyr.js
 html5-qrcode.min.js
