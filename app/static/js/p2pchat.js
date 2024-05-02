@@ -133,7 +133,7 @@ var oStreamTrack = null, // run ai
 	IS_SCREEN_STREAMING = !!0,
 	local_media = null,
 	szCltFg = "",clientJs,
-	isChrome,isFirefox,bIsMobile,
+	bIsMobile,
 	// detect node-webkit
 	isNodeWebkit = window.process && (typeof window.process == 'object') && window.process.versions && window.process.versions['node-webkit'],
 	socket = null, /* our socket.io connection to our webserver */
@@ -141,6 +141,7 @@ var oStreamTrack = null, // run ai
 	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
 	peer_media_elements = {}, /* keep track of our <video>/<audio> tags, indexed by peer_id */
 	g_oYourInfo = {},
+	vWcStr = "video/webm;codecs=vp9",
 	g_bTxtChat = !!0,
 	nLogs = 0, bNbg = !!0,
 	szTOsTp = 'application/octet-stream',
@@ -154,6 +155,90 @@ var oStreamTrack = null, // run ai
 	faceMatcher,
 	sendChannel = null, nCnt = 1;
 
+/*
+这3个属性通过 track.getSettings 来看默认值都是 true。
+autoGainControl 是自动音量调节
+noiseSuppression 是噪声消除
+echoCancellation 是回声消除
+
+音频三要素，分别是声道数、采样率、位深：channelCount & sampleRate & sampleSize
+浏览器中得到的默认值是 1 48k 16bit 可以得到未压缩的码率：48k * 16 * 1 = 768kb/s
+'user': 前置摄像头
+'environment': 后置摄像头
+'left':视频源面向用户但在他们的左边，例如一个对准用户但在他们的左肩上方的摄像机。
+'right': 视频源面向用户但在用户的右边，例如，摄像机对准用户但在他们的右肩上
+640 x 480
+*/
+const quickScan = [
+	{
+	  "label": "4K(UHD)",
+	  "width": 3840,
+	  "height": 2160,
+	  "ratio": "16:9"
+	},
+	{
+	  "label": "1080p(FHD)",
+	  "width": 1920,
+	  "height": 1080,
+	  "ratio": "16:9"
+	},
+	{
+	  "label": "UXGA",
+	  "width": 1600,
+	  "height": 1200,
+	  "ratio": "4:3"
+	},
+	{
+	  "label": "720p(HD)",
+	  "width": 1280,
+	  "height": 720,
+	  "ratio": "16:9"
+	},
+	{
+	  "label": "SVGA",
+	  "width": 800,
+	  "height": 600,
+	  "ratio": "4:3"
+	},
+	{
+	  "label": "VGA",
+	  "width": 640,
+	  "height": 480,
+	  "ratio": "4:3"
+	},
+	{
+	  "label": "360p(nHD)",
+	  "width": 640,
+	  "height": 360,
+	  "ratio": "16:9"
+	},
+	{
+	  "label": "CIF",
+	  "width": 352,
+	  "height": 288,
+	  "ratio": "4:3"
+	},
+	{
+	  "label": "QVGA",
+	  "width": 320,
+	  "height": 240,
+	  "ratio": "4:3"
+	},
+	{
+	  "label": "QCIF",
+	  "width": 176,
+	  "height": 144,
+	  "ratio": "4:3"
+	},
+	{
+	  "label": "QQVGA",
+	  "width": 160,
+	  "height": 120,
+	  "ratio": "4:3"
+	}
+  ];
+// nPos07 选择 3
+var g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
 // 加载人脸特征
 function LoadFaceDb(a){
 	var a1 = [];
@@ -171,7 +256,7 @@ function initFace(cbk){
 		Is("/js/14.js");
 		bInitFace = true;
 		cbk=cbk||function(){};
-		console.log(faceapi.tf.getBackend());
+		// console.log(faceapi.tf.getBackend());
 		// 使用 WebGL 后端时，模型会在浏览器中利用 GPU 进行计算；如果用户的设备支持 WebGL，这通常是性能最佳的选项之一
 		// await faceapi.tf.setBackend("“wasm”");//  “wasm” 或 “cpu” 
 		await faceapi.tf.enableProdMode();
@@ -225,6 +310,7 @@ function getYourInfo(s) {
 
 function log (...e) {
 	// if({"https://127.0.0.1:2083":1,"https://192.168.0.107:2083":1}[location.origin])fnMyLogs(e)
+	console.log(e);
 }
 // 检查css class是否定义
 const checkCssDef=function(s){
@@ -309,7 +395,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	if(szSelfK == n)szC += "t3"
 	else szC += "tleft"
 	var o9 = $("#msgList")
-	o9.append(`<div id="${szId}" class="${szC}"></div><div class=clall />`)
+	o9.append(`<div id="${szId}" class="${szC}"></div><div id="${szId}rm" class=clall />`)
 	var o1 = $(`#${szId}`)
 	var x01 = getNowStr()
 	// var szCp = 0 == t && n != szSelfK ? "<img title='click copy text|点击拷贝' src=/cp1.svg>": "";
@@ -319,7 +405,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	o1.attr("tm",new Date().getTime());
 	var szTag = "d";
 	if(0 == t){ // 普通消息
-		if(local_media_stream)setTips("收到["+n+"]消息",s)
+		if(local_media_stream)setTips("收到["+n+"]消息",s);
 		var oT1 = o1.find(szTag)
 		oT1.text(s);
 		var x009 = o1.find("svg");
@@ -355,6 +441,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 			if(n6 - n5 <= 0){
 				o1.html("");
 				o1.remove();
+				$("#"+szId+"rm").remove();
 				return true
 			}
 			o1.find("x").text( " (" + parseInt(n6 - n5) + ")")
@@ -430,10 +517,17 @@ function clOpen(){
 var g_ostt = {"connected":1};// "connecting":1,
 // 为每个 pc 创建文本聊天 通道
 function fnTxtChatOne(pc,peer_id){
+	if(pc)fnTxtChatOne1(pc,peer_id)
+	for(pid in peers){
+		fnTxtChatOne1(peers[pid],pid)
+	}
+}
+function fnTxtChatOne1(pc,peer_id){
 	if(pc.Tok || g_aMembers[peer_id] && (!g_aMembers[peer_id]["pc"] || !g_ostt[g_aMembers[peer_id]["pc"].connectionState||''])){
 		// log("pc.Tok = ",pc.Tok)
 		return;
 	}
+	pc.Tok = true;
 	pc.ondatachannel = function(e){
 		// log(" == pc.ondatachannel is ok ===>> ")
 		if(e.channel)e.channel.onmessage = RevMsg
@@ -470,7 +564,6 @@ function fnTxtChatOne(pc,peer_id){
 		}
 	}
 	sendChannel.onmessage = RevMsg;
-	pc.Tok = true;
 }
 
 // 文本聊天初始化
@@ -583,6 +676,7 @@ function SendMsg(s,t,n,nL,szFileName) {
 // 日志的输出
 function fnMyLogs (e) {
 	if (!e) return;
+	console.log(e);
 	// log(e)/*
 	var s = typeof(e) == "string" ? e : JSON.stringify(e), oLog = $("#msgList");
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
@@ -613,7 +707,7 @@ function fnCreateVid (bLocal = false,id = "") {
 	// https://github.com/bbc/VideoContext/issues/66
 	// autoplay=true :[Error] Unhandled Promise Rejection: AbortError: The operation was aborted. (x2)
 	//  playsinline=true 设置了 playsinline 属性的视频在播放时不会自动全屏 style='margin: 0 5px;'  controls
-	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded' controls id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape width=640 height=480 type=video/webm;codecs=h264></video></div>");
+	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded' controls id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape width=640 height=480></video></div>");
 	// ,{autoplay:true,volume:1}
 	if (!bLocal) new Plyr('#' + szId);
 	ovdio = $("#" + szId);
@@ -728,7 +822,7 @@ function StartVideo () {
 		if (local_media_stream) {
 			var bO = b_clickJoin;
 			b_clickJoin = bCbkDo = true;
-			JoinRoom();
+			if(!window.noJoin)JoinRoom();
 			initVideoChat();
 			b_clickJoin = bO;
 		}
@@ -804,13 +898,20 @@ function listDivie () {
 }
 var nxxxx = 0;
 function initOnePeer (pp, peer_id) {
-	peer_connection = pp
-	if (!local_media_stream||!peer_connection) {
-		log("initOnePeer why ? peer_connection is null")
+	if (!local_media_stream) {
 		return;
 	}
-	/* Add our local stream */
-	peer_connection.addStream(local_media_stream);
+	if(peer_id&&!pp)pp=peers[peer_id];
+	let calOne = function(p1){
+		try{if(p1.oldStream)p1.removeStream(p1.oldStream)}catch(e){alert(e)}
+		p1.addStream(local_media_stream);
+		p1.oldStream = local_media_stream;
+	};
+	if(pp)calOne(pp);else{
+		for(peer_id in peers){
+			calOne(peers[peer_id]);
+		}
+	}
 }
 
 // 更新在线人
@@ -823,14 +924,12 @@ function upListMb(s,b){
 		$("#otherP").html(a.join("&nbsp;|&nbsp;"))
 	}catch(e){log(e)}
 }
-function initVideoChat () {
+function initVideoChat() {
 	if (null == local_media_stream) {
 		RegAsync(initVideoChat);
 		return;
 	}
-	for (peer_id in peers) {
-		initOnePeer(peers[peer_id], peer_id)
-	}
+	initOnePeer();
 	// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
 }
 
@@ -954,13 +1053,10 @@ function init () {
 			if(nCIce >= ICE_SERVERS.length)nCIce = 0;
 			return oTp12;
 		}
-		peer_connection = new RTCPeerConnection(getIceCfg());
-		window.peer_connection = peer_connection;
-
+		let peer_connection = new RTCPeerConnection(getIceCfg());
 		peers[peer_id] = peer_connection;
-		
 		peer_connection.onicegatheringstatechange = function(event){
-			if (peer_connection.iceConnectionState === 'failed') {
+			if (peer_connection.iceConnectionState === 'failed'|| peer_connection.iceConnectionState === "disconnected" || peer_connection.iceConnectionState === "closed") {
 				try{
 					peer_connection.setConfiguration(getIceCfg());
 					peer_connection.restartIce()
@@ -976,21 +1072,16 @@ function init () {
 		
 		// p2p 打洞成功触发事件 
 		peer_connection.onicecandidate = function (event) {
-			if (event.candidate == null) { return }
-			if (event.candidate) {
-				if (event.candidate.candidate === '') {
-					return;
+			if (!event.candidate||!event.candidate.candidate) { return }
+			getYourInfo(event.candidate.candidate);
+			var c = parseCandidate(event.candidate.candidate);
+			socket.emit('relayICECandidate', {
+				'peer_id': peer_id,
+				'ice_candidate': {
+					'sdpMLineIndex': event.candidate.sdpMLineIndex,
+					'candidate': event.candidate.candidate
 				}
-				getYourInfo(event.candidate.candidate);
-				var c = parseCandidate(event.candidate.candidate);
-				socket.emit('relayICECandidate', {
-					'peer_id': peer_id,
-					'ice_candidate': {
-						'sdpMLineIndex': event.candidate.sdpMLineIndex,
-						'candidate': event.candidate.candidate
-					}
-				});
-			}
+			});
 		}
 		// https://stackoverflow.com/questions/55379332/onaddstream-event-not-called
 		//  addStream and onaddstream are deprecated
@@ -1003,12 +1094,13 @@ function init () {
 		}
 		peer_connection.onaddstream = function (event) {
 			var oCurmdm;
+			
 			if(!g_bTxtChat && event.stream && !peer_media_elements[peer_id]){try {
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
 				remote_media.controls = false;
 				oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
-				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0 0 0 0"});
+				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0"});
 				if(isSvLc()||document.getElementById("saveMeVD").checked){
 					remote_media.addEventListener('play', async function() {
 						fnStartRct(event.stream,1,config.userdata.nick);
@@ -1048,7 +1140,7 @@ function init () {
 		// 	peer_connection.onerror=log;
 		}catch(e){log("onclose::",e)}
 	};
-	socket.on('addPeer', addPeerCbk);
+	socket.on('addPeer', addPeerCbk);// 这里每个节点上线都会被调用1次，因此会产生若干 peer_connection
 
 	socket.on('sessionDescription', function (config) {
 		var peer_id = config.peer_id;
@@ -1068,7 +1160,7 @@ function init () {
 		/*允许设置多个 setRemoteDescription。您可以在连接的生命周期内多次调用 setRemoteDescription 方法，以接收来自不同远程对等方的会话描述。
 		每次调用 setRemoteDescription 时，它会更新连接的远程描述，从而允许您在同一个连接上与多个不同的远程对等方进行通信 */
 		var desc = new RTCSessionDescription(remote_description);
-		var stuff = peer.setRemoteDescription(desc, function () {
+		peer.setRemoteDescription(desc, function () {
 			if (remote_description.type == "offer") {
 				peer.createAnswer(
 					function (local_description) {
@@ -1076,7 +1168,7 @@ function init () {
 							function () {
 								socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
 								g_aMembers[peer_id]["pcok"]=true
-								fnTxtChatOne(peer_connection,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
+								fnTxtChatOne(null,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 								// log("setRemoteDescription -> createAnswer -> setLocalDescription - > relaySessionDescription")
 							},
 							function () { log("Answer setLocalDescription failed!",local_description); }
@@ -1140,7 +1232,7 @@ function init () {
 function stopPc01(pc){
 	if(!pc)return;
 	for (k in pc){
-		if (String(k).indexOf("on") == 0) {
+		if (String(k).indexOf("on") == 0&& typeof pc[k] == "function") {
 			pc[k] = null;
 		}
 	}
@@ -1168,28 +1260,6 @@ function MkQrcd () {
 	$("#myQrcode img").css({ width: "calc(100vw * 0.125)", height: "auto", "margin": "auto" });
 }
 
-/*
-这3个属性通过 track.getSettings 来看默认值都是 true。
-autoGainControl 是自动音量调节
-noiseSuppression 是噪声消除
-echoCancellation 是回声消除
-
-音频三要素，分别是声道数、采样率、位深：channelCount & sampleRate & sampleSize
-浏览器中得到的默认值是 1 48k 16bit 可以得到未压缩的码率：48k * 16 * 1 = 768kb/s
-
-'user': 前置摄像头
-'environment': 后置摄像头
-'left':视频源面向用户但在他们的左边，例如一个对准用户但在他们的左肩上方的摄像机。
-'right': 视频源面向用户但在用户的右边，例如，摄像机对准用户但在他们的右肩上
-640 x 480
-*/
-const quickScan = [{"label": "4K(UHD)","width": 3840,"height": 2160,"ratio": "16:9"},{"label": "1080p(FHD)","width": 1920,"height": 1080,
-"ratio": "16:9"},{"label": "UXGA","width": 1600,"height": 1200,"ratio": "4:3"},{"label": "720p(HD)","width": 1280,"height": 720,"ratio": "16:9"},
-{"label": "SVGA","width": 800,"height": 600,"ratio": "4:3"},{"label": "VGA","width": 640,"height": 480,"ratio": "4:3"},
-{"label": "360p(nHD)","width": 640,"height": 360,"ratio": "16:9"},{"label": "CIF","width": 352,"height": 288,"ratio": "4:3"},
-{"label": "QVGA","width": 320,"height": 240,"ratio": "4:3"},{"label": "QCIF","width": 176,"height": 144,"ratio": "4:3"},
-{"label": "QQVGA","width": 160,"height": 120,"ratio": "4:3"}];
-var g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
 
 // 构建、初始化全局 变量 g_Constraints，必须运行，否则视频聊天无法启动 https://webrtchacks.github.io/WebRTC-Camera-Resolution/
 function appSet() {
@@ -1229,12 +1299,17 @@ function appSet() {
 		"video": {// 将 deviceId 属性从 video 对象中删除。此属性不兼容 Safari 和 Firefox。
 			"facingMode":"environment",// "user",// "environment",
 			// 'mandatory': {// chrome 不支持
+				width: n002,
+    			height: n003,
 				minFrameRate: n001,
 				maxFrameRate: n001
 				// ,'width': { 'min': n002,ideal: n002},
 				// 'height': { 'min': n003},
 			// }
 		}
+	}
+	if(videoSource&& navigator.userAgent.includes("Safari")){// safari才支持  && navigator.userAgent.includes("Safari")
+		g_Constraints["video"]["deviceId"] = { exact: videoSource } ;
 	}
 	if(!!navigator.mozGetUserMedia) {
 		g_Constraints["video"] = {
@@ -1261,17 +1336,20 @@ function ChangeSound (stream) {
 }
 
 function StopStream () {
-	if (local_media_stream) local_media_stream.getTracks().forEach(function (track) {
-		if (track && track.readyState == 'live') {
-			track.stop();
-		}
-	});
-	var ot = $("#Pmtwebcam");
-	ot.find("*").remove();
-	ot.remove();
-	if(local_media)$(local_media).remove(),local_media = null;
-	window.webcam = null;
-	local_media_stream = null
+	try{
+		if (local_media_stream && typeof local_media_stream.getTracks == "function") local_media_stream.getTracks().forEach(function (track) {
+			if (track && track.readyState == 'live') {
+				track.stop();
+			}
+		});
+		var ot = $("#Pmtwebcam");
+		ot.find("*").remove();
+		ot.remove();
+		if(local_media)$(local_media).remove(),local_media = null;
+		window.webcam = null;
+		window.stream = null;
+		local_media_stream = null
+	}catch(e){alert(e)}
 }
 
 const b64toBlob = function(b64Data, contentType='', sliceSize=512){
@@ -1373,7 +1451,7 @@ let isSvLc = ()=>{return typeof SaveMp4 == "function"};
 // 触发保存
 var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nick) {// https://recordrtc.org/
 	try{
-		var stream = vSs||window.stream||window.webcam||local_media,oC1 = $(stream);
+		var stream = vSs||window.stream||local_media||window.webcam,oC1 = $(stream);
 		if(!stream){
 			RegAsync(function(){fnStartRct(vSs,nT,nick)});
 			return;
@@ -1382,15 +1460,15 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 			return;
 		}
 		oC1.attr("bIsRvdRcd",new Date().getTime());
-		const szT1 = "video/webm;codecs=vp9";
 		// if(isSvLc())szT1="video/webm;codecs=h264";// Chromium不支持264 video/x-matroska;codecs=avc1 // https://pixelpoint.io/blog/web-optimized-video-ffmpeg/
 		var recorder = RecordRTC(stream, {
 			type: (!!nT?"":"audio+")+'video'// 测评表明 AV1 是最佳的
-			, mimeType: szT1 // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
+			, mimeType: vWcStr // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
 			,audioBitsPerSecond: 128000,
 			videoBitsPerSecond: 128000,
 			bitsPerSecond: 128000,
 			frameRate: 24,//15 ～ 30
+			elementClass: 'multi-streams-mixer',
 		});
 		recorder.startRecording();
 		const nT3 = 60 * 1000 * (nT||(isSvLc() ? 5 : 1));
@@ -1444,13 +1522,13 @@ function setup_local_media (callback, errorback) {
 		window[k0] = window[k0] || navigator.mediaDevices && navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 		
 		let fnThen=async function(stream){
-			navigator.mediaDevices.getUserMedia = function(o,cbk){
-				try{
-					if(cbk)cbk(stream);
-					stream.then = function(cbk1){cbk1(stream)};
-				}catch(e){alert(e)}
-				return stream
-			};
+			// navigator.mediaDevices.getUserMedia = function(o,cbk){
+			// 	try{
+			// 		if(cbk)cbk(stream);
+			// 		stream.then = function(cbk1){cbk1(stream)};
+			// 	}catch(e){alert(e)}
+			// 	return stream
+			// };
 			// ChangeSound(stream)
 			window.stream = stream;
 			local_media_stream = stream;
@@ -1473,7 +1551,6 @@ function setup_local_media (callback, errorback) {
 							const detections = await faceapi.detectAllFaces(window.webcam, faceOpt).withFaceLandmarks().withFaceDescriptors();
 							if(detections&&detections.length>0)
 							detections.forEach(function(fd){
-								console.log(fd.descriptor);
 								if(faceMatcher){
 									const bestMatch = faceMatcher.findBestMatch(fd.descriptor);
 									if (typeof bestMatch === 'object') console.log(`识别结果：${bestMatch.label}`);
@@ -1486,7 +1563,7 @@ function setup_local_media (callback, errorback) {
 			if($("#eFace")[0].checked)initFace(initFaceCbk);
 			
 			localVvId = local_media.id
-			
+		
 			fnAddTmGps();
 			// hidden me、self
 			var oXv = $("#Pmt" + local_media.id),oCps = $("div.compass-circle");
@@ -1500,7 +1577,7 @@ function setup_local_media (callback, errorback) {
 				attachMediaStream(local_media, stream);
 			// attachMediaStream(local_media, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
-			if (callback) callback();
+			if (callback) callback(),callback=null;
 			return navigator.mediaDevices.enumerateDevices()
 		};
 		if(document.getElementById("rScreen").checked && (navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia||navigator.getDisplayMedia)){
@@ -1514,7 +1591,7 @@ function setup_local_media (callback, errorback) {
 			});
 		}
 	} catch (e) { fnMyLogs(e) }
-	if (callback) callback()
+	// if(callback) callback()
 }
 
 var captureImage = function(v,w){
@@ -2040,8 +2117,6 @@ $(document).ready(function(){
 	// 	Q: 较高的容错水平，可以纠正 25 个错误。
 	// 	H: 最高的容错水平，可以纠正 30 个错误。`);
 	clientJs = new ClientJS();
-	isChrome = clientJs.isChrome();
-	isFirefox = clientJs.isFirefox();
 	bIsMobile = clientJs.isMobile();
 	isIE = clientJs.isIE();
 	szCltFg = clientJs.getFingerprint();
@@ -2053,13 +2128,15 @@ $(document).ready(function(){
 	selectors.forEach(function (select) { $(select).change(appSet) });
 	$(videoSelect).change(function(){
 		g_bSetup = false;
+		window.noJoin = true;
 		StartVideo();
+		window.noJoin = false;
 	});
 	$('#uIps').on("change", function () {
 		bEaIpfs = this.checked;	
 	});
 	$('#saveMeVD').on("change", function () {
-		if (this.checked){g_bStopVd=false,fnStartRct(window.webcam,0,$("#nick").val());}
+		if (this.checked){g_bStopVd=false,fnStartRct(window.stream,0,$("#nick").val());}
 		else g_bStopVd = true;
 	});
 	
@@ -2153,7 +2230,8 @@ $(document).ready(function(){
 		oStChat.show();
 		oStartChat.hide();
 		oTxtChat.hide();
-		oMyCtn.show();
+		oMyCtn.show()
+		$("#msgList").show();
 		ovChat.show();
 		dspNa();
 		StartVideo();
