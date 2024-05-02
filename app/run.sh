@@ -14,3 +14,4 @@ rm -rf static/js.js static/v8.js static/css.css static/js/,.js;
 # NODE_DEBUG=true 
 # node --inspect --trace-deprecation server.js
 NODE_ENV=production node server.js
+# DEBUG=true NODE_ENV=debug node server.js

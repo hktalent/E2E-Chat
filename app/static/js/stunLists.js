@@ -1,8 +1,8 @@
 // https://gist.github.com/mondain/b0ec1cf5f60ae726202e
 var ICE_SERVERS = [
 {"urls":"stun:stun.l.google.com:19302"},
-{"urls":"turn:65.49.208.113:3478","credential":"REDACTED_TURN_CREDENTIAL","username":"REDACTED_TURN_USER"},
 {"urls":"stun:120.132.47.26:3478"},
+{"urls":"turn:65.49.208.113:3478","credential":"REDACTED_TURN_CREDENTIAL","username":"REDACTED_TURN_USER"},
 {"urls":"stun:120.132.47.24:3478"},
 {"urls":"stun:74.125.24.127:19305"},
 {"urls":"stun:111.230.157.11:3478"},
