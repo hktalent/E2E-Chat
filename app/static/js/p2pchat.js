@@ -517,9 +517,9 @@ function clOpen(){
 var g_ostt = {"connected":1};// "connecting":1,
 // 为每个 pc 创建文本聊天 通道
 function fnTxtChatOne(pc,peer_id){
-	if(pc)fnTxtChatOne1(pc,peer_id)
+	try{if(pc)fnTxtChatOne1(pc,peer_id)}catch(e){}
 	for(pid in peers){
-		fnTxtChatOne1(peers[pid],pid)
+		try{fnTxtChatOne1(peers[pid],pid)}catch(e){}
 	}
 }
 function fnTxtChatOne1(pc,peer_id){
@@ -822,7 +822,7 @@ function StartVideo () {
 		if (local_media_stream) {
 			var bO = b_clickJoin;
 			b_clickJoin = bCbkDo = true;
-			if(!window.noJoin)JoinRoom();
+			JoinRoom();
 			initVideoChat();
 			b_clickJoin = bO;
 		}
@@ -897,15 +897,15 @@ function listDivie () {
 	navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(log);
 }
 var nxxxx = 0;
-function initOnePeer (pp, peer_id) {
+function initOnePeer(pp, peer_id) {
 	if (!local_media_stream) {
 		return;
 	}
 	if(peer_id&&!pp)pp=peers[peer_id];
 	let calOne = function(p1){
 		try{if(p1.oldStream)p1.removeStream(p1.oldStream)}catch(e){alert(e)}
-		p1.addStream(local_media_stream);
-		p1.oldStream = local_media_stream;
+		p1.addStream(window.stream);
+		p1.oldStream = window.stream;
 	};
 	if(pp)calOne(pp);else{
 		for(peer_id in peers){
@@ -1092,6 +1092,14 @@ function init () {
 			}
 			return a;
 		}
+		// https://gist.github.com/Xeoncross/6bb446dc2241461422e3
+		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removestream_event
+		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/track_event
+		// peer_connection.onremovestream=function(event){
+		// 	// log("onremovestream",event);
+		// 	// alert(["onremovestream",event])
+		// 	// console.log(event)
+		// }
 		peer_connection.onaddstream = function (event) {
 			var oCurmdm;
 			
@@ -1119,7 +1127,8 @@ function init () {
 
 		if (config.should_create_offer) {
 			// LogMsg("Creating RTC offer to "+ peer_id);
-			peer_connection.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true,}).then(function(lds){
+			//,{ iceRestart: true }
+			peer_connection.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true}).then(function(lds){
 					// log("Local offer description is: ", local_description);
 					peer_connection.setLocalDescription(lds,function(){
 							socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
@@ -1127,7 +1136,7 @@ function init () {
 							fnMyLogs("Offer setLocalDescription failed!",lds);
 						}
 					);
-				});//,{ iceRestart: true }
+				});
 		}
 		
 		try{
@@ -2128,9 +2137,7 @@ $(document).ready(function(){
 	selectors.forEach(function (select) { $(select).change(appSet) });
 	$(videoSelect).change(function(){
 		g_bSetup = false;
-		window.noJoin = true;
 		StartVideo();
-		window.noJoin = false;
 	});
 	$('#uIps').on("change", function () {
 		bEaIpfs = this.checked;	
