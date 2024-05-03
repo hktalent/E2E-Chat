@@ -32,7 +32,8 @@ var g_cache = {},
         // passes:5,
         drop_console: bJmi,//移除所有console相关代码；
         drop_debugger: bJmi,//移除自动断点功能；
-        pure_funcs: bJmi?["console.log", "console.error"]:[] // 配置移除指定的指令，如console.log,alert等
+        // "console.log", "console.info", "console.error", "console.warn", "console.debug", "console.exception", "console.trace"
+        pure_funcs: bJmi?["console.log", "console.info", "console.error", "console.warn", "console.debug", "console.exception", "console.trace"]:[] // 配置移除指定的指令，如console.log,alert等
     },
     format: {
         comments: false // 删除注释
