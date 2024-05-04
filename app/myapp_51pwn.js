@@ -191,6 +191,7 @@ fix.js`).split("\n")
             ],
             objectSrc: [self],
             imgSrc: [self, ...images],
+            scriptSrcAttr:[self,"'unsafe-inline'"],
             scriptSrc: [
                 self,
                 "https://chat.51pwn.com:" + String(option.port) + "/*",
