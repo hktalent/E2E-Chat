@@ -906,18 +906,34 @@ function gotDevices (deviceInfos) {
 
 var nxxxx = 0;
 function initOnePeer(pp, peer_id) {
-	if (!local_media_stream) {
+	if (!window.stream) {
 		return;
 	}
 	if(peer_id&&!pp)pp=peers[peer_id];
 	const [track] = window.stream.getVideoTracks();
 	let calOne = function(p1){
-		// try{if(p1.oldStream)p1.removeStream(p1.oldStream)}catch(e){alert(e)}
-		// p1.addStream(window.stream);
-		// p1.oldStream = window.stream;
+		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removeTrack
+		if(typeof p1.addTrack == "function"){
+			try{
+				if(p1.oldSender)p1.removeTrack(p1.oldSender),p1.oldSender.replaceTrack(track);
+			}catch(e){}
+			p1.oldSender = p1.addTrack(track, window.stream);
+		}else if(typeof p1.addStream == "function"){
+			try{if(p1.oldStream)p1.removeStream(p1.oldStream)}catch(e){alert(e)}
+			p1.addStream(window.stream);
+			p1.oldStream = window.stream;
+		}
 
-		try{if(p1.oldSender)p1.removeTrack(p1.oldSender)}catch(e){alert(e)}
-		p1.oldSender = p1.addTrack(track, stream);
+		// if(window.oldStream){
+		// 	try{
+		// 		let videoTrack = window.oldStream.getVideoTracks()[0];
+		// 		alert(videoTrack.kind)
+		// 		var sender = p1.getSenders().find(function(s) {
+		// 			return (s.kind||s.track.kind) == videoTrack.kind;
+		// 		});
+		// 		sender.replaceTrack(track);
+		// 	}catch(e){alert(e)}
+		// }
 	};
 	if(pp)calOne(pp);else{
 		for(peer_id in peers){
@@ -1147,10 +1163,11 @@ function init () {
 		// 	// alert(["onremovestream",event])
 		// 	// console.log(event)
 		// }
-		peer_connection.onaddstream = function (event) {
+		let fnAddStream = function(event){
 			var oCurmdm;
 			
 			if(!g_bTxtChat && event.stream && !peer_media_elements[peer_id]){try {
+				if(typeof event.stream =="array")event.stream = event.stream[0];
 				var remote_media = fnCreateVid(0);
 				remote_media.autoplay = true;
 				remote_media.controls = false;
@@ -1182,7 +1199,9 @@ function init () {
 				if(oCurmdm)oCurmdm.remove();
 				delete peer_media_elements[peer_id];
 			 }}
-		}
+		};
+		// peer_connection.addEventListener("track",fnAddStream);
+		peer_connection.onaddstream = fnAddStream;
 		// p2p 流事件
 		if (!g_bTxtChat) {
 			initOnePeer(peer_connection, peer_id)
@@ -1602,6 +1621,7 @@ function setup_local_media (callback, errorback) {
 			// 	return stream
 			// };
 			// ChangeSound(stream)
+			if(window.stream)window.oldStream=window.stream;
 			window.stream = stream;
 			local_media_stream = stream;
 			let szVideoId = "webcam";
