@@ -1,4 +1,17 @@
-let RegAsync = function(c){setTimeout(c,1)};
+let RegAsync = function(c,n1){setTimeout(c,n1||1)};
+let aNoCtxCbk = [];
+let RegAsyncNoCtx = function(){
+	aNoCtxCbk.push(Array.from(arguments));
+};
+setInterval(async function(){
+	while(aNoCtxCbk.length > 0){
+		(async function(o){
+			RegAsync(async function(){
+				o[0].apply(window,o.slice(1));
+			});
+		})(aNoCtxCbk.shift());
+	}
+}, 16);
 let nVideoSn = 7; // 保留 最近 7 天
 String.prototype.trim = function(){return this.replace(/^\s*|\s*$/gmi,"")};
 String.prototype.hashCode = function() {
@@ -128,7 +141,9 @@ function cntVideo(cbk){// https://dexie.org/docs/Collection/Collection.count()
 }
 
 window.bEaV8 = window.bRunAi = !!0,window.bEabOcr = !!0;
+// https://www.webrtc-experiment.com/RecordRTC/simple-demos/
 var oStreamTrack = null, // run ai
+	oNick = null,
 	g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = !!0,
 	local_media = null,
@@ -141,7 +156,7 @@ var oStreamTrack = null, // run ai
 	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
 	peer_media_elements = {}, /* keep track of our <video>/<audio> tags, indexed by peer_id */
 	g_oYourInfo = {},
-	vWcStr = "video/webm;codecs=vp9",
+	vWcStr = "video/webm",// https://www.webrtc-experiment.com/RecordRTC/simple-demos/isTypeSupported.html https://www.webrtc-experiment.com/RecordRTC/simple-demos/
 	g_bTxtChat = !!0,
 	nLogs = 0, bNbg = !!0,
 	szTOsTp = 'application/octet-stream',
@@ -238,7 +253,7 @@ const quickScan = [
 	}
   ];
 // nPos07 选择 3
-var g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 3,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
+var g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 1,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
 // 加载人脸特征
 function LoadFaceDb(a){
 	var a1 = [];
@@ -339,7 +354,7 @@ setInterval(function(){
 
 function doCErr(s){
 	if(bIsMobile && socket && "function" == typeof socket.emit){
-		socket.emit('ocerror', s + " "+$("#nick").val())
+		socket.emit('ocerror', s + " "+oNick.val())
 	}
 }
 function LogMsg(s){
@@ -576,7 +591,7 @@ function fnTxtChat () {
 	}
 	if (bDoit) {
 		LogMsg("bDoit = " + bDoit)
-		RegAsync(fnTxtChat);
+		RegAsyncNoCtx(fnTxtChat);
 	}
 }
 function mmMsgj(s){
@@ -633,7 +648,7 @@ function SendMsg(s,t,n,nL,szFileName) {
 								var nMin = g_aMembers[k]['maxSendSize'] || maxSendSize;
 								s = s01.substring(0,nMin);
 								s01 = s01.substring(nMin);
-								var szMsg1 = JSON.stringify({ "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s })
+								var szMsg1 = JSON.stringify({ "nick": oNick.val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s })
 								var sendChannel = g_aMembers[k]['sendChannel'];
 								send4C(sendChannel,szMsg1)
 								if(0 == s01.length)break;
@@ -649,7 +664,7 @@ function SendMsg(s,t,n,nL,szFileName) {
 								var nMin = 10 * 1024;// 10k
 								s = s01.substring(0,nMin);
 								s01 = s01.substring(nMin);
-								socket.emit('msg4One', {"peer_id":k, "nick": $("#nick").val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s });
+								socket.emit('msg4One', {"peer_id":k, "nick": oNick.val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s });
 								n++;
 							}catch(e){console.log(e);break}
 						}
@@ -703,11 +718,11 @@ function fnGetId () { return ("X" + (Math.random() + (++nId))).replace(/\./gmi, 
 
 // create 
 function fnCreateVid (bLocal = false,id = "") {
-	var szId = id||fnGetId(), szCol = "col-4", szCss = bLocal ? '<canvas class="szCol shadow-lg bg-white rounded output_canvas"></canvas>' : '';
+	var szId = id||fnGetId(),i2 = "Pmt"+szId, szCol = "col-4", szCss = bLocal ? '<canvas class="szCol shadow-lg bg-white rounded output_canvas"></canvas>' : '';
 	// https://github.com/bbc/VideoContext/issues/66
 	// autoplay=true :[Error] Unhandled Promise Rejection: AbortError: The operation was aborted. (x2)
 	//  playsinline=true 设置了 playsinline 属性的视频在播放时不会自动全屏 style='margin: 0 5px;'  controls
-	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded' controls id='Pmt" + szId + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape width=640 height=480></video></div>");
+	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded' controls id='" + i2 + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape width=640 height=480></video></div>");
 	// ,{autoplay:true,volume:1}
 	if (!bLocal) new Plyr('#' + szId);
 	ovdio = $("#" + szId);
@@ -728,7 +743,7 @@ JoinRoom=function(){
 	if(!b_clickJoin)return;
 	var szRoom = $("#cnId").val();
 	if(szRoom){
-		join_chat_channel(szRoom,{nick:$("#nick").val()});
+		join_chat_channel(szRoom,{nick:oNick.val()});
 	}
 },
 join_chat_channel =function(channel, userdata){
@@ -745,12 +760,10 @@ join_chat_channel =function(channel, userdata){
 join_chat_channel1 =function(channel, userdata){
 	if(!b_clickJoin)return;
 	userdata || (userdata={});
-	userdata["nick"] = $("#nick").val();
+	userdata["nick"] = oNick.val();
 	
 	if (!bIoIsOk) {
-		RegAsync(function () {
-			join_chat_channel1(channel, userdata)
-		});
+		RegAsyncNoCtx(join_chat_channel1,channel, userdata);
 		return;
 	}
 	if (szLstChannel && szLstChannel != channel) {
@@ -891,21 +904,20 @@ function gotDevices (deviceInfos) {
 	});
 }
 
-function listDivie () {
-	if (!navigator.mediaDevices?.enumerateDevices)
-		return ;
-	navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(log);
-}
 var nxxxx = 0;
 function initOnePeer(pp, peer_id) {
 	if (!local_media_stream) {
 		return;
 	}
 	if(peer_id&&!pp)pp=peers[peer_id];
+	const [track] = window.stream.getVideoTracks();
 	let calOne = function(p1){
-		try{if(p1.oldStream)p1.removeStream(p1.oldStream)}catch(e){alert(e)}
-		p1.addStream(window.stream);
-		p1.oldStream = window.stream;
+		// try{if(p1.oldStream)p1.removeStream(p1.oldStream)}catch(e){alert(e)}
+		// p1.addStream(window.stream);
+		// p1.oldStream = window.stream;
+
+		try{if(p1.oldSender)p1.removeTrack(p1.oldSender)}catch(e){alert(e)}
+		p1.oldSender = p1.addTrack(track, stream);
 	};
 	if(pp)calOne(pp);else{
 		for(peer_id in peers){
@@ -917,7 +929,7 @@ function initOnePeer(pp, peer_id) {
 // 更新在线人
 function upListMb(s,b){
 	try{
-		var a = [$("#nick").val()];
+		var a = [oNick.val()];
 		for(var k in g_aMembers){
 			a.push(g_aMembers[k]["nick"])
 		}
@@ -926,7 +938,7 @@ function upListMb(s,b){
 }
 function initVideoChat() {
 	if (null == local_media_stream) {
-		RegAsync(initVideoChat);
+		RegAsyncNoCtx(initVideoChat);
 		return;
 	}
 	initOnePeer();
@@ -1055,18 +1067,53 @@ function init () {
 		}
 		let peer_connection = new RTCPeerConnection(getIceCfg());
 		peers[peer_id] = peer_connection;
+		let reConn = function(){
+			try{
+				peer_connection.setConfiguration(getIceCfg());
+				peer_connection.restartIce()
+			}catch(e){log('peer_connection.restartIce ',e)}
+		};
 		peer_connection.onicegatheringstatechange = function(event){
-			if (peer_connection.iceConnectionState === 'failed'|| peer_connection.iceConnectionState === "disconnected" || peer_connection.iceConnectionState === "closed") {
-				try{
-					peer_connection.setConfiguration(getIceCfg());
-					peer_connection.restartIce()
-				}catch(e){log('peer_connection.restartIce ',e)}
-			}
-			// log("peer_connection.iceGatheringState = " + peer_connection.iceGatheringState)
-			if (peer_connection.iceGatheringState !== 'complete') {
-				return;
-			}
-			
+			// switch(peer_connection.iceGatheringState){
+			// 	case "new","gathering":// 对等连接刚刚创建，尚未进行任何网络连接;ICE 代理正在收集候选的连接。
+			// 		break;
+			// 	case 'complete':
+			// 		return;
+			// }
+			// switch(peer_connection.connectionState){
+			// 	case "new":
+			// 		break;
+			// 	case "connecting":// 表示至少有一个 ICE 连接处于正在建立连接的状态
+			// 		break;
+			// 	case "connected":// 至少有一个连接处于 connected 或 completed 状态
+			// 		break;
+			// 	case "disconnected","failed":// 表示至少有一个 ICE 连接处于 disconnected 状态，并且没有连接处于 failed、connecting 或 checking 状态。；表示至少有一个 ICE 连接处于 failed 的状态。
+			// 		break;
+			// 	case "closed":// 表示 RTCPeerConnection 已关闭。
+			// 	// connectionState 反映了整体连接状态，包括 ICE 搜集、信令和媒体通道。如果在 connectionState 为 'failed' 或 'closed' 时重启 ICE，如果故障在于连接过程的其他阶段，可能会触发不必要的重启
+			// 		return;
+			// }
+			let is1 = peer_connection.iceConnectionState,is2 = peer_connection.connectionState,is3 = peer_connection.iceGatheringState,is4 = peer_connection.signalingState;
+			log("P2P ICE state: "+is1 + " iceGatheringState: "+is3+"  connectionState: " + is2+" signalingState: "+is4);
+			if(is1 == "failed"){reConn();}
+			// switch(is1){
+			// 	case "new","checking":
+			// 		break;
+			// 	case "connected": //  ICE 代理至少对每个候选发现了一个可用的连接，此时仍然会继续测试远程候选以便发现更优的连接。同时可能在继续收集候选。
+			// await pc.peerIdentity
+			// 		break
+			// 	case "icegatheringcomplete":// ICE 搜集已完成，但可能尚未建立完整连接。
+			// 		break
+			// 	case "completed"://  ICE 代理已经发现了可用的连接，不再测试远程候选。
+			// 		break;
+			// 	case "failed": // ICE 候选测试了所有远程候选没有发现匹配的候选。也可能有些候选中发现了一些可用连接。
+			// 		reConn();
+			// 		break;
+			// 	case "disconnected":// 测试不再活跃，这可能是一个暂时的状态，可以自我恢复。
+			// 		break;
+			// 	case "closed"://  ICE 代理关闭，不再应答任何请求
+			// 		break;
+			// }
 			if(g_aMembers[peer_id])g_aMembers[peer_id]["pc"]=peer_connection;
 		}
 		
@@ -1115,6 +1162,22 @@ function init () {
 					});
 				}
 				attachMediaStream(remote_media, event.stream);
+				// remote_media.addEventListener("loadedmetadata", function (e) {
+					// LogMsg("loadedmetadata");
+					// ctx.drawImage(video1, 10, 10, 341, 257);
+				// });
+				// Continuous drawing (optional)
+				// function drawFrames() {
+				// 	if (video1.playing && video2.playing) {
+				// 	ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous frames
+				// 	ctx.drawImage(video1, 10, 10, 341, 257);
+				// 	ctx.drawImage(video2, 351 + 10, 10, 341, 257);
+				// 	}
+				// 	requestAnimationFrame(drawFrames); // Schedule next frame drawing
+				// }
+				
+				// // Start continuous drawing if desired
+				// drawFrames();
 			} catch (e) { 
 				if(oCurmdm)oCurmdm.remove();
 				delete peer_media_elements[peer_id];
@@ -1199,10 +1262,9 @@ function init () {
 		peer.addIceCandidate(new RTCIceCandidate(ice_candidate));
 	});
 	socket.on('setNick', function (s) {
-		oNk = $("#nick")
-		if (s && szCltFg == oNk.val()){
+		if (s && szCltFg == oNick.val()){
 			if(0 == s.indexOf("{"))try{s=JSON.parse(s)}catch(e){}
-			oNk.val(s["nick"]||s["id"]||s);
+			oNick.val(s["nick"]||s["id"]||s);
 			if(s["vlst"]?.length)gotDevices(s["vlst"]);
 		}
 	})
@@ -1308,8 +1370,10 @@ function appSet() {
 		"video": {// 将 deviceId 属性从 video 对象中删除。此属性不兼容 Safari 和 Firefox。
 			"facingMode":"environment",// "user",// "environment",
 			// 'mandatory': {// chrome 不支持
-				width: n002,
-    			height: n003,
+				// width: n002,
+    			// height: n003,
+				width: { ideal: n002},
+    			height:{ ideal:  n003},
 				minFrameRate: n001,
 				maxFrameRate: n001
 				// ,'width': { 'min': n002,ideal: n002},
@@ -1457,32 +1521,33 @@ function CrtDldA(s,beSvl,szId,nick,szName){
 	});
 }
 let isSvLc = ()=>{return typeof SaveMp4 == "function"};
-// 触发保存
-var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nick) {// https://recordrtc.org/
+// 触发保存 https://recordrtc.org/   https://www.webrtc-experiment.com/
+var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nick) {
 	try{
+		if(g_bStopVd)return;
 		var stream = vSs||window.stream||local_media||window.webcam,oC1 = $(stream);
 		if(!stream){
-			RegAsync(function(){fnStartRct(vSs,nT,nick)});
+			RegAsyncNoCtx(fnStartRct,vSs,nT,nick);
 			return;
 		}
+		// 70 秒内不重复执行
 		if(new Date().getTime() - (oC1.attr("bIsRvdRcd")||0) < 70000){
 			return;
 		}
 		oC1.attr("bIsRvdRcd",new Date().getTime());
 		// if(isSvLc())szT1="video/webm;codecs=h264";// Chromium不支持264 video/x-matroska;codecs=avc1 // https://pixelpoint.io/blog/web-optimized-video-ffmpeg/
-		var recorder = RecordRTC(stream, {
+		var qxd = 1000000,recorder = RecordRTC(stream, {
 			type: (!!nT?"":"audio+")+'video'// 测评表明 AV1 是最佳的
-			, mimeType: vWcStr // codecs="av01.2.19H.12.0.000.09.16.09.1, flac"  vp9  https://recordrtc.org
+			, mimeType: vWcStr
 			,audioBitsPerSecond: 128000,
-			videoBitsPerSecond: 128000,
-			bitsPerSecond: 128000,
+			videoBitsPerSecond: qxd,
+			bitsPerSecond: 0,// 让 RecordRTC 计算总比特率
 			frameRate: 24,//15 ～ 30
-			elementClass: 'multi-streams-mixer',
 		});
 		recorder.startRecording();
 		const nT3 = 60 * 1000 * (nT||(isSvLc() ? 5 : 1));
 		//  10分钟,停一下，并上传，然后重新开始
-		setTimeout(async function(){
+		RegAsync(async function(){
 			if (recorder) recorder.stopRecording(async function(){
 				// 开启人脸识别的情况，只在检测到人时保存
 				if($("#eAi").attr("checked") && !g_bWarn);else{
@@ -1492,10 +1557,10 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 							if(100 > videoDataURL.length){
 								return;
 							}
-							if(isSvLc())RegAsync(async function(){SaveMp4({"data":videoDataURL,"name":nick})});
+							if(isSvLc())RegAsyncNoCtx(SaveMp4,{"data":videoDataURL,"name":nick});
 							else{
-								let beSvl = document.getElementById("eSvl").checked
-								RegAsync(async function(){CrtDldA(videoDataURL,beSvl,0,nick)});
+								let beSvl = document.getElementById("eSvl").checked;
+								RegAsyncNoCtx(CrtDldA,videoDataURL,beSvl,0,nick);
 								// if(!beSvl)socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
 							}
 						});
@@ -1503,9 +1568,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 						console.log(e)
 					}
 				}
-				RegAsync(function(){
-					if (!g_bStopVd) oC1.attr("bIsRvdRcd","false"),fnStartRct(vSs,nT,nick);
-				});
+				RegAsyncNoCtx(fnStartRct,vSs,nT,nick);
 			});
 		}, nT3);
 	}catch(e){alert(e)}
@@ -1587,6 +1650,9 @@ function setup_local_media (callback, errorback) {
 			// attachMediaStream(local_media, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
 			if (callback) callback(),callback=null;
+
+			fnStartRct(window.stream,0,document.getElementById("nick").value);
+			RegAsyncNoCtx(fnStartRct,window.stream,1,document.getElementById("nick").value);
 			return navigator.mediaDevices.enumerateDevices()
 		};
 		if(document.getElementById("rScreen").checked && (navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia||navigator.getDisplayMedia)){
@@ -1742,7 +1808,7 @@ window['doODetcCbk'] = function(oDtc){
 // 				if(g_oYourInfo['ip']?.length)oTm42["ip"] = g_oYourInfo['ip'];
 // 				oTm42["date"] = getNowStr();
 // 				// id: nick + fingerprint + channel + gps + date
-// 				oTm42["nick"] = $("#nick").val();
+// 				oTm42["nick"] = oNick.val();
 // 				oTm42["channel"] = $("#cnId").val();
 // 				if(szCltFg)oTm42["fingerprint"] = szCltFg;
 // 				socket.emit('svCurImgInfo',oTm42);
@@ -2023,7 +2089,7 @@ function showWnSt(){
 			}
 		}
 	}else{
-		RegAsync(showWnSt);
+		RegAsyncNoCtx(showWnSt);
 		return;
 	}
 	$("#wnset").html(a.join("")).show();
@@ -2121,11 +2187,21 @@ function initLang(){
 }
 $(document).ready(function(){
 	initLang();
+	oNick = $("#nick");
 	// genQrcd( `L: 最低的容错水平，可以纠正 7 个错误。
 	// 	M: 中等的容错水平，可以纠正 15 个错误。
 	// 	Q: 较高的容错水平，可以纠正 25 个错误。
 	// 	H: 最高的容错水平，可以纠正 30 个错误。`);
 	clientJs = new ClientJS();
+	let ua = navigator.userAgent;
+	if(ua.indexOf("Firefox")){
+		vWcStr = "video/webm;codecs=vp9";// firefox 仅这个格式
+	}else if(ua.indexOf("Chrome")){
+		vWcStr = "video/webm;codecs=vp9"; // 在高分辨率下更高的压缩效率
+	}else if(ua.indexOf("Safari")){
+		vWcStr = "video/mp4"; // 在高分辨率下更高的压缩效率
+	}
+
 	bIsMobile = clientJs.isMobile();
 	isIE = clientJs.isIE();
 	szCltFg = clientJs.getFingerprint();
@@ -2143,7 +2219,7 @@ $(document).ready(function(){
 		bEaIpfs = this.checked;	
 	});
 	$('#saveMeVD').on("change", function () {
-		if (this.checked){g_bStopVd=false,fnStartRct(window.stream,0,$("#nick").val());}
+		if (this.checked){g_bStopVd=false,fnStartRct(window.stream,0,oNick.val());}
 		else g_bStopVd = true;
 	});
 	
@@ -2178,7 +2254,6 @@ $(document).ready(function(){
 		return false;
 	};
 
-	listDivie();
 	var doKstart = false;
 	const dspNa=function(){
 		var oT0 = $("#cah,#nkid"),o7 = $("#qmI");
@@ -2271,7 +2346,6 @@ $(document).ready(function(){
 		ldai(true);
 	});
 	szLstChannel = getRoomName();
-	oNick = $("#nick");
 	oNick.val(szCltFg);
 	oNick.change(function () {
 		if (bIoIsOk) setNickInfo($(this).val());
