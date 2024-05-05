@@ -147,6 +147,8 @@ var oStreamTrack = null, // run ai
 	g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = !!0,
 	local_media = null,
+	oESvl = null,
+	oCAllVideo = null,
 	szCltFg = "",clientJs,
 	bIsMobile,
 	// detect node-webkit
@@ -842,12 +844,24 @@ function StartVideo () {
 	});
 }
 
+function AddStream2Canvas(stream,x,y,w,h){
+	try{
+		const canvasCtx = oCAllVideo.getContext('2d');
+		stream.onplay = function drawFrame(){
+			requestAnimationFrame(drawFrame);
+			canvasCtx.drawImage(stream, x,y, w,h);
+		};
+	}catch(e){alert(e)}
+}
 function attachMediaStream (element, stream) {
 	// fnMyLogs2('DEPRECATED, attachMediaStream will soon be removed.');
 	// Uncaught (in promise) DOMException
 	// https://github.com/sampotts/plyr/issues/331
 	// https://github.com/addyosmani/getUserMedia.js/issues/64#issuecomment-270668091
 	// try{
+	try{
+		let o = $("#Pmt"+element.id),p=o.position();
+		AddStream2Canvas(element,p.left,p.top,o.width(),o.height());}catch(e){alert(e)}
 	if (element.srcObject !== undefined) {
 		element.srcObject = stream;
 	}
@@ -856,6 +870,7 @@ function attachMediaStream (element, stream) {
 	} else { // FF16a, 17a
 		element.src = stream;
 	}
+	
 	// fix: Uncaught (in promise) DOMException,Unhandled Promise Rejection: AbortError: The operation was aborted.
 	// https://developers.google.com/web/updates/2017/06/play-request-was-interrupted
 	// if(element.play)element.play();
@@ -1554,7 +1569,6 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 			return;
 		}
 		oC1.attr("bIsRvdRcd",new Date().getTime());
-		// if(isSvLc())szT1="video/webm;codecs=h264";// Chromium不支持264 video/x-matroska;codecs=avc1 // https://pixelpoint.io/blog/web-optimized-video-ffmpeg/
 		var qxd = 1000000,recorder = RecordRTC(stream, {
 			type: (!!nT?"":"audio+")+'video'// 测评表明 AV1 是最佳的
 			, mimeType: vWcStr
@@ -1578,16 +1592,15 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 							}
 							if(isSvLc())RegAsyncNoCtx(SaveMp4,{"data":videoDataURL,"name":nick});
 							else{
-								let beSvl = document.getElementById("eSvl").checked;
-								RegAsyncNoCtx(CrtDldA,videoDataURL,beSvl,0,nick);
-								// if(!beSvl)socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
+								if(oESvl.checked)RegAsyncNoCtx(CrtDldA,videoDataURL,oESvl.checked,0,nick);
+								// else socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
 							}
 						});
 					} catch (e) {
 						console.log(e)
 					}
 				}
-				RegAsyncNoCtx(fnStartRct,vSs,nT,nick);
+				if(oESvl.checked||oSaveMeVD.checked)RegAsyncNoCtx(fnStartRct,vSs,nT,nick);
 			});
 		}, nT3);
 	}catch(e){alert(e)}
@@ -2205,9 +2218,27 @@ function initLang(){
 	}
 	oMs.hide();
 }
+
 $(document).ready(function(){
 	initLang();
 	oNick = $("#nick");
+	oMyCtn = $("#myCtn");
+	oESvl = document.getElementById("eSvl");
+	oSaveMeVD = document.getElementById("saveMeVD");
+	oCAllVideo = document.getElementById("cAllVideo");
+	$(oCAllVideo).hide();
+	fnTmArr.push(function(){
+		oCAllVideo.width = oMyCtn.width();
+		oCAllVideo.height = oMyCtn.height();
+		if(typeof window.ov8canvas!="undefined"){
+			let o = window.ov8canvas;
+			o.width = oCAllVideo.width;
+			o.height = oCAllVideo.height;
+			o.style.left = oMyCtn.css("left");
+			o.style.top = oMyCtn.css("top");
+		}
+		return false;
+	});
 	// genQrcd( `L: 最低的容错水平，可以纠正 7 个错误。
 	// 	M: 中等的容错水平，可以纠正 15 个错误。
 	// 	Q: 较高的容错水平，可以纠正 25 个错误。
@@ -2289,7 +2320,6 @@ $(document).ready(function(){
 		oStChat = $("#stChat"),
 		osdMsg = $("#sdMsg"),
 		oTxtChat = $(".txtChat")
-		oMyCtn = $("#myCtn"),
 		oclsId = $("#clsId"),
 		ovChat = $(".vChat");
 		
@@ -2297,7 +2327,7 @@ $(document).ready(function(){
 	// text chat
 	oStChat.click(function () {
 		playSd(1);
-		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
+		var pdv = oCnId;if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin = doKstart = g_bTxtChat = true;
 		oTxtChat.css("display", "inline-block");
 		oStChat.hide();
