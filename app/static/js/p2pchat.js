@@ -2261,7 +2261,7 @@ function initLang(){
 	oMs.hide();
 }
 
-$(document).ready(function(){
+$(document).ready(async function(){
 	initLang();
 	oNick = $("#nick");
 	oMyCtn = $("#myCtn");
@@ -2306,13 +2306,13 @@ $(document).ready(function(){
 	$('#uIps').on("change", function () {
 		bEaIpfs = this.checked;	
 	});
-	$('#saveMeVD').on("change", function () {
+	$('#saveMeVD').on("change", async function () {
 		if (this.checked){g_bStopVd=false,fnStartRct(window.stream,0,oNick.val());}
 		else g_bStopVd = true;
 	});
 	
 
-	$('#saveMe').on("change", function () {
+	$('#saveMe').on("change", async function () {
 		if (socket && local_media && this.checked) {// 3秒一保存
 			bTm = setInterval(function () {
 				if(local_media)socket.emit('saveImg', fnV2I(local_media.id), g_LbsIps);
@@ -2321,7 +2321,7 @@ $(document).ready(function(){
 		else clearInterval(bTm);
 	});
 
-	$("#showme").on("change", function () {
+	$("#showme").on("change", async function () {
 		if(!local_media)return;
 		var oNt = $("#Pmt" + local_media.id);
 		if (this.checked) oNt.removeClass('d-none');
@@ -2362,7 +2362,7 @@ $(document).ready(function(){
 		
 	$("#shRow1").click(SetRow1);
 	// text chat
-	oStChat.click(function () {
+	oStChat.click(async function () {
 		playSd(1);
 		var pdv = oCnId;if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin = doKstart = g_bTxtChat = true;
@@ -2410,7 +2410,7 @@ $(document).ready(function(){
 	// $("#eFace").change(function(){
 	// 	if(this.checked)initFace();
 	// });
-	$("#eLpos").change(function(){
+	$("#eLpos").change(async function(){
 		if(this.checked){
 			if(!bposInit)bposInit=true,$("body").append(`<div class=compass><div class=arrow></div><div class=compass-circle></div><div class=my-point></div></div>`);
 			bELpos = StartPosInfo();
@@ -2421,14 +2421,14 @@ $(document).ready(function(){
 	$("#ux8").change(function(){
 		window["x8md"] = "yolov8" + (this.checked ? "x": "n") + "-seg";
 	});
-	oEAi.change(function(){
+	oEAi.change(async function(){
 		bEaV8 = this.checked;
 		if(bEaV8 && window.v8Load && typeof window["detectImgV8"] == "function")window["detectImgV8"]()//,imgOldCbk.push(fnFaceDtc);
 		// else rmFnImg(fnFaceDtc);
 		ldai();
 		showWnSt()
 	});
-	$("#eOcr").change(function(){
+	$("#eOcr").change(async function(){
 		window.bEabOcr = this.checked;
 		ldai(true);
 	});
