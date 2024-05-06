@@ -10,7 +10,7 @@ function rcp(){
 	scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -C -r -P ${rport} "$1"  root@${rip}:"$2"
 }
 
-rcp ./upTmp.sh /root/app1/app/
+#rcp ./upTmp.sh /root/app1/app/
 rport=26188
 rip="65.49.208.113"
 
