@@ -1,4 +1,5 @@
-let RegAsync = function(c,n1){setTimeout(c,n1||1)};
+let RegAsync = function(c,n1){setTimeout(c,n1||1)},ckd = 'checked';
+let gaM = {},bIoIsOk = false;
 let aNoCtxCbk = [];
 let RegAsyncNoCtx = function(){
 	aNoCtxCbk.push(Array.from(arguments));
@@ -41,7 +42,7 @@ prettyBytes =(num) =>{
 	return (neg ? '-' : '') + num + ' ' + unit
 };
 
-window.appURL = function(){return document.location.protocol + "//" + location.host};
+appURL = function(){return document.location.protocol + "//" + location.host};
 const getRoomName = function(){// return $("#cnId").val();
 	return "Pwn"+String($("#cnId").val()).hashCode();
 }
@@ -146,13 +147,13 @@ function cntVideo(cbk){// https://dexie.org/docs/Collection/Collection.count()
 	});
 }
 
-bEaV8 = window.bRunAi = !!0,window.bEabOcr = !!0;
+bEaV8 = bRunAi = !!0,bEabOcr = !!0;
 // https://www.webrtc-experiment.com/RecordRTC/simple-demos/
 var oStreamTrack = null, // run ai
 	oNick = null,
 	g_LbsIps = [], qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = !!0,
-	local_media = null,
+	lM = null,
 	oESvl = null,
 	oEAi = null,
 	bEaV8 = !!0,
@@ -163,7 +164,7 @@ var oStreamTrack = null, // run ai
 	// detect node-webkit
 	isNodeWebkit = window.process && (typeof window.process == 'object') && window.process.versions && window.process.versions['node-webkit'],
 	socket = null, /* our socket.io connection to our webserver */
-	local_media_stream = null, /* our own microphone / webcam */
+	lMs = null, /* our own microphone / webcam */
 	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
 	peer_media_elements = {}, /* keep track of our <video>/<audio> tags, indexed by peer_id */
 	g_oYourInfo = {},
@@ -355,7 +356,7 @@ const checkCssDef=function(s){
 
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(async function(){
-	if($("#atRd").prop("checked")){
+	if($("#atRd").prop(ckd)){
 		for(var i =0; i < fnTmArr.length; i++){
 			try{
 			if(fnTmArr[i]()){
@@ -419,7 +420,7 @@ function copyText(o,x) {
 	navigator.clipboard.writeText(o.text());
 	setTips('','Copied|已拷贝',x);
 }
-function CreateMsgDiv (n, s,t,szFileName,nSize) {
+function CreateMsgDiv (n, s,t,sFnm,nSize) {
 	var szId = `TmpId${nCnt}`
 	var szC="msgRow "
 	if(szSelfK == n)szC += "t3"
@@ -435,7 +436,7 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	o1.attr("tm",new Date().getTime());
 	var szTag = "d";
 	if(0 == t){ // 普通消息
-		if(local_media_stream)setTips("收到["+n+"]消息",s);
+		if(lMs)setTips("收到["+n+"]消息",s);
 		var oT1 = o1.find(szTag)
 		oT1.text(s);
 		var x009 = o1.find("svg");
@@ -456,8 +457,8 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	else if(2 == t){// 文件 下载
 		var a = document.createElement("a");
 		a.href = URL.createObjectURL(getBlob(s));
-		a.download = szFileName;
-		a.innerText = "点击下载文件: " + szFileName +"("+ formatBytes(nSize)+")";
+		a.download = sFnm;
+		a.innerText = "点击下载文件: " + sFnm +"("+ formatBytes(nSize)+")";
 		o1.find(szTag).append(a);
 	}else if(3 == t){ // html
 		o1.find(szTag).html(s);
@@ -483,17 +484,17 @@ function CreateMsgDiv (n, s,t,szFileName,nSize) {
 	else o1.click(autoRm);
 	nCnt++;
 	o9.scrollTop(100000,100000);
-	if(window["playSd"])window["playSd"](2)
+	if(typeof playSd == "function")playSd(2)
 }
 
 // 文件发送、接收需要拆包和组包
 // 每次要加密，最后要base64，所有每次，原本限制每次只能发送16k，这里只能发送16/4 = 4k
-function SendFile(s, t,szFileName) {
+function SendFile(s, t,sFnm) {
 	var n = 0,nL = s.length;
-	if(2 == t)CreateMsgDiv(szSelfK, `你发送了文件: ${szFileName}(${formatBytes(nL)})`,0);
+	if(2 == t)CreateMsgDiv(szSelfK, `你发送了文件: ${sFnm}(${formatBytes(nL)})`,0);
 	else CreateMsgDiv(szSelfK, s,t);
 	// s = getUtf8FromB64(s).toString();// base64解码
-	SendMsg(s,t,0,nL,szFileName)
+	SendMsg(s,t,0,nL,sFnm)
 }
 
 // 接收到文件、图片先缓存，最后组包
@@ -501,20 +502,20 @@ var oCcFile = {};
 
 function RevMsg (e) {
 	e = JSON.parse(e.data)
-	if(e.szFileName){
-		// CreateMsgDiv(e.nick, `接收到文件${e.szFileName},文件(${formatBytes(e.nL)})，当前序号:${e.n}`,0)
-		var o1 = oCcFile[e.szFileName] || [];
+	if(e.sFnm){
+		// CreateMsgDiv(e.nick, `接收到文件${e.sFnm},文件(${formatBytes(e.nL)})，当前序号:${e.n}`,0)
+		var o1 = oCcFile[e.sFnm] || [];
 		o1[e.n] = e.msg;
-		oCcFile[e.szFileName] = o1;
+		oCcFile[e.sFnm] = o1;
 		var s1 = o1.join("");
 		if(s1.length == e.nL)
 		{
 			try{s1 = mmMsgj(o1.join(""));}catch(e){
 				log("解码失败： " + s1)
 			}
-			// CreateMsgDiv(e.nick, "data:" + szTOsTp + ";base64,"+btoa(s1),e.t,e.szFileName,e.nL);
-			CreateMsgDiv(e.nick, s1,e.t,e.szFileName,e.nL);
-			delete oCcFile[e.szFileName]
+			// CreateMsgDiv(e.nick, "data:" + szTOsTp + ";base64,"+btoa(s1),e.t,e.sFnm,e.nL);
+			CreateMsgDiv(e.nick, s1,e.t,e.sFnm,e.nL);
+			delete oCcFile[e.sFnm]
 		}
 		
 		return
@@ -534,8 +535,8 @@ var fn009 = function () {
 	oT2.css({"left":"calc(100vw - " + (w + n * 3 + (n - 1) * 3) + "px)",width:w+"px"});
 	setMF();
 	setWhOne();
-	if(window.bEaV8)getImgFromStream();
-	// if(local_media && local_media.id)qrS(fnV2I(local_media.id));
+	if(bEaV8)getImgFromStream();
+	// if(lM && lM.id)qrS(fnV2I(lM.id));
 	var t4 = window.ov8canvas;
 	if(t4){
 		t4.style.width = `${oMyCtn.width()}px`;
@@ -558,7 +559,7 @@ function fnTxtChatOne(pc,peer_id){
 	}
 }
 function fnTxtChatOne1(pc,peer_id){
-	if(pc.Tok || g_aMembers[peer_id] && (!g_aMembers[peer_id]["pc"] || !g_ostt[g_aMembers[peer_id]["pc"].connectionState||''])){
+	if(pc.Tok || gaM[peer_id] && (!gaM[peer_id]["pc"] || !g_ostt[gaM[peer_id]["pc"].connectionState||''])){
 		// log("pc.Tok = ",pc.Tok)
 		return;
 	}
@@ -566,8 +567,8 @@ function fnTxtChatOne1(pc,peer_id){
 	pc.ondatachannel = function(e){
 		// log(" == pc.ondatachannel is ok ===>> ")
 		if(e.channel)e.channel.onmessage = RevMsg
-		if(peer_id && g_aMembers[peer_id]){g_aMembers[peer_id]['sendChannel'] = e.channel;clOpen()}
-		else {log(`${peer_id} 没有成功注册到 g_aMembers`);}
+		if(peer_id && gaM[peer_id]){gaM[peer_id]['sendChannel'] = e.channel;clOpen()}
+		else {log(`${peer_id} 没有成功注册到 gaM`);}
 	}
 	/*
 	maxPacketLifeTime: 0, // 在不可靠模式下尝试传输消息的最大毫秒数。虽然此值是一个 16 位无符号数，但每个用户代理都可以将其限制在它认为合适的任何最大值
@@ -580,9 +581,9 @@ function fnTxtChatOne1(pc,peer_id){
 	if(!sendChannel)return
 	
 	sendChannel.onclose = function () {
-		if(g_aMembers[peer_id]){
-			delete g_aMembers[peer_id]['sendChannel'];
-			g_aMembers[peer_id]['pcok'] = false;
+		if(gaM[peer_id]){
+			delete gaM[peer_id]['sendChannel'];
+			gaM[peer_id]['pcok'] = false;
 		}
 		stopPc01(sendChannel)
 		
@@ -591,9 +592,9 @@ function fnTxtChatOne1(pc,peer_id){
 		fnTxtChatOne(pc,peer_id);
 	}
 	sendChannel.onopen = function () {
-		if(peer_id && g_aMembers[peer_id])
+		if(peer_id && gaM[peer_id])
 		{
-			// var sNick = g_aMembers[peer_id]["nick"]
+			// var sNick = gaM[peer_id]["nick"]
 			// log(sNick)
 			// LogMsg(`你可以 基于 P2P/E2E 加密模式给 ${sNick} 发送消息了`);
 		}
@@ -641,7 +642,7 @@ function send4C(ox1,s){
 
 // 1、当前人pc ok 就基于 P2P 发送
 // 2、当前人pc 不ok 就基于 服务器 发送
-function SendMsg(s,t,n,nL,szFileName) {
+function SendMsg(s,t,n,nL,sFnm) {
 	if (s) {
 		t = t || 0;
 		n = n || 0;
@@ -655,21 +656,21 @@ function SendMsg(s,t,n,nL,szFileName) {
 		if( 0 == s.indexOf("@")){
 			socket.emit('csys',s,szCltFg)
 		}else{
-			for(var k in g_aMembers){
+			for(var k in gaM){
 				try{
 					s01 = s022;
 					n = 0;
 					var bSd = 0;
-					if(g_aMembers[k]["pcok"] && g_aMembers[k]['pc'] && g_ostt[g_aMembers[k]["pc"].connectionState] && g_aMembers[k]['sendChannel']){
+					if(gaM[k]["pcok"] && gaM[k]['pc'] && g_ostt[gaM[k]["pc"].connectionState] && gaM[k]['sendChannel']){
 						// 数据 分片 发送
 						while(0 < s01.length)
 						{
 							try{
-								var nMin = g_aMembers[k]['maxSendSize'] || maxSendSize;
+								var nMin = gaM[k]['maxSendSize'] || maxSendSize;
 								s = s01.substring(0,nMin);
 								s01 = s01.substring(nMin);
-								var szMsg1 = JSON.stringify({ "nick": oNick.val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s })
-								var sendChannel = g_aMembers[k]['sendChannel'];
+								var szMsg1 = JSON.stringify({ "nick": oNick.val(), "t": t, "n": n, "nL": nL, "sFnm": sFnm,"msg": s })
+								var sendChannel = gaM[k]['sendChannel'];
 								send4C(sendChannel,szMsg1)
 								if(0 == s01.length)break;
 								n++;
@@ -684,7 +685,7 @@ function SendMsg(s,t,n,nL,szFileName) {
 								var nMin = 10 * 1024;// 10k
 								s = s01.substring(0,nMin);
 								s01 = s01.substring(nMin);
-								socket.emit('msg4One', {"peer_id":k, "nick": oNick.val(), "t": t, "n": n, "nL": nL, "szFileName": szFileName,"msg": s });
+								socket.emit('msg4One', {"peer_id":k, "nick": oNick.val(), "t": t, "n": n, "nL": nL, "sFnm": sFnm,"msg": s });
 								n++;
 							}catch(e){console.log(e);break}
 						}
@@ -693,8 +694,8 @@ function SendMsg(s,t,n,nL,szFileName) {
 					if(bSd){
 						oks = "✅"
 						// var oM = {1:"P2P/E2E",2:"Sc服务器"}[bSd]
-						// LogMsg(`给 ${k} [${g_aMembers[k]["nick"]}] 的消息已经基于 [${oM}] 模式发送`)
-						// console.log([k,g_aMembers[k]])
+						// LogMsg(`给 ${k} [${gaM[k]["nick"]}] 的消息已经基于 [${oM}] 模式发送`)
+						// console.log([k,gaM[k]])
 					}else{
 						oks = "❎"
 						// LogMsg(`当前没有其他人，消息没有发出`)
@@ -768,13 +769,13 @@ JoinRoom=function(){
 },
 join_chat_channel =function(channel, userdata){
 	if(!b_clickJoin)return;
-	for(var k in g_aMembers){
-		if(g_aMembers[k]['sendChannel']){
-			try{g_aMembers[k]['sendChannel'].close()}catch(e){}
-			delete g_aMembers[k]['sendChannel'];
+	for(var k in gaM){
+		if(gaM[k]['sendChannel']){
+			try{gaM[k]['sendChannel'].close()}catch(e){}
+			delete gaM[k]['sendChannel'];
 		}
 	}
-	g_aMembers={};
+	gaM={};
 	join_chat_channel1(channel, userdata)
 },
 join_chat_channel1 =function(channel, userdata){
@@ -812,16 +813,18 @@ doQrcodeScan=function(imageEl,fnCbk){
 	}
 },
 initQrcode =function(){
-	if (window.wc1 && !bCloseQrcode) {
+	let wc1 = window.wc1;
+	if(typeof wc1 == "undefined")return	;
+	if (wc1 && !bCloseQrcode) {
 		let c1 = async function(){
 			let config = {
 				fps: 10,
-				qrbox: {width: window.wc1.width, height: window.wc1.height},
+				qrbox: {width: wc1.width, height: wc1.height},
 				rememberLastUsedCamera: false,
 				supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
 			  };
 			  
-			  html5QrcodeScanner = new Html5QrcodeScanner(window.wc1, config, false);
+			  html5QrcodeScanner = new Html5QrcodeScanner(wc1, config, false);
 			  html5QrcodeScanner.render(onScanSuccess);
 		};
 		if(typeof Html5QrcodeScanner == "undefined")Is("/js/6.js",c1);
@@ -853,9 +856,9 @@ function setWhOne(){// 只有自己的视频才会调整
 
 function StartVideo () {
 	var bCbkDo = false;
-	setup_local_media(function () {
+	setup_lM(function () {
 		if(bCbkDo)return;
-		if (local_media_stream) {
+		if (lMs) {
 			var bO = b_clickJoin;
 			b_clickJoin = bCbkDo = true;
 			JoinRoom();
@@ -882,7 +885,7 @@ function AddStream2Canvas(e){
 		
 	}catch(e){alert(e)}
 }
-function attachMediaStream (e, stream) {
+function attachMediaStream (e, s) {
 	// fnMyLogs2('DEPRECATED, attachMediaStream will soon be removed.');
 	// Uncaught (in promise) DOMException
 	// https://github.com/sampotts/plyr/issues/331
@@ -890,12 +893,12 @@ function attachMediaStream (e, stream) {
 	// try{
 	RegAsyncNoCtx(AddStream2Canvas,e);
 	if (e.srcObject !== undefined) {
-		e.srcObject = stream;
+		e.srcObject = s;
 	}
 	else if (e.mozSrcObject !== undefined) { // FF18a
-		e.mozSrcObject = stream;
+		e.mozSrcObject = s;
 	} else { // FF16a, 17a
-		e.src = stream;
+		e.src = s;
 	}
 	
 	// fix: Uncaught (in promise) DOMException,Unhandled Promise Rejection: AbortError: The operation was aborted.
@@ -948,22 +951,23 @@ function gotDevices (deviceInfos) {
 
 var nxxxx = 0;
 function initOnePeer(pp, peer_id) {
-	if (!window.stream) {
+	let os = window.stream;
+	if (!os) {
 		return;
 	}
 	if(peer_id&&!pp)pp=peers[peer_id];
-	const [track] = window.stream.getVideoTracks();
+	const [track] = os.getVideoTracks();
 	let calOne = function(p1){
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removeTrack
 		if(typeof p1.addTrack == "function"){
 			try{
 				if(p1.oldSender)p1.removeTrack(p1.oldSender),p1.oldSender.replaceTrack(track);
 			}catch(e){}
-			p1.oldSender = p1.addTrack(track, window.stream);
+			p1.oldSender = p1.addTrack(track, os);
 		}else if(typeof p1.addStream == "function"){
 			try{if(p1.oldStream)p1.removeStream(p1.oldStream)}catch(e){alert(e)}
-			p1.addStream(window.stream);
-			p1.oldStream = window.stream;
+			p1.addStream(os);
+			p1.oldStream = os;
 		}
 
 		// if(window.oldStream){
@@ -988,26 +992,26 @@ function initOnePeer(pp, peer_id) {
 function upListMb(s,b){
 	try{
 		var a = [oNick.val()];
-		for(var k in g_aMembers){
-			a.push(g_aMembers[k]["nick"])
+		for(var k in gaM){
+			a.push(gaM[k]["nick"])
 		}
 		$("#otherP").html(a.join("&nbsp;|&nbsp;"))
 	}catch(e){log(e)}
 }
 function initVideoChat() {
-	if (null == local_media_stream) {
+	if (null == lMs) {
 		RegAsyncNoCtx(initVideoChat);
 		return;
 	}
 	initOnePeer();
-	// peer_connection.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
+	// pC1.addStream(document.getElementsByClassName('output_canvas')[0].captureStream(10));
 }
 
 const setTips = function(t,s,o){
 	var x=(o&&$(o)||$("#msgList")).tipso('hide').attr("data-tipso-title",t||"🔔Tips").tipso({size: 'tiny'}).tipso('update', 'content', s).tipso('show');
 	RegAsync(function(){x.tipso('hide')});
 };
-var g_aMembers = {},bIoIsOk = false;
+
 function setNickInfo(v){
 	if (szCltFg && socket) socket.emit("getNick", szCltFg,JSON.stringify({id:szCltFg,nick:v||szCltFg,vlst:vlst}));
 }
@@ -1069,7 +1073,7 @@ function init () {
 				delete lstRct[sid];
 			}
 			o.remove();
-			delete g_aMembers[peer_id]
+			delete gaM[peer_id]
 		}
 		for (peer_id in peers) {
 			peers[peer_id].close();
@@ -1101,7 +1105,7 @@ function init () {
 	let addPeerCbk=function(config){
 		var peer_id = config.peer_id;
 		if(config.userdata && config.userdata.nick){
-			g_aMembers[peer_id] = {nick:config.userdata.nick};
+			gaM[peer_id] = {nick:config.userdata.nick};
 			// if(config.userdata.nick)setTips("Online",config.userdata.nick);
 			upListMb()
 		}
@@ -1129,22 +1133,22 @@ function init () {
 			if(nCIce >= ICE_SERVERS.length)nCIce = 0;
 			return oTp12;
 		}
-		let peer_connection = new RTCPeerConnection(getIceCfg());
-		peers[peer_id] = peer_connection;
+		let pC1 = new RTCPeerConnection(getIceCfg());
+		peers[peer_id] = pC1;
 		let reConn = function(){
 			try{
-				peer_connection.setConfiguration(getIceCfg());
-				peer_connection.restartIce()
-			}catch(e){log('peer_connection.restartIce ',e)}
+				pC1.setConfiguration(getIceCfg());
+				pC1.restartIce()
+			}catch(e){log('pC1.restartIce ',e)}
 		};
-		peer_connection.onicegatheringstatechange = function(event){
-			// switch(peer_connection.iceGatheringState){
+		pC1.onicegatheringstatechange = function(event){
+			// switch(pC1.iceGatheringState){
 			// 	case "new","gathering":// 对等连接刚刚创建，尚未进行任何网络连接;ICE 代理正在收集候选的连接。
 			// 		break;
 			// 	case 'complete':
 			// 		return;
 			// }
-			// switch(peer_connection.connectionState){
+			// switch(pC1.connectionState){
 			// 	case "new":
 			// 		break;
 			// 	case "connecting":// 表示至少有一个 ICE 连接处于正在建立连接的状态
@@ -1157,7 +1161,7 @@ function init () {
 			// 	// connectionState 反映了整体连接状态，包括 ICE 搜集、信令和媒体通道。如果在 connectionState 为 'failed' 或 'closed' 时重启 ICE，如果故障在于连接过程的其他阶段，可能会触发不必要的重启
 			// 		return;
 			// }
-			let is1 = peer_connection.iceConnectionState,is2 = peer_connection.connectionState,is3 = peer_connection.iceGatheringState,is4 = peer_connection.signalingState;
+			let is1 = pC1.iceConnectionState,is2 = pC1.connectionState,is3 = pC1.iceGatheringState,is4 = pC1.signalingState;
 			log("P2P ICE state: "+is1 + " iceGatheringState: "+is3+"  connectionState: " + is2+" signalingState: "+is4);
 			if(is1 == "failed"){reConn();}
 			// switch(is1){
@@ -1178,11 +1182,11 @@ function init () {
 			// 	case "closed"://  ICE 代理关闭，不再应答任何请求
 			// 		break;
 			// }
-			if(g_aMembers[peer_id])g_aMembers[peer_id]["pc"]=peer_connection;
+			if(gaM[peer_id])gaM[peer_id]["pc"]=pC1;
 		}
 		
 		// p2p 打洞成功触发事件 
-		peer_connection.onicecandidate = function (event) {
+		pC1.onicecandidate = function (event) {
 			if (!event.candidate||!event.candidate.candidate) { return }
 			getYourInfo(event.candidate.candidate);
 			var c = parseCandidate(event.candidate.candidate);
@@ -1206,7 +1210,7 @@ function init () {
 		// https://gist.github.com/Xeoncross/6bb446dc2241461422e3
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removestream_event
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/track_event
-		// peer_connection.onremovestream=function(event){
+		// pC1.onremovestream=function(event){
 		// 	// log("onremovestream",event);
 		// 	// alert(["onremovestream",event])
 		// 	// console.log(event)
@@ -1248,19 +1252,19 @@ function init () {
 				delete peer_media_elements[peer_id];
 			 }}
 		};
-		// peer_connection.addEventListener("track",fnAddStream);
-		peer_connection.onaddstream = fnAddStream;
+		// pC1.addEventListener("track",fnAddStream);
+		pC1.onaddstream = fnAddStream;
 		// p2p 流事件
 		if (!g_bTxtChat) {
-			initOnePeer(peer_connection, peer_id)
+			initOnePeer(pC1, peer_id)
 		}
 
 		if (config.should_create_offer) {
 			// LogMsg("Creating RTC offer to "+ peer_id);
 			//,{ iceRestart: true }
-			peer_connection.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true}).then(function(lds){
+			pC1.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true}).then(function(lds){
 					// log("Local offer description is: ", local_description);
-					peer_connection.setLocalDescription(lds,function(){
+					pC1.setLocalDescription(lds,function(){
 							socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
 						},function(){
 							fnMyLogs("Offer setLocalDescription failed!",lds);
@@ -1270,16 +1274,16 @@ function init () {
 		}
 		
 		try{
-			peer_connection.onclose = function () {
-				delete g_aMembers[peer_id]["pc"];
-				delete g_aMembers[peer_id]['sendChannel'];
+			pC1.onclose = function () {
+				delete gaM[peer_id]["pc"];
+				delete gaM[peer_id]['sendChannel'];
 			};
-		// 	peer_connection.onicecandidateerror=log;
-		// 	peer_connection.ontrack=log;
-		// 	peer_connection.onerror=log;
+		// 	pC1.onicecandidateerror=log;
+		// 	pC1.ontrack=log;
+		// 	pC1.onerror=log;
 		}catch(e){log("onclose::",e)}
 	};
-	socket.on('addPeer', addPeerCbk);// 这里每个节点上线都会被调用1次，因此会产生若干 peer_connection
+	socket.on('addPeer', addPeerCbk);// 这里每个节点上线都会被调用1次，因此会产生若干 pC1
 
 	socket.on('sessionDescription', function (config) {
 		var peer_id = config.peer_id;
@@ -1291,7 +1295,7 @@ function init () {
 			xM = config["session_description"]["sdp"].match(/a=max-message-size:\s*(\d+)/);
 			if (xM && xM.length >= 2) {
 				var n08 = parseInt(xM[1]) - 800;
-				g_aMembers[peer_id]["maxSendSize"]=n08;
+				gaM[peer_id]["maxSendSize"]=n08;
 				// LogMsg(`set ${peer_id} maxSendSize = ${n08}`)
 			}
 		}catch(e){log(e)}
@@ -1306,7 +1310,7 @@ function init () {
 						peer.setLocalDescription(local_description,
 							function () {
 								socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
-								g_aMembers[peer_id]["pcok"]=true
+								gaM[peer_id]["pcok"]=true
 								fnTxtChatOne(null,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 								// log("setRemoteDescription -> createAnswer -> setLocalDescription - > relaySessionDescription")
 							},
@@ -1348,7 +1352,7 @@ function init () {
 
 		delete peers[peer_id];
 		delete peer_media_elements[config.peer_id];
-		delete g_aMembers[peer_id];
+		delete gaM[peer_id];
 		upListMb();
 		bStopRsize = !($("#myCtn div.rounded").length == 1);
 	});
@@ -1363,7 +1367,7 @@ function init () {
 	});
 	$('#closebtn').on('click', function(){
 		$('#intro').hide();
-		$("#sInvite").prop("checked",false);
+		$("#sInvite").prop(ckd,false);
 	});
 }
 
@@ -1467,23 +1471,23 @@ function appSet() {
 	// deviceId 与 facingMode 不能同时使用
 	// user（前置摄像头）、environment（后置摄像头）、left（前置左侧摄像头）、right（前置右置摄像头）
 	var szCurMd = "user";
-	if($("#evdUser").prop("checked"))szCurMd = "environment";
+	if($("#evdUser").prop(ckd))szCurMd = "environment";
 	g_Constraints["video"]["facingMode"] = szCurMd;
 	return g_Constraints
 }
 
 // 改变声音
-function ChangeSound (stream) {
-	if(stream)try {
-		const audioTracks = stream.getAudioTracks()
-		appSet(stream)
+function ChangeSound (s) {
+	if(s)try {
+		const audioTracks = s.getAudioTracks()
+		appSet(s)
 		audioTracks[0].applyConstraints(g_Constraints["audio"]);
 	} catch (e) { log(e) }
 }
 
 function StopStream () {
 	try{
-		if (local_media_stream && typeof local_media_stream.getTracks == "function") local_media_stream.getTracks().forEach(function (track) {
+		if (lMs && typeof lMs.getTracks == "function") lMs.getTracks().forEach(function (track) {
 			if (track && track.readyState == 'live') {
 				track.stop();
 			}
@@ -1491,10 +1495,10 @@ function StopStream () {
 		var ot = $("#Pmtwebcam");
 		ot.find("*").remove();
 		ot.remove();
-		if(local_media)$(local_media).remove(),local_media = null;
+		if(lM)$(lM).remove(),lM = null;
 		window.webcam = null;
 		window.stream = null;
-		local_media_stream = null
+		lMs = null
 	}catch(e){alert(e)}
 }
 
@@ -1598,7 +1602,7 @@ let isSvLc = ()=>{return typeof SaveMp4 == "function"};
 var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nick) {
 	try{
 		if(g_bStopVd)return;
-		var stream = vSs||window.stream||local_media||window.webcam,oC1 = $(stream);
+		var stream = vSs||window.stream||lM||window.webcam,oC1 = $(stream);
 		if(!stream){
 			RegAsyncNoCtx(fnStartRct,vSs,nT,nick);
 			return;
@@ -1646,7 +1650,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 };
 window['fnStartRct'] = fnStartRct;
 // 初始化本地视频
-function setup_local_media (callback, errorback) {
+function setup_lM (callback, errorback) {
 	if (g_bSetup) return;
 	StopStream();
 	g_bSetup = true;
@@ -1675,11 +1679,11 @@ function setup_local_media (callback, errorback) {
 			// ChangeSound(stream)
 			if(window.stream)window.oldStream=window.stream;
 			window.stream = stream;
-			local_media_stream = stream;
+			lMs = stream;
 			let szVideoId = "webcam";
-			local_media = fnCreateVid(bNbg,szVideoId);
-			window.webcam = local_media;
-			local_media.srcObject = stream;
+			lM = fnCreateVid(bNbg,szVideoId);
+			window.webcam = lM;
+			lM.srcObject = stream;
 			const initFaceCbk = function(){// https://justadudewhohacks.github.io/face-api.js/docs/index.html
 				// scoreThreshold 筛选检测到的人脸的置信度阈值
 				// iouThreshold：用于非最大抑制（NMS）的IoU（交并比）阈值。默认值为0.3
@@ -1687,7 +1691,7 @@ function setup_local_media (callback, errorback) {
 				// minFaceSize：最小人脸尺寸。默认值为20
 				// https://vladmandic.github.io/face-api/TUTORIAL.html
 				const faceOpt = new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.6,minConfidence:0.6,maxResults:100});
-				local_media.addEventListener('play', function (){
+				lM.addEventListener('play', function (){
 					// 人脸识别
 					const n42 = setInterval(async function (){
 						try{
@@ -1708,16 +1712,16 @@ function setup_local_media (callback, errorback) {
 			
 			fnAddTmGps();
 			// hidden me、self
-			var oXv = $("#Pmt" + local_media.id),oCps = $("div.compass-circle");
+			var oXv = $("#Pmt" + lM.id),oCps = $("div.compass-circle");
 			oCps.css("display","none");
-			$("#showme").attr("checked", true),oXv.removeClass('d-none');
+			$("#showme").attr(ckd, true),oXv.removeClass('d-none');
 			
 			// try{
-				local_media.muted = true;
-				local_media.autoplay = true;
-				local_media.controls = false;
-				attachMediaStream(local_media, stream);
-			// attachMediaStream(local_media, document.getElementsByClassName('output_canvas')[0].captureStream(10));
+				lM.muted = true;
+				lM.autoplay = true;
+				lM.controls = false;
+				attachMediaStream(lM, stream);
+			// attachMediaStream(lM, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
 			if (callback) callback(),callback=null;
 
@@ -1765,8 +1769,8 @@ function fnDoImgStream (socket, vId) {
 
 // as HTMLImageElement
 async function getImgFromStream(){
-	if(!local_media)return;
-	// oImgOcr.src = szImageData = fnV2I(local_media.id);// 这一行频率过高性能影响很大
+	if(!lM)return;
+	// oImgOcr.src = szImageData = fnV2I(lM.id);// 这一行频率过高性能影响很大
 	return oImgOcr;
 }
 
@@ -2154,7 +2158,7 @@ function showWnSt(){
 		for(var i in o){
 			var szCkdt = "";
 			if(-1 < sD.indexOf(o[i])){
-				window.g_oWarObj[o[i]]=1,szCkdt = "checked";
+				window.g_oWarObj[o[i]]=1,szCkdt = ckd;
 				a.push(`<i><input type=checkbox onchange=boxslct(this) value='${o[i]}' ${szCkdt}>${o[i]}</i>`);
 			}
 		}
@@ -2313,17 +2317,17 @@ $(document).ready(async function(){
 	
 
 	$('#saveMe').on("change", async function () {
-		if (socket && local_media && this.checked) {// 3秒一保存
+		if (socket && lM && this.checked) {// 3秒一保存
 			bTm = setInterval(function () {
-				if(local_media)socket.emit('saveImg', fnV2I(local_media.id), g_LbsIps);
+				if(lM)socket.emit('saveImg', fnV2I(lM.id), g_LbsIps);
 			}, 1000);
 		}
 		else clearInterval(bTm);
 	});
 
 	$("#showme").on("change", async function () {
-		if(!local_media)return;
-		var oNt = $("#Pmt" + local_media.id);
+		if(!lM)return;
+		var oNt = $("#Pmt" + lM.id);
 		if (this.checked) oNt.removeClass('d-none');
 		else oNt.addClass('d-none');
 	});
@@ -2441,7 +2445,7 @@ $(document).ready(async function(){
 	oCnId.change(function () {
 		if(doKstart)JoinRoom();// 这里非常神奇和变态，若干没有点按钮开始聊，就先执行，则导致join失败
 	});
-	initQrcode();
+	// initQrcode();
 	osdMsg.keydown(function (e) {
 		if (e.keyCode == 13) SendMsg(osdMsg.val()),osdMsg.val("")
 	})
@@ -2493,7 +2497,7 @@ $(document).ready(async function(){
 		bAutoRm = this.checked;
 	});
 	oMsgBox = $("#msgList");
-	bAutoRm = oAutoRm.prop("checked");
+	bAutoRm = oAutoRm.prop(ckd);
 	oclsId.click(async function(){
 		oMsgBox.html("")
 		fnTmArr = [];
@@ -2546,11 +2550,11 @@ $(document).ready(async function(){
 	fnShT1($("#sInvite").change(function(){
 		MkQrcd();
 		fnShT1(this.checked);
-	}).prop("checked"));
+	}).prop(ckd));
 	$("div.rtool input[type=checkbox]").addClass("btn btn-secondary");
 	if(bIsMobile)
 	{
-		$("#evdUser").prop("checked",true);
+		$("#evdUser").prop(ckd,true);
 		window.addEventListener("orientationchange", function(event) {
 			var n = event.orientation ||(screen.orientation && screen.orientation.angle);
 			if(-90 == n || 90 == n){
