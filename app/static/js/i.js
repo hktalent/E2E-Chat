@@ -1,1 +1,1 @@
-var g_bEableP2pFs=!1;const Is=e=>{var a=document.createElement("script");a.src=e,a.defer=!1,document.head.appendChild(a)};
+var g_bEableP2pFs=!1;const Is=(e,c)=>{var a=document.createElement("script");a.src=e,a.onload=c,a.defer=!1,document.head.appendChild(a)};

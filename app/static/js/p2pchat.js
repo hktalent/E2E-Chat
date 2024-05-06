@@ -11,7 +11,7 @@ setInterval(async function(){
 			});
 		})(aNoCtxCbk.shift());
 	}
-}, 16);
+}, 100);
 let nVideoSn = 7; // 保留 最近 7 天
 String.prototype.trim = function(){return this.replace(/^\s*|\s*$/gmi,"")};
 String.prototype.hashCode = function() {
@@ -66,48 +66,51 @@ function crtLoader(){
 	return l;
 }
 async function dlAllVideo(){
-	if(typeof JSZip != "function"){
-		Is("/js/jszip.min.js");
-	}
-	const zip = new JSZip();
-	const videoFolderName = "51pwn_video";
-	const mp4Folder = zip.folder(videoFolderName);
+	let c1 = async function(){
+		const zip = new JSZip();
+		const videoFolderName = "51pwn_video";
+		const mp4Folder = zip.folder(videoFolderName);
 
-	const videoLinks = document.querySelectorAll("#ocrRst a");
-	var a3 = [];
-	a3.push.apply(a3,videoLinks);
-	var lT = crtLoader(),i = 0;
-	await Promise.all(a3.map(async (vl) => {
-		const videoUrl = vl.href;
-		try {
-			let fileName = vl.innerText || videoUrl.substring(videoUrl.lastIndexOf("/") + 1);
-			fileName = fileName.split("(")[0];
-			await mp4Folder.file(fileName, await fetch(videoUrl).then(response => response.blob()), {binary: true});
-			i++;
-			lT.innerText = "download zip:" + i + "/" + a3.length;
-		} catch (error) {
-			console.error("Error processing video link:", videoUrl, error);
-		}
-	}));
-	lT.remove();
+		const videoLinks = document.querySelectorAll("#ocrRst a");
+		var a3 = [];
+		a3.push.apply(a3,videoLinks);
+		var lT = crtLoader(),i = 0;
+		await Promise.all(a3.map(async (vl) => {
+			const videoUrl = vl.href;
+			try {
+				let fileName = vl.innerText || videoUrl.substring(videoUrl.lastIndexOf("/") + 1);
+				fileName = fileName.split("(")[0];
+				await mp4Folder.file(fileName, await fetch(videoUrl).then(response => response.blob()), {binary: true});
+				i++;
+				lT.innerText = "download zip:" + i + "/" + a3.length;
+			} catch (error) {
+				console.error("Error processing video link:", videoUrl, error);
+			}
+		}));
+		lT.remove();
+		
+		// for (let index = 0; index < videoLinks.length; index++) {
+		// 	const videoLink = videoLinks[index];
+		// 	const videoUrl = videoLink.href;
+		// 	try {
+		// 		let fileName = videoLink.innerText || videoUrl.substring(videoUrl.lastIndexOf("/") + 1);
+		// 		fileName = fileName.split("(")[0];
+		// 		await mp4Folder.file(fileName, await fetch(videoUrl).then(response => response.blob()), {binary: true,});
+		// 	} catch (error) {
+		// 		console.error("Error processing video link:", videoUrl, error);
+		// 	}
+		// }
+
+		zip.generateAsync({ type: "blob" }).then(content => {
+			saveAs(content, videoFolderName + ".zip");
+		}).catch(error => {
+			console.error("Error generating ZIP:", error);
+		});
+	};
+	if(typeof JSZip == "undefined"){
+		Is("/js/jszip.min.js",c1);
+	}else c1();
 	
-	// for (let index = 0; index < videoLinks.length; index++) {
-	// 	const videoLink = videoLinks[index];
-	// 	const videoUrl = videoLink.href;
-	// 	try {
-	// 		let fileName = videoLink.innerText || videoUrl.substring(videoUrl.lastIndexOf("/") + 1);
-	// 		fileName = fileName.split("(")[0];
-	// 		await mp4Folder.file(fileName, await fetch(videoUrl).then(response => response.blob()), {binary: true,});
-	// 	} catch (error) {
-	// 		console.error("Error processing video link:", videoUrl, error);
-	// 	}
-	// }
-
-	zip.generateAsync({ type: "blob" }).then(content => {
-		saveAs(content, videoFolderName + ".zip");
-	}).catch(error => {
-		console.error("Error generating ZIP:", error);
-	});
 }
 // 删除历史数据
 // 保留 7 天数据
@@ -143,14 +146,16 @@ function cntVideo(cbk){// https://dexie.org/docs/Collection/Collection.count()
 	});
 }
 
-window.bEaV8 = window.bRunAi = !!0,window.bEabOcr = !!0;
+bEaV8 = window.bRunAi = !!0,window.bEabOcr = !!0;
 // https://www.webrtc-experiment.com/RecordRTC/simple-demos/
 var oStreamTrack = null, // run ai
 	oNick = null,
-	g_LbsIps = [], localVvId = '', qWBox = 0, html5QrcodeScanner, charset4ai = true,
+	g_LbsIps = [], qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = !!0,
 	local_media = null,
 	oESvl = null,
+	oEAi = null,
+	bEaV8 = !!0,
 	oCAllVideo = null,
 	oMyCtn=null,
 	szCltFg = "",clientJs,
@@ -274,27 +279,29 @@ var bInitFace = !!0;
 function initFace(cbk){
 	RegAsync(async function(){
 		if(bInitFace)return;
-		Is("/js/14.js");
-		bInitFace = true;
-		cbk=cbk||function(){};
-		// console.log(faceapi.tf.getBackend());
-		// 使用 WebGL 后端时，模型会在浏览器中利用 GPU 进行计算；如果用户的设备支持 WebGL，这通常是性能最佳的选项之一
-		// await faceapi.tf.setBackend("“wasm”");//  “wasm” 或 “cpu” 
-		await faceapi.tf.enableProdMode();
-		await faceapi.tf.ENV.set("DEBUG", false);
-		await faceapi.tf.ready();
-		const mdP = '/model/face/';
+		let c1 =async function(){
+			bInitFace = true;
+			cbk=cbk||function(){};
+			// console.log(faceapi.tf.getBackend());
+			// 使用 WebGL 后端时，模型会在浏览器中利用 GPU 进行计算；如果用户的设备支持 WebGL，这通常是性能最佳的选项之一
+			// await faceapi.tf.setBackend("“wasm”");//  “wasm” 或 “cpu” 
+			await faceapi.tf.enableProdMode();
+			await faceapi.tf.ENV.set("DEBUG", false);
+			await faceapi.tf.ready();
+			const mdP = '/model/face/';
 
-		Promise.all([
-			faceapi.nets.ssdMobilenetv1.loadFromUri(mdP),
-			faceapi.nets.mtcnn.loadFromUri(mdP),
-			faceapi.nets.faceExpressionNet.loadFromUri(mdP),
-			faceapi.nets.ageGenderNet.loadFromUri(mdP),
-			faceapi.nets.tinyFaceDetector.loadFromUri(mdP),
-			faceapi.nets.faceLandmark68Net.loadFromUri(mdP),
-			faceapi.nets.faceLandmark68TinyNet.loadFromUri(mdP),
-			faceapi.nets.faceRecognitionNet.loadFromUri(mdP)
-		]).then(cbk);
+			Promise.all([
+				faceapi.nets.ssdMobilenetv1.loadFromUri(mdP),
+				faceapi.nets.mtcnn.loadFromUri(mdP),
+				faceapi.nets.faceExpressionNet.loadFromUri(mdP),
+				faceapi.nets.ageGenderNet.loadFromUri(mdP),
+				faceapi.nets.tinyFaceDetector.loadFromUri(mdP),
+				faceapi.nets.faceLandmark68Net.loadFromUri(mdP),
+				faceapi.nets.faceLandmark68TinyNet.loadFromUri(mdP),
+				faceapi.nets.faceRecognitionNet.loadFromUri(mdP)
+			]).then(cbk);
+		};
+		Is("/js/14.js",c1);
 	});
 }
 // 当前时间
@@ -533,6 +540,7 @@ var fn009 = function () {
 	if(t4){
 		t4.style.width = `${oMyCtn.width()}px`;
 		t4.style.height = `${oMyCtn.height()}px`;
+		t4.style.display = bEaV8?"block":"none";
 	}
 	return false;
 };
@@ -804,14 +812,20 @@ doQrcodeScan=function(imageEl,fnCbk){
 	}
 },
 initQrcode =function(){
-	if (localVvId && !bCloseQrcode) {
-		qWBox = $("#" + localVvId)
-		html5QrcodeScanner = new Html5Qrcode(localVvId);
-		var qb = { width: parseInt(qWBox.width()) || 250, height: parseInt(qWBox.height()) || 250 }
-		qb.height = qb.width;
-		var config = { fps: 10, qrbox: qb };
-		// 后置镜头
-		// html5QrcodeScanner.start({ deviceId: { exact: localVvId } }, config, onScanSuccess);
+	if (window.wc1 && !bCloseQrcode) {
+		let c1 = async function(){
+			let config = {
+				fps: 10,
+				qrbox: {width: window.wc1.width, height: window.wc1.height},
+				rememberLastUsedCamera: false,
+				supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+			  };
+			  
+			  html5QrcodeScanner = new Html5QrcodeScanner(window.wc1, config, false);
+			  html5QrcodeScanner.render(onScanSuccess);
+		};
+		if(typeof Html5QrcodeScanner == "undefined")Is("/js/6.js",c1);
+		else c1();
 	}
 };
 var bStopRsize = false;
@@ -852,41 +866,43 @@ function StartVideo () {
 }
 
 let lstRct = {};
-function AddStream2Canvas(stream){
+function AddStream2Canvas(e){
 	try{
-		stream.onplay = function drawFrame(){
-			requestAnimationFrame(drawFrame);
-			let sid = stream.id,o = $("#Pmt"+sid),p=o.position(),o1 = $(stream);
-			let x = p.left,y = p.top,w = o1.width(),h= o1.height();
+		let sid = e.id,o = $("#Pmt"+sid),o1 = $(e);;
+		let drawFrame=function(){
+			// requestAnimationFrame(drawFrame);// requestAnimationFrame的调用很频繁
+			let p=o.position(),x = p.left,y = p.top,w = o1.width(),h= o1.height();
 			const canvasCtx = oCAllVideo.getContext('2d');
 			if(lstRct[sid]&&lstRct[sid].length)canvasCtx.clearRect.apply(canvasCtx,lstRct[sid]);
-			canvasCtx.drawImage(stream, x,y, w,h);
+			canvasCtx.drawImage(e, x,y, w,h);
 			lstRct[sid]=[x,y, w,h];
+			RegAsyncNoCtx(drawFrame);
 		};
+		e.onplay = drawFrame;
+		
 	}catch(e){alert(e)}
 }
-function attachMediaStream (element, stream) {
+function attachMediaStream (e, stream) {
 	// fnMyLogs2('DEPRECATED, attachMediaStream will soon be removed.');
 	// Uncaught (in promise) DOMException
 	// https://github.com/sampotts/plyr/issues/331
 	// https://github.com/addyosmani/getUserMedia.js/issues/64#issuecomment-270668091
 	// try{
-	try{
-		AddStream2Canvas(element);}catch(e){alert(e)}
-	if (element.srcObject !== undefined) {
-		element.srcObject = stream;
+	RegAsyncNoCtx(AddStream2Canvas,e);
+	if (e.srcObject !== undefined) {
+		e.srcObject = stream;
 	}
-	else if (element.mozSrcObject !== undefined) { // FF18a
-		element.mozSrcObject = stream;
+	else if (e.mozSrcObject !== undefined) { // FF18a
+		e.mozSrcObject = stream;
 	} else { // FF16a, 17a
-		element.src = stream;
+		e.src = stream;
 	}
 	
 	// fix: Uncaught (in promise) DOMException,Unhandled Promise Rejection: AbortError: The operation was aborted.
 	// https://developers.google.com/web/updates/2017/06/play-request-was-interrupted
-	// if(element.play)element.play();
+	// if(e.play)e.play();
 	// }catch(e){fnMyLogs(e);
-	// 	try{element.src = (window['URL'] || window['webkitURL']).createObjectURL(stream);}catch(e1){fnMyLogs(e1);}
+	// 	try{e.src = (window['URL'] || window['webkitURL']).createObjectURL(stream);}catch(e1){fnMyLogs(e1);}
 	// }
 };
 
@@ -1046,7 +1062,13 @@ function init () {
 	socket.on('disconnect', function () {
 		bIoIsOk = false;
 		for (peer_id in peer_media_elements) {
-			peer_media_elements[peer_id].remove();
+			let o = peer_media_elements[peer_id],sid = o[0].id.substring(3);
+			if(lstRct[sid]&&lstRct[sid].length){
+				const c = oCAllVideo.getContext('2d');
+				c.clearRect.apply(c,lstRct[sid]);
+				delete lstRct[sid];
+			}
+			o.remove();
 			delete g_aMembers[peer_id]
 		}
 		for (peer_id in peers) {
@@ -1372,7 +1394,13 @@ function MkQrcd () {
 	document.getElementById('roomurl').textContent = szCurUrl;
 	o1 = document.getElementById("myQrcode")
 	o1.innerHTML = ""
-	new QRCode(o1, { text: szCurUrl, width: 200, height: 200 });
+	let c1 = function(){new QRCode(o1, { text: szCurUrl, width: 200, height: 200 })};
+	if(typeof QRCode=="undefined"){
+		Is("/js/4.js",c1);
+	}else{
+		c1();
+	}
+	
 	$("#myQrcode img").css({ width: "calc(100vw * 0.125)", height: "auto", "margin": "auto" });
 }
 
@@ -1594,7 +1622,7 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 		RegAsync(async function(){
 			if (recorder) recorder.stopRecording(async function(){
 				// 开启人脸识别的情况，只在检测到人时保存
-				if($("#eAi").attr("checked") && !g_bWarn);else{
+				if(bEaV8 && !g_bWarn);else{
 					try {
 						recorder.getDataURL(async function(videoDataURL){
 							videoDataURL = String(videoDataURL);
@@ -1678,8 +1706,6 @@ function setup_local_media (callback, errorback) {
 			};
 			if($("#eFace")[0].checked)initFace(initFaceCbk);
 			
-			localVvId = local_media.id
-		
 			fnAddTmGps();
 			// hidden me、self
 			var oXv = $("#Pmt" + local_media.id),oCps = $("div.compass-circle");
@@ -1888,8 +1914,8 @@ const qrS =function(I){
 
 function ldai(){
 	if(g_bTxtChat)return;
-	// ");// Is('/v8.js');//
-	if(window.bEaV8 && !window.v8Load)window.v8Load = true,Is('/v8.js');//<script src=/js/face-api.min.js></script>"),initFc();
+	// ");// Is('/v8.js');// 依赖 /js/9.js tfjs
+	if(bEaV8 && !window.v8Load)window.v8Load = true,Is('/v8.js');//<script src=/js/face-api.min.js></script>"),initFc();
 	// if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -2152,11 +2178,16 @@ const html2img=function(html) {
 	return new Promise(function(resolve){
 		const d1 = document.createElement("div");
 		d1.innerHTML = html;
-		html2canvas(d1).then(function(canvas){
-			canvas.toBlob(function(blob){
-				resolve(blob)
-			},'image/webp',0.5);
-		});
+		let c1 = function(){
+			html2canvas(d1).then(function(canvas){
+				canvas.toBlob(function(blob){
+					resolve(blob)
+				},'image/webp',0.5);
+			})
+		};
+		if(typeof html2canvas == "undefined"){
+			Is("/js/13.js",c1);
+		}else c1();
 	});
 }, genQrcd=function(s){
 	const rq1 =  new QRCode("msgList", {
@@ -2237,6 +2268,7 @@ $(document).ready(function(){
 	oESvl = document.getElementById("eSvl");
 	oSaveMeVD = document.getElementById("saveMeVD");
 	oCAllVideo = document.createElement("canvas");
+	oEAi=$("#eAi");
 	oCAllVideo.id = "cAllVideo"
 	// $(oCAllVideo).hide();
 	fnTmArr.push(function(){
@@ -2389,9 +2421,9 @@ $(document).ready(function(){
 	$("#ux8").change(function(){
 		window["x8md"] = "yolov8" + (this.checked ? "x": "n") + "-seg";
 	});
-	$("#eAi").change(function(){
-		window.bEaV8 = this.checked;
-		if(window.bEaV8 && window.v8Load && typeof window["detectImgV8"] == "function")window["detectImgV8"]()//,imgOldCbk.push(fnFaceDtc);
+	oEAi.change(function(){
+		bEaV8 = this.checked;
+		if(bEaV8 && window.v8Load && typeof window["detectImgV8"] == "function")window["detectImgV8"]()//,imgOldCbk.push(fnFaceDtc);
 		// else rmFnImg(fnFaceDtc);
 		ldai();
 		showWnSt()
@@ -2457,12 +2489,12 @@ $(document).ready(function(){
 		}
 	});
 	oAutoRm = $("#atRd");
-	oAutoRm.change(function () {
+	oAutoRm.change(async function () {
 		bAutoRm = this.checked;
 	});
 	oMsgBox = $("#msgList");
 	bAutoRm = oAutoRm.prop("checked");
-	oclsId.click(function(){
+	oclsId.click(async function(){
 		oMsgBox.html("")
 		fnTmArr = [];
 	});
@@ -2472,8 +2504,8 @@ $(document).ready(function(){
 	fnTmArr.push(fn009);
 	// window.addEventListener('resize', fn009);
 	// 微信浏览器 https://www.lixf.cc/2021/03/26/webrtc-in-ios-weixin-browser/
-	document.addEventListener("WeixinJSBridgeReady", function () {  
-		$("video").each(function(){
+	document.addEventListener("WeixinJSBridgeReady", async function () {  
+		$("video").each(async function(){
 			this.play();
 		});
 	});
@@ -2532,7 +2564,7 @@ $(document).ready(function(){
 	}
 	initBox();
 	if(g_bEableP2pFs){
-		// for(const x of '/js/12.js;/js/8.js'.split(";")){
+		// for(const x of '/js/10.js;/js/12.js;/js/8.js'.split(";")){
 		// 	seedFiles(x);
 		// }
 	}
