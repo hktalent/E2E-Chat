@@ -1486,7 +1486,7 @@ function StopStream () {
 		lMs = null
 	}catch(e){alert(e)}
 }
-
+window.onbeforeunload =StopStream;
 const b64toBlob = function(b64Data, contentType='', sliceSize=512){
 	const byteCharacters = atob(b64Data);
 	const byteArrays = [];
