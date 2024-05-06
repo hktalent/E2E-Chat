@@ -851,12 +851,17 @@ function StartVideo () {
 	});
 }
 
-function AddStream2Canvas(stream,x,y,w,h){
+let lstRct = {};
+function AddStream2Canvas(stream){
 	try{
-		const canvasCtx = oCAllVideo.getContext('2d');
 		stream.onplay = function drawFrame(){
 			requestAnimationFrame(drawFrame);
+			let sid = stream.id,o = $("#Pmt"+sid),p=o.position(),o1 = $(stream);
+			let x = p.left,y = p.top,w = o1.width(),h= o1.height();
+			const canvasCtx = oCAllVideo.getContext('2d');
+			if(lstRct[sid]&&lstRct[sid].length)canvasCtx.clearRect.apply(canvasCtx,lstRct[sid]);
 			canvasCtx.drawImage(stream, x,y, w,h);
+			lstRct[sid]=[x,y, w,h];
 		};
 	}catch(e){alert(e)}
 }
@@ -867,8 +872,7 @@ function attachMediaStream (element, stream) {
 	// https://github.com/addyosmani/getUserMedia.js/issues/64#issuecomment-270668091
 	// try{
 	try{
-		let o = $("#Pmt"+element.id),p=o.position();
-		AddStream2Canvas(element,p.left,p.top,o.width(),o.height());}catch(e){alert(e)}
+		AddStream2Canvas(element);}catch(e){alert(e)}
 	if (element.srcObject !== undefined) {
 		element.srcObject = stream;
 	}
