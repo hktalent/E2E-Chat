@@ -66,6 +66,9 @@ function crtLoader(){
 	return l;
 }
 async function dlAllVideo(){
+	if(typeof JSZip != "function"){
+		Is("/js/jszip.min.js");
+	}
 	const zip = new JSZip();
 	const videoFolderName = "51pwn_video";
 	const mp4Folder = zip.folder(videoFolderName);
@@ -149,6 +152,7 @@ var oStreamTrack = null, // run ai
 	local_media = null,
 	oESvl = null,
 	oCAllVideo = null,
+	oMyCtn=null,
 	szCltFg = "",clientJs,
 	bIsMobile,
 	// detect node-webkit
@@ -341,14 +345,16 @@ const checkCssDef=function(s){
 	}
 	return false;
 };
+
 var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
-setInterval(function(){
+setInterval(async function(){
 	if($("#atRd").prop("checked")){
 		for(var i =0; i < fnTmArr.length; i++){
+			try{
 			if(fnTmArr[i]()){
 				fnTmArr.splice(i, 1)
 				i--
-			}
+			}}catch(e){}
 		}
 	}
 	// fnSendSvMsg();// 太频繁了
@@ -521,9 +527,13 @@ var fn009 = function () {
 	oT2.css({"left":"calc(100vw - " + (w + n * 3 + (n - 1) * 3) + "px)",width:w+"px"});
 	setMF();
 	setWhOne();
-	$("#v8canvas").css({display:window.bEaV8?"block":"none"});
 	if(window.bEaV8)getImgFromStream();
 	// if(local_media && local_media.id)qrS(fnV2I(local_media.id));
+	var t4 = window.ov8canvas;
+	if(t4){
+		t4.style.width = `${oMyCtn.width()}px`;
+		t4.style.height = `${oMyCtn.height()}px`;
+	}
 	return false;
 };
 function clOpen(){
@@ -817,15 +827,12 @@ function setWhOne(){// 只有自己的视频才会调整
 			w = bw,h = bw * blF;
 			if(h > bh){h = bh;w = bh/blF;}
 			$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
-			var oCur11 = document.getElementById("Pmtwebcam"),t4 = document.getElementById("v8canvas");
-			if(t4 && oCur11){
-				t4.style.width = `${oCur11.clientWidth}px`;
-				t4.style.height = `${oCur11.clientHeight}px`;
-				t4.style.top = `${oCur11.offsetTop}px`;
-				t4.style.left = `${oCur11.offsetLeft}px`;
+			var t4 = window.ov8canvas;
+			if(t4){
+				t4.style.top = `${oMyCtn[0].offsetTop}px`;
+				t4.style.left = `${oMyCtn[0].offsetLeft}px`;
 				t4.style.display = "block";
 			}
-			
 		}
 	});
 }
@@ -2125,7 +2132,7 @@ function showWnSt(){
 		RegAsyncNoCtx(showWnSt);
 		return;
 	}
-	$("#wnset").html(a.join("")).show();
+	ws.html(a.join("")).show();
 } 
   
 // 要下载的资源URL数组，每个元素包含magnetURI和url属性
@@ -2225,18 +2232,12 @@ $(document).ready(function(){
 	oMyCtn = $("#myCtn");
 	oESvl = document.getElementById("eSvl");
 	oSaveMeVD = document.getElementById("saveMeVD");
-	oCAllVideo = document.getElementById("cAllVideo");
-	$(oCAllVideo).hide();
+	oCAllVideo = document.createElement("canvas");
+	oCAllVideo.id = "cAllVideo"
+	// $(oCAllVideo).hide();
 	fnTmArr.push(function(){
 		oCAllVideo.width = oMyCtn.width();
 		oCAllVideo.height = oMyCtn.height();
-		if(typeof window.ov8canvas!="undefined"){
-			let o = window.ov8canvas;
-			o.width = oCAllVideo.width;
-			o.height = oCAllVideo.height;
-			o.style.left = oMyCtn.css("left");
-			o.style.top = oMyCtn.css("top");
-		}
 		return false;
 	});
 	// genQrcd( `L: 最低的容错水平，可以纠正 7 个错误。
