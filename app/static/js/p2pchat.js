@@ -32,12 +32,12 @@ const T2Sha384 =(s,v) =>{
 	return v ? window.crypto.subtle.verify(s1, s):s1;
 },
 prettyBytes =(num) =>{
-	const units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+	const units = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
 	const neg = num < 0
 	if (neg) num = -num
 	if (num < 1) return (neg ? '-' : '') + num + ' B'
 	const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1)
-	const unit = units[exponent]
+	const unit = units[exponent]+'B'
 	num = Number((num / Math.pow(1000, exponent)).toFixed(2))
 	return (neg ? '-' : '') + num + ' ' + unit
 };
@@ -153,7 +153,7 @@ var oStreamTrack = null, // run ai
 	oNick = null,
 	g_LbsIps = [], qWBox = 0, html5QrcodeScanner, charset4ai = true,
 	IS_SCREEN_STREAMING = !!0,
-	lM = null,
+	lM = null,// 本地 video
 	oESvl = null,
 	oEAi = null,
 	bEaV8 = !!0,
@@ -164,7 +164,7 @@ var oStreamTrack = null, // run ai
 	// detect node-webkit
 	isNodeWebkit = window.process && (typeof window.process == 'object') && window.process.versions && window.process.versions['node-webkit'],
 	socket = null, /* our socket.io connection to our webserver */
-	lMs = null, /* our own microphone / webcam */
+	lMs = null, // 本地视频流
 	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
 	peer_media_elements = {}, /* keep track of our <video>/<audio> tags, indexed by peer_id */
 	g_oYourInfo = {},
@@ -856,7 +856,7 @@ function setWhOne(){// 只有自己的视频才会调整
 
 function StartVideo () {
 	var bCbkDo = false;
-	setup_lM(function () {
+	setupLm(function () {
 		if(bCbkDo)return;
 		if (lMs) {
 			var bO = b_clickJoin;
@@ -871,8 +871,10 @@ function StartVideo () {
 let lstRct = {};
 function AddStream2Canvas(e){
 	try{
-		let sid = e.id,o = $("#Pmt"+sid),o1 = $(e);;
+		let sid = e.id,o = $("#Pmt"+sid),o1 = $(e);
 		let drawFrame=function(){
+			let o2 = $("#Pmt"+sid);
+			if(0 == o2.length||o2[0] != o[0])return;
 			// requestAnimationFrame(drawFrame);// requestAnimationFrame的调用很频繁
 			let p=o.position(),x = p.left,y = p.top,w = o1.width(),h= o1.height();
 			const canvasCtx = oCAllVideo.getContext('2d');
@@ -882,7 +884,6 @@ function AddStream2Canvas(e){
 			RegAsyncNoCtx(drawFrame);
 		};
 		e.onplay = drawFrame;
-		
 	}catch(e){alert(e)}
 }
 function attachMediaStream (e, s) {
@@ -957,29 +958,18 @@ function initOnePeer(pp, peer_id) {
 	}
 	if(peer_id&&!pp)pp=peers[peer_id];
 	const [track] = os.getVideoTracks();
+	
 	let calOne = function(p1){
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removeTrack
+		try{if(p1.oldStream)p1.removeStream(p1.oldStream)}catch(e){alert(e)}
+		try{if(p1.oldSender)p1.removeTrack(p1.oldSender),p1.oldSender.replaceTrack(track)}catch(e){alert(e)}
 		if(typeof p1.addTrack == "function"){
-			try{
-				if(p1.oldSender)p1.removeTrack(p1.oldSender),p1.oldSender.replaceTrack(track);
-			}catch(e){}
 			p1.oldSender = p1.addTrack(track, os);
 		}else if(typeof p1.addStream == "function"){
-			try{if(p1.oldStream)p1.removeStream(p1.oldStream)}catch(e){alert(e)}
 			p1.addStream(os);
-			p1.oldStream = os;
 		}
-
-		// if(window.oldStream){
-		// 	try{
-		// 		let videoTrack = window.oldStream.getVideoTracks()[0];
-		// 		alert(videoTrack.kind)
-		// 		var sender = p1.getSenders().find(function(s) {
-		// 			return (s.kind||s.track.kind) == videoTrack.kind;
-		// 		});
-		// 		sender.replaceTrack(track);
-		// 	}catch(e){alert(e)}
-		// }
+		
+		p1.oldStream = os;
 	};
 	if(pp)calOne(pp);else{
 		for(peer_id in peers){
@@ -1201,12 +1191,12 @@ function init () {
 		// https://stackoverflow.com/questions/55379332/onaddstream-event-not-called
 		//  addStream and onaddstream are deprecated
 		// ontrack event.stream[0]
-		var xxGet = function(o,a,prefix){
-			for(var k in o){
-				a.push(prefix+k + ":" + o[k]);
-			}
-			return a;
-		}
+		// var xxGet = function(o,a,prefix){
+		// 	for(var k in o){
+		// 		a.push(prefix+k + ":" + o[k]);
+		// 	}
+		// 	return a;
+		// }
 		// https://gist.github.com/Xeoncross/6bb446dc2241461422e3
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removestream_event
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/track_event
@@ -1303,26 +1293,21 @@ function init () {
 		/*允许设置多个 setRemoteDescription。您可以在连接的生命周期内多次调用 setRemoteDescription 方法，以接收来自不同远程对等方的会话描述。
 		每次调用 setRemoteDescription 时，它会更新连接的远程描述，从而允许您在同一个连接上与多个不同的远程对等方进行通信 */
 		var desc = new RTCSessionDescription(remote_description);
-		peer.setRemoteDescription(desc, function () {
+		peer.setRemoteDescription(desc,async function(){
 			if (remote_description.type == "offer") {
-				peer.createAnswer(
-					function (local_description) {
-						peer.setLocalDescription(local_description,
-							function () {
+				peer.createAnswer(async function (local_description) {
+						peer.setLocalDescription(local_description,async function () {
 								socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
-								gaM[peer_id]["pcok"]=true
+								gaM[peer_id]["pcok"] = true;
 								fnTxtChatOne(null,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 								// log("setRemoteDescription -> createAnswer -> setLocalDescription - > relaySessionDescription")
-							},
-							function () { log("Answer setLocalDescription failed!",local_description); }
+							},async function () { log("Answer setLocalDescription failed!",local_description); }
 						);
-					},
-					function (error) {
+					},async function (error) {
 						fnMyLogs2("Error creating answer: ", error, peer);
 					});
 			}
-		},
-		function (error) {
+		},async function (error) {
 			log("setRemoteDescription error: ", error,remote_description);
 		});
 	});
@@ -1650,7 +1635,8 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 };
 window['fnStartRct'] = fnStartRct;
 // 初始化本地视频
-function setup_lM (callback, errorback) {
+// 本地启恩还的时候要解绑定 attachMediaStream 否则会导臃无法再次启动
+function setupLm (callback, errorback) {
 	if (g_bSetup) return;
 	StopStream();
 	g_bSetup = true;
@@ -1683,7 +1669,6 @@ function setup_lM (callback, errorback) {
 			let szVideoId = "webcam";
 			lM = fnCreateVid(bNbg,szVideoId);
 			window.webcam = lM;
-			lM.srcObject = stream;
 			const initFaceCbk = function(){// https://justadudewhohacks.github.io/face-api.js/docs/index.html
 				// scoreThreshold 筛选检测到的人脸的置信度阈值
 				// iouThreshold：用于非最大抑制（NMS）的IoU（交并比）阈值。默认值为0.3
@@ -2144,7 +2129,7 @@ function plWarn(){
 	playSd(3);
 	clearTimeout(nWarn);
 	g_bWarn = true;
-	nWarn = setTimeout(function(){g_bWarn = !!0}, 30000);
+	nWarn = setTimeout(function(){g_bWarn = !!0}, 25000);
 }
 window.g_oWarObj = {};
 function boxslct(o){
