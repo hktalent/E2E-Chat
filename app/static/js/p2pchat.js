@@ -1217,7 +1217,7 @@ function init () {
 				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0"});
 				if(isSvLc()||document.getElementById("saveMeVD").checked){
 					remote_media.addEventListener('play', async function() {
-						fnStartRct(event.stream,1,config.userdata.nick);
+						fnStartRct(event.stream,1,config.userdata.nick,remote_media);
 					});
 				}
 				attachMediaStream(remote_media, event.stream);
@@ -1584,12 +1584,16 @@ function CrtDldA(s,beSvl,szId,nick,szName){
 }
 let isSvLc = ()=>{return typeof SaveMp4 == "function"};
 // 触发保存 https://recordrtc.org/   https://www.webrtc-experiment.com/
-var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nick) {
+// https://recordrtc.org/CanvasRecorder.html
+var bTm = 0, g_nTmxx9, nT090,fnStartRct = function(vSs,nT,nick,vd) {
 	try{
-		if(g_bStopVd)return;
+		// 节点离场、本地视频源切换时退出
+		let vd1 = $("#Pmt"+vd.id).find("video");
+		if(!vd1.length || vd1[0]!=vd)return;
+
 		var stream = vSs||window.stream||lM||window.webcam,oC1 = $(stream);
 		if(!stream){
-			RegAsyncNoCtx(fnStartRct,vSs,nT,nick);
+			RegAsyncNoCtx(fnStartRct,vSs,nT,nick,vd);
 			return;
 		}
 		// 70 秒内不重复执行
@@ -1597,40 +1601,44 @@ var bTm = 0, g_nTmxx9, nT090, g_bStopVd = false,fnStartRct = function(vSs,nT,nic
 			return;
 		}
 		oC1.attr("bIsRvdRcd",new Date().getTime());
-		var qxd = 1000000,recorder = RecordRTC(stream, {
-			type: (!!nT?"":"audio+")+'video'// 测评表明 AV1 是最佳的
-			, mimeType: vWcStr
-			,audioBitsPerSecond: 128000,
-			videoBitsPerSecond: qxd,
-			bitsPerSecond: 0,// 让 RecordRTC 计算总比特率
-			frameRate: 24,//15 ～ 30
-		});
-		recorder.startRecording();
-		const nT3 = 60 * 1000 * (nT||(isSvLc() ? 5 : 1));
-		//  10分钟,停一下，并上传，然后重新开始
-		RegAsync(async function(){
-			if (recorder) recorder.stopRecording(async function(){
-				// 开启人脸识别的情况，只在检测到人时保存
-				if(bEaV8 && !g_bWarn);else{
-					try {
-						recorder.getDataURL(async function(videoDataURL){
-							videoDataURL = String(videoDataURL);
-							if(100 > videoDataURL.length){
-								return;
-							}
-							if(isSvLc())RegAsyncNoCtx(SaveMp4,{"data":videoDataURL,"name":nick});
-							else{
-								if(oESvl.checked)RegAsyncNoCtx(CrtDldA,videoDataURL,oESvl.checked,0,nick);
-								// else socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
-							}
-						});
-					} catch (e) {
-						console.log(e)
+		if(oESvl.checked||oSaveMeVD.checked){
+			let opts = {
+				type: (!!nT?"":"audio+")+'video'// 测评表明 AV1 是最佳的
+				, mimeType: vWcStr
+				,disableLogs: true
+				,recorderType: MediaStreamRecorder,
+				// audioBitsPerSecond : 256 * 8 * 1024,
+    			// videoBitsPerSecond : 256 * 8 * 1024,
+				bitsPerSecond: 256 * 8 * 1024,
+				videoBitsPerSecond: qxd,
+				frameRate: 24,//15 ～ 30
+			};
+			var qxd = 1000000,recorder = new RecordRTC(stream, opts);
+			recorder.startRecording();
+			const nT3 = 60 * 1000 * (nT||(isSvLc() ? 5 : 1));
+			//  10分钟,停一下，并上传，然后重新开始
+			RegAsync(async function(){
+				if (recorder) recorder.stopRecording(async function(){
+					// 开启AI、人脸识别的情况，只在检测到人时保存
+					if(bEaV8 && !g_bWarn);else{
+						try {
+							recorder.getDataURL(async function(videoDataURL){
+								videoDataURL = String(videoDataURL);
+								if(100 > videoDataURL.length)// 跳过无效的视频
+									return;
+								// 本地保存的情形
+								if(isSvLc())RegAsyncNoCtx(SaveMp4,{"data":videoDataURL,"name":nick});
+								else{// 浏览器保存
+									if(oESvl.checked)RegAsyncNoCtx(CrtDldA,videoDataURL,oESvl.checked,0,nick);
+									// else socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
+								}
+							});
+						} catch (e) {console.log(e)}
 					}
-				}
-				if(oESvl.checked||oSaveMeVD.checked)RegAsyncNoCtx(fnStartRct,vSs,nT,nick);
-			});
-		}, nT3);
+				});
+			}, nT3);
+		}
+		RegAsyncNoCtx(fnStartRct,vSs,nT,nick,vd);
 	}catch(e){alert(e)}
 };
 window['fnStartRct'] = fnStartRct;
@@ -1709,9 +1717,7 @@ function setupLm (callback, errorback) {
 			// attachMediaStream(lM, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
 			if (callback) callback(),callback=null;
-
-			fnStartRct(window.stream,0,document.getElementById("nick").value);
-			RegAsyncNoCtx(fnStartRct,window.stream,1,document.getElementById("nick").value);
+			RegAsyncNoCtx(fnStartRct,window.stream,1,document.getElementById("nick").value,lM);
 			return navigator.mediaDevices.enumerateDevices()
 		};
 		if(document.getElementById("rScreen").checked && (navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia||navigator.getDisplayMedia)){
@@ -2295,11 +2301,6 @@ $(document).ready(async function(){
 	$('#uIps').on("change", function () {
 		bEaIpfs = this.checked;	
 	});
-	$('#saveMeVD').on("change", async function () {
-		if (this.checked){g_bStopVd=false,fnStartRct(window.stream,0,oNick.val());}
-		else g_bStopVd = true;
-	});
-	
 
 	$('#saveMe').on("change", async function () {
 		if (socket && lM && this.checked) {// 3秒一保存
