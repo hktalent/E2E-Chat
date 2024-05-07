@@ -1,9 +1,180 @@
-let RegAsync = function(c,n1){setTimeout(c,n1||1)},ckd = 'checked';
-let gaM = {},bIoIsOk = false;
-let aNoCtxCbk = [];
-let RegAsyncNoCtx = function(){
-	aNoCtxCbk.push(Array.from(arguments));
-};
+var RegAsync = function(c,n1){setTimeout(c,n1||1)},ckd = 'checked',
+	lstRct = {},// 保存每个视频流的上一次的位置，便于下次清除
+	nVideoSn = 7, // 保留 最近 7 天
+	gaM = {},bIoIsOk = false,
+	db,
+	// https://www.webrtc-experiment.com/RecordRTC/simple-demos/
+	oStreamTrack = null, // run ai
+	oNick = null,
+	g_LbsIps = [], qWBox = 0, html5QrcodeScanner, charset4ai = true,
+	IS_SCREEN_STREAMING = !!0,
+	lM = null,// 本地 video
+	oESvl = null,
+	oEAi = null,
+	bEaV8 = !!0,
+	bEabOcr = !!0,
+	bRunAi = !!0,
+	oCAllVideo = null,
+	// 接收到文件、图片先缓存，最后组包
+	oCcFile = {},
+	videoSelect, audioInputSelect, audioOutputSelect, selectors,vlst = [],
+	szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true,//{behavior: "auto",block: "start",inline: "start"};
+	szLstQrcode = "", // 上一次的二维码内容
+	oMyCtn=null,
+	szCltFg = "",clientJs,
+	bIsMobile,
+	// detect node-webkit
+	isNodeWebkit = window.process && (typeof window.process == 'object') && window.process.versions && window.process.versions['node-webkit'],
+	socket = null, /* our socket.io connection to our webserver */
+	lMs = null, // 本地视频流
+	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
+	peer_media_elements = {}, /* keep track of our <video>/<audio> tags, indexed by peer_id */
+	g_oYourInfo = {},
+	vWcStr = "video/webm",// https://www.webrtc-experiment.com/RecordRTC/simple-demos/isTypeSupported.html https://www.webrtc-experiment.com/RecordRTC/simple-demos/
+	g_bTxtChat = !!0,
+	nLogs = 0, bNbg = !!0,
+	szTOsTp = 'application/octet-stream',
+	szLstChannel = '',
+	nId = 0, bCloseQrcode = true,
+	g_bUseUpInfo = true,// submit current info to server
+	g_bSetup = !!0,
+	szgetYourInfo = '',
+	maxSendSize = 65535,// 64k
+	b_clickJoin = !!0,
+	faceMatcher,
+	sendChannel = null, nCnt = 1,
+	vdCnt1 = 0,// 本地视频计数
+	/*
+这3个属性通过 track.getSettings 来看默认值都是 true。
+autoGainControl 是自动音量调节
+noiseSuppression 是噪声消除
+echoCancellation 是回声消除
+
+音频三要素，分别是声道数、采样率、位深：channelCount & sampleRate & sampleSize
+浏览器中得到的默认值是 1 48k 16bit 可以得到未压缩的码率：48k * 16 * 1 = 768kb/s
+'user': 前置摄像头
+'environment': 后置摄像头
+'left':视频源面向用户但在他们的左边，例如一个对准用户但在他们的左肩上方的摄像机。
+'right': 视频源面向用户但在用户的右边，例如，摄像机对准用户但在他们的右肩上
+640 x 480
+*/
+// 	quickScan = [
+// 	{
+// 	  "label": "4K(UHD)",
+// 	  "width": 3840,
+// 	  "height": 2160,
+// 	  "ratio": "16:9"
+// 	},
+// 	{
+// 	  "label": "1080p(FHD)",
+// 	  "width": 1920,
+// 	  "height": 1080,
+// 	  "ratio": "16:9"
+// 	},
+// 	{
+// 	  "label": "UXGA",
+// 	  "width": 1600,
+// 	  "height": 1200,
+// 	  "ratio": "4:3"
+// 	},
+// 	{
+// 	  "label": "720p(HD)",
+// 	  "width": 1280,
+// 	  "height": 720,
+// 	  "ratio": "16:9"
+// 	},
+// 	{
+// 	  "label": "SVGA",
+// 	  "width": 800,
+// 	  "height": 600,
+// 	  "ratio": "4:3"
+// 	},
+// 	{
+// 	  "label": "VGA",
+// 	  "width": 640,
+// 	  "height": 480,
+// 	  "ratio": "4:3"
+// 	},
+// 	{
+// 	  "label": "360p(nHD)",
+// 	  "width": 640,
+// 	  "height": 360,
+// 	  "ratio": "16:9"
+// 	},
+// 	{
+// 	  "label": "CIF",
+// 	  "width": 352,
+// 	  "height": 288,
+// 	  "ratio": "4:3"
+// 	},
+// 	{
+// 	  "label": "QVGA",
+// 	  "width": 320,
+// 	  "height": 240,
+// 	  "ratio": "4:3"
+// 	},
+// 	{
+// 	  "label": "QCIF",
+// 	  "width": 176,
+// 	  "height": 144,
+// 	  "ratio": "4:3"
+// 	},
+// 	{
+// 	  "label": "QQVGA",
+// 	  "width": 160,
+// 	  "height": 120,
+// 	  "ratio": "4:3"
+// 	}
+//   ],
+	// nPos07 选择 3
+	g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 1,n002 = 1920,n003 = 1080,
+	aNoCtxCbk = [],
+	clientHeight = 0,
+	bStopRsize = false,
+	g_ostt = {"connected":1};// "connecting":1,
+
+function dg(s){return document.getElementById(s)}
+function dc(s){return document.createElement(s)}
+function getRoomName(){// return $("#cnId").val();
+	return "Pwn"+String($("#cnId").val()).hashCode()
+}
+function fn009() {
+	let oT2 = $("div.r1rt"),w = 0,n=0,oA = oT2.find("a.i,span.i");
+	oA.each(function(){
+		let oT = $(this);
+		if(oT.is(":visible"))n++,w += oT.width();
+	});
+	w += n*10+20;
+	oT2.css({"left":"calc(100vw - " + (w + n * 3 + (n - 1) * 3) + "px)",width:w+"px"});
+	setMF();
+	setWhOne();
+	if(bEaV8)getImgFromStream();
+	// if(lM && lM.id)qrS(fnV2I(lM.id));
+	var t4 = window.ov8canvas;
+	if(t4){
+		t4.style.width = `${oMyCtn.width()}px`;
+		t4.style.height = `${oMyCtn.height()}px`;
+		t4.style.display = bEaV8?"block":"none";
+	}
+	return false
+}
+function T2Sha384(s,v){
+	var s1 = "SHA384-"+CryptoJS.SHA384(s).toString(CryptoJS.enc.Base64);
+	return v ? window.crypto.subtle.verify(s1, s):s1
+}
+function prettyBytes(num){
+	const units = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
+	const neg = num < 0
+	if (neg) num = -num
+	if (num < 1) return (neg ? '-' : '') + num + ' B'
+	const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1)
+	const unit = units[exponent]+'B'
+	num = Number((num / Math.pow(1000, exponent)).toFixed(2))
+	return (neg ? '-' : '') + num + ' ' + unit
+}
+function RegAsyncNoCtx(){
+	aNoCtxCbk.push(Array.from(arguments))
+}
 setInterval(async function(){
 	while(aNoCtxCbk.length > 0){
 		(async function(o){
@@ -13,7 +184,6 @@ setInterval(async function(){
 		})(aNoCtxCbk.shift());
 	}
 }, 100);
-let nVideoSn = 7; // 保留 最近 7 天
 String.prototype.trim = function(){return this.replace(/^\s*|\s*$/gmi,"")};
 String.prototype.hashCode = function() {
 	var hash = 0, i, chr;
@@ -25,43 +195,21 @@ String.prototype.hashCode = function() {
 	}
 	return hash;
 };
-//  验证 script 的 integrity
-// const valid = window.crypto.subtle.verify(integrity, script.textContent);
-const T2Sha384 =(s,v) =>{
-	var s1 = "SHA384-"+CryptoJS.SHA384(s).toString(CryptoJS.enc.Base64);
-	return v ? window.crypto.subtle.verify(s1, s):s1;
-},
-prettyBytes =(num) =>{
-	const units = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
-	const neg = num < 0
-	if (neg) num = -num
-	if (num < 1) return (neg ? '-' : '') + num + ' B'
-	const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1)
-	const unit = units[exponent]+'B'
-	num = Number((num / Math.pow(1000, exponent)).toFixed(2))
-	return (neg ? '-' : '') + num + ' ' + unit
-};
-
-appURL = function(){return document.location.protocol + "//" + location.host};
-const getRoomName = function(){// return $("#cnId").val();
-	return "Pwn"+String($("#cnId").val()).hashCode();
-}
+function appURL(){return document.location.protocol + "//" + location.host};
 window.onerror = function (msg, url, lineNo, columnNo, error) {
 	LogMsg([msg, url, lineNo, columnNo, error].join("\n"))
 }
 window.MediaStream = window.MediaStream || window.webkitMediaStream;
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-let db;
-let vdCnt1 = 0;// 本地视频计数
 function saveAs(blob, fileName) {
-	const a = document.createElement('a');
+	const a = dc('a');
 	a.href = window.URL.createObjectURL(blob);
 	a.download = fileName;
 	a.click();
 }
 function crtLoader(){
-	var l = document.createElement("div");
+	var l = dc("div");
 	l.className = "loader";
 	$("#st2").append(l);
 	return l;
@@ -147,125 +295,6 @@ function cntVideo(cbk){// https://dexie.org/docs/Collection/Collection.count()
 	});
 }
 
-bEaV8 = bRunAi = !!0,bEabOcr = !!0;
-// https://www.webrtc-experiment.com/RecordRTC/simple-demos/
-var oStreamTrack = null, // run ai
-	oNick = null,
-	g_LbsIps = [], qWBox = 0, html5QrcodeScanner, charset4ai = true,
-	IS_SCREEN_STREAMING = !!0,
-	lM = null,// 本地 video
-	oESvl = null,
-	oEAi = null,
-	bEaV8 = !!0,
-	oCAllVideo = null,
-	oMyCtn=null,
-	szCltFg = "",clientJs,
-	bIsMobile,
-	// detect node-webkit
-	isNodeWebkit = window.process && (typeof window.process == 'object') && window.process.versions && window.process.versions['node-webkit'],
-	socket = null, /* our socket.io connection to our webserver */
-	lMs = null, // 本地视频流
-	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
-	peer_media_elements = {}, /* keep track of our <video>/<audio> tags, indexed by peer_id */
-	g_oYourInfo = {},
-	vWcStr = "video/webm",// https://www.webrtc-experiment.com/RecordRTC/simple-demos/isTypeSupported.html https://www.webrtc-experiment.com/RecordRTC/simple-demos/
-	g_bTxtChat = !!0,
-	nLogs = 0, bNbg = !!0,
-	szTOsTp = 'application/octet-stream',
-	szLstChannel = '',
-	nId = 0, bCloseQrcode = true,
-	g_bUseUpInfo = true,// submit current info to server
-	g_bSetup = !!0,
-	szgetYourInfo = '',
-	maxSendSize = 65535,// 64k
-	b_clickJoin = !!0,
-	faceMatcher,
-	sendChannel = null, nCnt = 1;
-
-/*
-这3个属性通过 track.getSettings 来看默认值都是 true。
-autoGainControl 是自动音量调节
-noiseSuppression 是噪声消除
-echoCancellation 是回声消除
-
-音频三要素，分别是声道数、采样率、位深：channelCount & sampleRate & sampleSize
-浏览器中得到的默认值是 1 48k 16bit 可以得到未压缩的码率：48k * 16 * 1 = 768kb/s
-'user': 前置摄像头
-'environment': 后置摄像头
-'left':视频源面向用户但在他们的左边，例如一个对准用户但在他们的左肩上方的摄像机。
-'right': 视频源面向用户但在用户的右边，例如，摄像机对准用户但在他们的右肩上
-640 x 480
-*/
-const quickScan = [
-	{
-	  "label": "4K(UHD)",
-	  "width": 3840,
-	  "height": 2160,
-	  "ratio": "16:9"
-	},
-	{
-	  "label": "1080p(FHD)",
-	  "width": 1920,
-	  "height": 1080,
-	  "ratio": "16:9"
-	},
-	{
-	  "label": "UXGA",
-	  "width": 1600,
-	  "height": 1200,
-	  "ratio": "4:3"
-	},
-	{
-	  "label": "720p(HD)",
-	  "width": 1280,
-	  "height": 720,
-	  "ratio": "16:9"
-	},
-	{
-	  "label": "SVGA",
-	  "width": 800,
-	  "height": 600,
-	  "ratio": "4:3"
-	},
-	{
-	  "label": "VGA",
-	  "width": 640,
-	  "height": 480,
-	  "ratio": "4:3"
-	},
-	{
-	  "label": "360p(nHD)",
-	  "width": 640,
-	  "height": 360,
-	  "ratio": "16:9"
-	},
-	{
-	  "label": "CIF",
-	  "width": 352,
-	  "height": 288,
-	  "ratio": "4:3"
-	},
-	{
-	  "label": "QVGA",
-	  "width": 320,
-	  "height": 240,
-	  "ratio": "4:3"
-	},
-	{
-	  "label": "QCIF",
-	  "width": 176,
-	  "height": 144,
-	  "ratio": "4:3"
-	},
-	{
-	  "label": "QQVGA",
-	  "width": 160,
-	  "height": 120,
-	  "ratio": "4:3"
-	}
-  ];
-// nPos07 选择 3
-var g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 1,n002 = quickScan[nPos07]["width"],n003 = quickScan[nPos07]["height"];
 // 加载人脸特征
 function LoadFaceDb(a){
 	var a1 = [];
@@ -342,19 +371,18 @@ function log (...e) {
 	console.log(e);
 }
 // 检查css class是否定义
-const checkCssDef=function(s){
-	const rules = window.document.styleSheets;
-	for (const sheet of rules) {
-		for (const rule of sheet.cssRules) {
-			if (rule.selector === s) {
-				return true;
-			}
-		}
-	}
-	return false;
-};
+// const checkCssDef=function(s){
+// 	const rules = document.styleSheets;
+// 	for (const sheet of rules) {
+// 		for (const rule of sheet.cssRules) {
+// 			if (rule.selector === s) {
+// 				return true;
+// 			}
+// 		}
+// 	}
+// 	return false;
+// };
 
-var szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true;//{behavior: "auto",block: "start",inline: "start"};
 setInterval(async function(){
 	if($("#atRd").prop(ckd)){
 		for(var i =0; i < fnTmArr.length; i++){
@@ -404,13 +432,10 @@ function getBlob (s) {
 }
 function formatBytes(bytes, decimals = 2) {
     if (!+bytes) return '0 Bytes'
-
     const k = 1024
     const dm = decimals < 0 ? 0 : decimals
     const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
-
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 function copyText(o,x) {
@@ -455,7 +480,7 @@ function CreateMsgDiv (n, s,t,sFnm,nSize) {
 		})
 	}
 	else if(2 == t){// 文件 下载
-		var a = document.createElement("a");
+		var a = dc("a");
 		a.href = URL.createObjectURL(getBlob(s));
 		a.download = sFnm;
 		a.innerText = "点击下载文件: " + sFnm +"("+ formatBytes(nSize)+")";
@@ -497,9 +522,6 @@ function SendFile(s, t,sFnm) {
 	SendMsg(s,t,0,nL,sFnm)
 }
 
-// 接收到文件、图片先缓存，最后组包
-var oCcFile = {};
-
 function RevMsg (e) {
 	e = JSON.parse(e.data)
 	if(e.sFnm){
@@ -524,33 +546,11 @@ function RevMsg (e) {
 }
 
 // https://emojipedia.org/check-mark-button/
-var clientHeight = 0;
-var fn009 = function () {
-	let oT2 = $("div.r1rt"),w = 0,n=0,oA = oT2.find("a.i,span.i");
-	oA.each(function(){
-		let oT = $(this);
-		if(oT.is(":visible"))n++,w += oT.width();
-	});
-	w += n*10+20;
-	oT2.css({"left":"calc(100vw - " + (w + n * 3 + (n - 1) * 3) + "px)",width:w+"px"});
-	setMF();
-	setWhOne();
-	if(bEaV8)getImgFromStream();
-	// if(lM && lM.id)qrS(fnV2I(lM.id));
-	var t4 = window.ov8canvas;
-	if(t4){
-		t4.style.width = `${oMyCtn.width()}px`;
-		t4.style.height = `${oMyCtn.height()}px`;
-		t4.style.display = bEaV8?"block":"none";
-	}
-	return false;
-};
 function clOpen(){
 	o1 = $("#sdMsg")
 	o1.val("");
 	o1.focus();
 }
-var g_ostt = {"connected":1};// "connecting":1,
 // 为每个 pc 创建文本聊天 通道
 function fnTxtChatOne(pc,peer_id){
 	try{if(pc)fnTxtChatOne1(pc,peer_id)}catch(e){}
@@ -831,11 +831,11 @@ initQrcode =function(){
 		else c1();
 	}
 };
-var bStopRsize = false;
-function setWhOne(){// 只有自己的视频才会调整
+// 只有自己的视频才会调整大小,居中，撑满，在ai 检测的时候会影响检测结果图层的位置不对齐
+function setWhOne(){
 	RegAsync(function(){
 		bStopRsize = $("video").length > 1;
-		if(typeof window.webcam == "undefined"){window.webcam = document.getElementById('webcam');}
+		if(typeof window.webcam == "undefined"){window.webcam = dg('webcam');}
 		if(window.webcam && !bStopRsize){
 			var bd = $("body");
 			if(!bd.length || !bd[0])return;
@@ -865,10 +865,9 @@ function StartVideo () {
 			initVideoChat();
 			b_clickJoin = bO;
 		}
-	});
+	})
 }
 
-let lstRct = {};
 function AddStream2Canvas(e){
 	try{
 		let sid = e.id,o = $("#Pmt"+sid),o1 = $(e);
@@ -910,8 +909,6 @@ function attachMediaStream (e, s) {
 	// }
 };
 
-var videoSelect, audioInputSelect, audioOutputSelect, selectors,vlst = [];
-
 function gotDevices (deviceInfos) {
 	const values = selectors.map(select => select.value);
 	selectors.forEach(function(select){
@@ -923,7 +920,7 @@ function gotDevices (deviceInfos) {
 	for (var i = 0; i < deviceInfos.length; i++) {
 		const deviceInfo = deviceInfos[i];
 		if (!deviceInfo.label || !deviceInfo.deviceId) {continue; }
-		const option = document.createElement('option');
+		const option = dc('option');
 		option.value = deviceInfo.deviceId;
 		if (deviceInfo.kind === 'audioinput') {
 			option.text = deviceInfo.label || `microphone ${audioInputSelect.length + 1}`;
@@ -950,7 +947,6 @@ function gotDevices (deviceInfos) {
 	});
 }
 
-var nxxxx = 0;
 function initOnePeer(pp, peer_id) {
 	let os = window.stream;
 	if (!os) {
@@ -961,8 +957,14 @@ function initOnePeer(pp, peer_id) {
 	
 	let calOne = function(p1){
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removeTrack
-		try{if(p1.oldStream)p1.removeStream(p1.oldStream)}catch(e){alert(e)}
-		try{if(p1.oldSender)p1.removeTrack(p1.oldSender),p1.oldSender.replaceTrack(track)}catch(e){alert(e)}
+		try{if(p1.oldStream){
+			p1.oldStream.getTracks().forEach(function(t) {
+				try{t.stop()}catch(f){alert(f)}
+			});
+			p1.removeStream(p1.oldStream)}}catch(e){alert(e)}
+		try{if(p1.oldSender){
+			if(p1.oldSender.track)p1.oldSender.track.stop();
+			p1.removeTrack(p1.oldSender),p1.oldSender.replaceTrack(track)}}catch(e){alert(e)}
 		if(typeof p1.addTrack == "function"){
 			p1.oldSender = p1.addTrack(track, os);
 		}else if(typeof p1.addStream == "function"){
@@ -1131,7 +1133,8 @@ function init () {
 				pC1.restartIce()
 			}catch(e){log('pC1.restartIce ',e)}
 		};
-		pC1.onicegatheringstatechange = function(event){
+		pC1.onicegatheringstatechange = async function(e){
+			let cc = e.target;
 			// switch(pC1.iceGatheringState){
 			// 	case "new","gathering":// 对等连接刚刚创建，尚未进行任何网络连接;ICE 代理正在收集候选的连接。
 			// 		break;
@@ -1151,7 +1154,7 @@ function init () {
 			// 	// connectionState 反映了整体连接状态，包括 ICE 搜集、信令和媒体通道。如果在 connectionState 为 'failed' 或 'closed' 时重启 ICE，如果故障在于连接过程的其他阶段，可能会触发不必要的重启
 			// 		return;
 			// }
-			let is1 = pC1.iceConnectionState,is2 = pC1.connectionState,is3 = pC1.iceGatheringState,is4 = pC1.signalingState;
+			let is1 = cc.iceConnectionState,is2 = cc.connectionState,is3 = cc.iceGatheringState,is4 = cc.signalingState;
 			log("P2P ICE state: "+is1 + " iceGatheringState: "+is3+"  connectionState: " + is2+" signalingState: "+is4);
 			if(is1 == "failed"){reConn();}
 			// switch(is1){
@@ -1172,11 +1175,11 @@ function init () {
 			// 	case "closed"://  ICE 代理关闭，不再应答任何请求
 			// 		break;
 			// }
-			if(gaM[peer_id])gaM[peer_id]["pc"]=pC1;
+			if(gaM[peer_id])gaM[peer_id]["pc"]=cc;
 		}
 		
 		// p2p 打洞成功触发事件 
-		pC1.onicecandidate = function (event) {
+		pC1.onicecandidate = async function (event) {
 			if (!event.candidate||!event.candidate.candidate) { return }
 			getYourInfo(event.candidate.candidate);
 			var c = parseCandidate(event.candidate.candidate);
@@ -1205,7 +1208,7 @@ function init () {
 		// 	// alert(["onremovestream",event])
 		// 	// console.log(event)
 		// }
-		let fnAddStream = function(event){
+		let fnAddStream = async function(event){
 			var oCurmdm;
 			
 			if(!g_bTxtChat && event.stream && !peer_media_elements[peer_id]){try {
@@ -1215,7 +1218,7 @@ function init () {
 				remote_media.controls = false;
 				oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 				$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0"});
-				if(isSvLc()||document.getElementById("saveMeVD").checked){
+				if(isSvLc()||dg("saveMeVD").checked){
 					remote_media.addEventListener('play', async function() {
 						fnStartRct(event.stream,1,config.userdata.nick,remote_media);
 					});
@@ -1248,23 +1251,24 @@ function init () {
 		if (!g_bTxtChat) {
 			initOnePeer(pC1, peer_id)
 		}
-
+		let cof = async function(){
+			pC1.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true,iceRestart: true}).then(async function(lds){
+				// log("Local offer description is: ", local_description);
+				pC1.setLocalDescription(lds,async function(){
+						socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
+					},async function(){
+						fnMyLogs("Offer setLocalDescription failed!",lds);
+					}
+				);
+			});
+		};
 		if (config.should_create_offer) {
-			// LogMsg("Creating RTC offer to "+ peer_id);
-			//,{ iceRestart: true }
-			pC1.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true}).then(function(lds){
-					// log("Local offer description is: ", local_description);
-					pC1.setLocalDescription(lds,function(){
-							socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
-						},function(){
-							fnMyLogs("Offer setLocalDescription failed!",lds);
-						}
-					);
-				});
+			cof();
 		}
+		// pC1.onnegotiationneeded=cof;
 		
 		try{
-			pC1.onclose = function () {
+			pC1.onclose = async function () {
 				delete gaM[peer_id]["pc"];
 				delete gaM[peer_id]['sendChannel'];
 			};
@@ -1365,7 +1369,6 @@ function stopPc01(pc){
 	}
 }
 
-var szLstQrcode = "";
 // 构建二维码
 function MkQrcd () {
 	var aP = [];
@@ -1380,8 +1383,8 @@ function MkQrcd () {
 	var szCurUrl = document.location.href.split("#")[0].split("?")[0] + "?" + aP.join("&");
 	if(szLstQrcode == szCurUrl)return;
 	szLstQrcode = szCurUrl;
-	document.getElementById('roomurl').textContent = szCurUrl;
-	o1 = document.getElementById("myQrcode")
+	dg('roomurl').textContent = szCurUrl;
+	o1 = dg("myQrcode")
 	o1.innerHTML = ""
 	let c1 = function(){new QRCode(o1, { text: szCurUrl, width: 200, height: 200 })};
 	if(typeof QRCode=="undefined"){
@@ -1507,7 +1510,7 @@ const b64toBlob = function(b64Data, contentType='', sliceSize=512){
 	return blob;
 }
 function crtDel(o,id,oDv){
-	let rm = document.createElement("span");
+	let rm = dc("span");
 	rm.className = "rm";
 	rm.innerText = " X";
 	rm.onclick = function(){
@@ -1553,13 +1556,13 @@ function rmAllVd(){
 }
 // 本地浏览器保存
 function CrtDldA(s,beSvl,szId,nick,szName){
-	var nMax = document.getElementById("iVdnm").value||100;
+	var nMax = dg("iVdnm").value||100;
 	let a1 = s.split(";base64,");
-	let link = document.createElement("a");
+	let link = dc("a");
 	const blob = b64toBlob(a1[1],a1[0].substr(5));
 	const s11 = prettyBytes(blob.size);
 	let objectURL = window.URL.createObjectURL(blob)
-	var oDv = document.createElement("div");
+	var oDv = dc("div");
 	oDv.className = "x4";
 	$("#ocrRst").append(oDv);
 	$(oDv).append(crtDel(link,szId,oDv)).append(link);
@@ -1716,10 +1719,10 @@ function setupLm (callback, errorback) {
 			// attachMediaStream(lM, document.getElementsByClassName('output_canvas')[0].captureStream(10));
 			// }catch(e){fnMyLogs2(e)}
 			if (callback) callback(),callback=null;
-			RegAsyncNoCtx(fnStartRct,window.stream,1,document.getElementById("nick").value,lM);
+			RegAsyncNoCtx(fnStartRct,window.stream,1,dg("nick").value,lM);
 			return navigator.mediaDevices.enumerateDevices()
 		};
-		if(document.getElementById("rScreen").checked && (navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia||navigator.getDisplayMedia)){
+		if(dg("rScreen").checked && (navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia||navigator.getDisplayMedia)){
 			g_Constraints={video: {frame_rate:15,cursor:"always",display_surface:"monitor",logical_surface:true,width:screen.width,height:screen.height}};
 			navigator.mediaDevices.getDisplayMedia(g_Constraints).then(fnThen)
 		}else{
@@ -1734,13 +1737,13 @@ function setupLm (callback, errorback) {
 }
 
 var captureImage = function(v,w){
-	var c = document.createElement("canvas");
+	var c = dc("canvas");
 	c.width = v.videoWidth * w;
 	c.height = v.videoHeight * w;
 	c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
 	// 图片品质为0.6
 	var s = c.toDataURL('image/jpeg', 1);
-	// var img = document.createElement("img");img.src = szImgData;
+	// var img = dc("img");img.src = szImgData;
 	return s;
 };
 // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL
@@ -1827,7 +1830,7 @@ async function fnFaceDtc(){
 
 /////////////////////////*/
 
-var oImgOcr = document.getElementById("ocrImg");
+var oImgOcr = dg("ocrImg");
 oImgOcr.onload = videoImgOnload;
 
 const rmFnImg=function(fnCbk){
@@ -1990,7 +1993,7 @@ const createScaledCanvas = function(canvas, maxWidth = 1024){
 	const scaledWidth = maxImageWidth;
 	const scaledHeight = maxImageWidth / aspectRatio;
   
-	const scaledCanvas = document.createElement("canvas");
+	const scaledCanvas = dc("canvas");
 	scaledCanvas.width = scaledWidth;
 	scaledCanvas.height = scaledHeight;
 	const scaledCtx = scaledCanvas.getContext("2d");
@@ -2002,7 +2005,7 @@ const createScaledCanvas = function(canvas, maxWidth = 1024){
   // Function to convert ImageData to data URL
   const createImageDataUrl = function(imageData){
 	return new Promise(function(resolve){
-	  const canvas = document.createElement("canvas");
+	  const canvas = dc("canvas");
 	  canvas.width = imageData.width;
 	  canvas.height = imageData.height;
 	  const ctx = canvas.getContext("2d");
@@ -2017,7 +2020,7 @@ const createScaledCanvas = function(canvas, maxWidth = 1024){
 	if(!canvasId)return;
 	const canvas = await createImageDataUrl(imageData); // 等待canvas对象返回
 	const scaledCanvas = createScaledCanvas(canvas, maxWidth);
-	document.getElementById(canvasId).appendChild(scaledCanvas);
+	dg(canvasId).appendChild(scaledCanvas);
   
 	// 释放内存
 	// URL.revokeObjectURL(img.src);
@@ -2027,7 +2030,7 @@ const createScaledCanvas = function(canvas, maxWidth = 1024){
 
 // HTML5 Video的流是只读的，不可直接修改的 https://developer.mozilla.org/en-US/docs/Web/API/VTTCue
 function fnAddTmGps(){
-	// var video = document.getElementById('webcam');
+	// var video = dg('webcam');
 	// const track = video.addTextTrack('subtitles', 'text',"en");
     // track.mode = 'showing'; // Show the cues
 
@@ -2060,7 +2063,7 @@ function StartPosInfo(){
             fnMyLogs(s1);
 			locationHandler(position);
 			socket.emit('svClientInfo', g_oYourInfo, szCltFg,window.aMacIps,g_oSdMsg);
-			if(!document.getElementById("eLpos").checked)stopPosInfo(idGps);
+			if(!dg("eLpos").checked)stopPosInfo(idGps);
         }, function(e){
         }, {maximumAge:10 * 1000,enableHighAccuracy:true, timeout: 5000,useSignificantChanges:true});
 	}
@@ -2110,7 +2113,7 @@ function initBox(){
 	location.search.substring(1).split("&").forEach(function (item) {
 		item = item.split("=");
 		if(0== item.length || !item[0])return;
-		var o = document.getElementById(item[0]);
+		var o = dg(item[0]);
 		if(o){
 			item[1]=decodeURIComponent(item[1])
 			if(o.type == "checkbox")(function(o){
@@ -2170,7 +2173,7 @@ function showWnSt(){
 const html2img=function(html) {
 	// https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js
 	return new Promise(function(resolve){
-		const d1 = document.createElement("div");
+		const d1 = dc("div");
 		d1.innerHTML = html;
 		let c1 = function(){
 			html2canvas(d1).then(function(canvas){
@@ -2201,14 +2204,14 @@ function GetLg(){
 	if(!o)o=navigator.language.split("-")[1];
 	return o;
 }
-function initLang(){
+async function initLang(){
 	var oMs = $("#slctMtl"),bS1 = true;
 	// https://cdn.simplelocalize.io/public/v1/flags/es.svg
-	$("#stL").html("<img src=/flags/"+(GetLg()||"us").toLowerCase()+".svg>").click(function(){
+	$("#stL").html("<img src=/flags/"+(GetLg()||"us").toLowerCase()+".svg>").click(async function(){
 		if(bS1)oMs.show(),bS1=false;
 		else oMs.hide(),bS1=true
 	})
-	oMs.click(function(){
+	oMs.click(async function(){
 		oMs.hide();
 	});
 	
@@ -2259,9 +2262,9 @@ $(document).ready(async function(){
 	initLang();
 	oNick = $("#nick");
 	oMyCtn = $("#myCtn");
-	oESvl = document.getElementById("eSvl");
-	oSaveMeVD = document.getElementById("saveMeVD");
-	oCAllVideo = document.createElement("canvas");
+	oESvl = dg("eSvl");
+	oSaveMeVD = dg("saveMeVD");
+	oCAllVideo = dc("canvas");
 	oEAi=$("#eAi");
 	oCAllVideo.id = "cAllVideo"
 	// $(oCAllVideo).hide();
@@ -2285,7 +2288,6 @@ $(document).ready(async function(){
 	}
 
 	bIsMobile = clientJs.isMobile();
-	isIE = clientJs.isIE();
 	szCltFg = clientJs.getFingerprint();
 	clientHeight = document.documentElement.clientHeight;
 	videoSelect = document.querySelector('select#videoSelect');
