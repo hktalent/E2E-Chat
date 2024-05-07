@@ -1597,46 +1597,45 @@ var bTm = 0, g_nTmxx9, nT090,fnStartRct = function(vSs,nT,nick,vd) {
 			return;
 		}
 		// 70 秒内不重复执行
-		if(new Date().getTime() - (oC1.attr("bIsRvdRcd")||0) < 70000){
-			return;
-		}
-		oC1.attr("bIsRvdRcd",new Date().getTime());
-		if(oESvl.checked||oSaveMeVD.checked){
-			let opts = {
-				type: (!!nT?"":"audio+")+'video'// 测评表明 AV1 是最佳的
-				, mimeType: vWcStr
-				,disableLogs: true
-				,recorderType: MediaStreamRecorder,
-				// audioBitsPerSecond : 256 * 8 * 1024,
-    			// videoBitsPerSecond : 256 * 8 * 1024,
-				bitsPerSecond: 256 * 8 * 1024,
-				videoBitsPerSecond: qxd,
-				frameRate: 24,//15 ～ 30
-			};
-			var qxd = 1000000,recorder = new RecordRTC(stream, opts);
-			recorder.startRecording();
-			const nT3 = 60 * 1000 * (nT||(isSvLc() ? 5 : 1));
-			//  10分钟,停一下，并上传，然后重新开始
-			RegAsync(async function(){
-				if (recorder) recorder.stopRecording(async function(){
-					// 开启AI、人脸识别的情况，只在检测到人时保存
-					if(bEaV8 && !g_bWarn);else{
-						try {
-							recorder.getDataURL(async function(videoDataURL){
-								videoDataURL = String(videoDataURL);
-								if(100 > videoDataURL.length)// 跳过无效的视频
-									return;
-								// 本地保存的情形
-								if(isSvLc())RegAsyncNoCtx(SaveMp4,{"data":videoDataURL,"name":nick});
-								else{// 浏览器保存
-									if(oESvl.checked)RegAsyncNoCtx(CrtDldA,videoDataURL,oESvl.checked,0,nick);
-									// else socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
-								}
-							});
-						} catch (e) {console.log(e)}
-					}
-				});
-			}, nT3);
+		if(new Date().getTime() - (oC1.attr("bIsRvdRcd")||0) > 70000){
+			oC1.attr("bIsRvdRcd",new Date().getTime());
+			if(oESvl.checked||oSaveMeVD.checked){
+				let opts = {
+					type: (!!nT?"":"audio+")+'video'// 测评表明 AV1 是最佳的
+					, mimeType: vWcStr
+					,disableLogs: true
+					,recorderType: MediaStreamRecorder,
+					// audioBitsPerSecond : 256 * 8 * 1024,
+					// videoBitsPerSecond : 256 * 8 * 1024,
+					bitsPerSecond: 256 * 8 * 1024,
+					videoBitsPerSecond: qxd,
+					frameRate: 24,//15 ～ 30
+				};
+				var qxd = 1000000,recorder = new RecordRTC(stream, opts);
+				recorder.startRecording();
+				const nT3 = 60 * 1000 * (nT||(isSvLc() ? 5 : 1));
+				//  10分钟,停一下，并上传，然后重新开始
+				RegAsync(async function(){
+					if (recorder) recorder.stopRecording(async function(){
+						// 开启AI、人脸识别的情况，只在检测到人时保存
+						if(bEaV8 && !g_bWarn);else{
+							try {
+								recorder.getDataURL(async function(videoDataURL){
+									videoDataURL = String(videoDataURL);
+									if(100 > videoDataURL.length)// 跳过无效的视频
+										return;
+									// 本地保存的情形
+									if(isSvLc())RegAsyncNoCtx(SaveMp4,{"data":videoDataURL,"name":nick});
+									else{// 浏览器保存
+										if(oESvl.checked)RegAsyncNoCtx(CrtDldA,videoDataURL,oESvl.checked,0,nick);
+										// else socket.emit('saveVideo', { type:  szT1.split(";")[0],"videoDataURL": videoDataURL});
+									}
+								});
+							} catch (e) {console.log(e)}
+						}
+					});
+				}, nT3);
+			}
 		}
 		RegAsyncNoCtx(fnStartRct,vSs,nT,nick,vd);
 	}catch(e){alert(e)}
