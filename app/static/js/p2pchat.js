@@ -1254,12 +1254,9 @@ function init () {
 		let cof = async function(){
 			pC1.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true,iceRestart: true}).then(async function(lds){
 				// log("Local offer description is: ", local_description);
-				pC1.setLocalDescription(lds,async function(){
-						socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
-					},async function(){
-						fnMyLogs("Offer setLocalDescription failed!",lds);
-					}
-				);
+				pC1.setLocalDescription(lds).then(async function(){
+					socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
+				},async function(){fnMyLogs("Offer setLocalDescription failed!",lds)});
 			});
 		};
 		if (config.should_create_offer) {
