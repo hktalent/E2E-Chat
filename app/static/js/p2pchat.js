@@ -1185,12 +1185,12 @@ function init () {
 		// p2p 打洞成功触发事件 
 		pC1.onicecandidate = async function (event) {
 			let ec = event.candidate,s1 = event.state,oS1={
-				"host": '表示候选者代表了设备的本地 IP 地址和端口',
-				"srflx": '表示候选者通过 STUN 服务器反射获取，可能位于 NAT 设备之后',
-				"prflx": '表示候选者通过 PRFLX 服务器反射获取，通常用于对称 NAT 情况',
-				"relay": '表示候选者通过 TURN 服务器中继获取，用于无法进行直接 P2P 连接的情况',
-				"relaycand": '表示候选者是 TURN 服务器提供的候选者，但尚未验证其可达性',
-				"error": '表示候选者获取过程中出现错误'
+				"host": '候选者是本地 IP 地址和端口',
+				"srflx": '候选者通过 STUN 服务器反射获取，可能位于 NAT 设备之后',
+				"prflx": '候选者通过 PRFLX 服务器反射获取，通常用于对称 NAT 情况',
+				"relay": '候选者通过 TURN 服务器中继获取，用于无法进行直接 P2P 连接的情况',
+				"relaycand": '候选者是 TURN 服务器提供的候选者，但尚未验证其可达性',
+				"error": '候选者获取过程中出现错误'
 			};
 			if (!ec||!ec.candidate) { return }
 			if(s1 == "failed"||s1 == "disconnected"){// NAT 穿透失败; 连接建立失败，可能与 NAT 穿透失败有关
