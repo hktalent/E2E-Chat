@@ -276,7 +276,7 @@ a {
     grid-template-columns: repeat(2, 1fr);
     grid-gap: 0.5rem;
 }
-#slctMtl div{
+#slctMtl a{
     display:inline-block;
     text-align: left;
     margin: 0.1rem auto 0.1rem auto;
@@ -290,7 +290,7 @@ a {
     box-shadow: rgba(0, 0, 0, 0.56) 0px 22px 30px 4px;
     background-color: #ccc;
 }
-#slctMtl div img{
+#slctMtl a img{
     width: 27px;
     height: 27px;
     margin-right: 5px;

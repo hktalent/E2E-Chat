@@ -178,7 +178,7 @@ function prettyBytes(num){
 function RegAsyncNoCtx(){
 	aNoCtxCbk.push(Array.from(arguments))
 }
-setInterval(async function(){
+setInterval(function(){
 	while(aNoCtxCbk.length > 0){
 		(async function(o){
 			RegAsync(async function(){
@@ -2197,69 +2197,67 @@ const html2img=function(html) {
 	// alert(s1)
 };
 function GetLg(){
-	var o = "";
-	if(!!document.cookie && -1 < String(document.cookie).indexOf("lclg=")){
-		o = String(document.cookie).split("lclg=")[1].split(";")[0];
+	if(location.search){
+		var o = location.search.split("lang=");
+		if(1 < o.length)return o[1].split("&")[0];
 	}
-	if(!o)o=navigator.language.split("-")[1];
-	return o;
+	// 获取当前语言
+	var lang = navigator.language || navigator.userLanguage;
+	if(lang){
+		lang = lang.toLowerCase();
+		if(-1 < lang.indexOf("zh"))lang= "cn";
+	}
+	return lang||"us";
 }
 async function initLang(){
-	var oMs = $("#slctMtl"),bS1 = true;
-	// https://cdn.simplelocalize.io/public/v1/flags/es.svg
-	$("#stL").html("<img src=/flags/"+(GetLg()||"us").toLowerCase()+".svg>").click(async function(){
-		if(bS1)oMs.show(),bS1=false;
-		else oMs.hide(),bS1=true
-	})
-	oMs.click(async function(){
-		oMs.hide();
-	});
-	
-	if(!!language){
-		for(let k = 0; k < language.length;k++){
-			try{
-				let oT1 = language[k];
-				let o1 = oT1["obj"];
-				if(!oT1["des"] || !o1 || !o1.length)continue;
-				for(let x = 0;x < o1.length;x++){
-					let o7 = o1[x];
-					let  o2;
-					if(o7["tag"] && "title" == o7["tag"]){
-						document.title = oT1["des"];
-						continue;
+	Is("/js/lang.js"+(location.search||""),function(){
+		var oMs = $("#slctMtl"),bS1 = true;
+		// https://cdn.simplelocalize.io/public/v1/flags/es.svg
+		$("#stL").html("<img src=/flags/"+(GetLg()).toLowerCase()+".svg>").click(async function(){
+			if(bS1)oMs.show(),bS1=false;
+			else oMs.hide(),bS1=true
+		})
+		oMs.click(async function(){
+			oMs.hide();
+		});
+		
+		if(!!language){
+			for(let k = 0; k < language.length;k++){
+				try{
+					let oT1 = language[k];
+					let o1 = oT1["obj"];
+					if(!oT1["des"] || !o1 || !o1.length)continue;
+					for(let x = 0;x < o1.length;x++){
+						let o7 = o1[x];
+						let  o2;
+						if(o7["tag"] && "title" == o7["tag"]){
+							document.title = oT1["des"];
+							continue;
+						}
+						o2 = $("#"+o7["id"]);
+						if(o2 && 0 < o2.length && o7["id"] && o7["attr"]){
+							if(o7["attr"] == "text")o2[0].innerText=oT1["des"];
+							else o2.attr(o7["attr"],oT1["des"])
+						}
 					}
-					o2 = $("#"+o7["id"]);
-					if(o2 && 0 < o2.length && o7["id"] && o7["attr"]){
-						if(o7["attr"] == "text")o2[0].innerText=oT1["des"];
-						else o2.attr(o7["attr"],oT1["des"])
-					}
+				}catch(e){
+					continue
 				}
-			}catch(e){
-				continue
 			}
 		}
-	}
-	
-	if(!!aLang){
-		var a = [];
-		for(var k in aLang){
-			a.push("<div dt="+k+" class=w lclg="+aLang[k]["contry"]+" title="+aLang[k]["desCn"]+"><img src=/flags/"+(aLang[k]["contry"]||"us").toLowerCase()+".svg>"+aLang[k]["des"]+"</div>");
+		
+		if(!!aLang){
+			var a = [],h = [];
+			for(var k in aLang){
+				a.push(`<a class=w href="/?lang=${k}" target=_self><img src=/flags/`+(aLang[k]["contry"]||"us").toLowerCase()+".svg>"+aLang[k]["des"]+`</a>`);
+			}
+			oMs.html(a.join(""));
 		}
-		oMs.html(a.join(""));
-		$("#slctMtl div").click(function(){
-			var o44 = $(this);
-			var s = o44.attr("dt");
-			if(s){
-				document.cookie = "lang="+s+";path=/";
-				document.cookie = "lclg="+o44.attr("lclg")+";path=/";
-				location.reload();}
-		});
-	}
-	oMs.hide();
+		oMs.hide();
+	});
 }
 
 $(document).ready(async function(){
-	initLang();
 	oNick = $("#nick");
 	oMyCtn = $("#myCtn");
 	oESvl = dg("eSvl");
@@ -2300,6 +2298,7 @@ $(document).ready(async function(){
 
 	$('#saveMe').on("change", async function () {
 		if (socket && lM && this.checked) {// 3秒一保存
+			clearInterval(bTm);
 			bTm = setInterval(function () {
 				if(lM)socket.emit('saveImg', fnV2I(lM.id), g_LbsIps);
 			}, 1000);
@@ -2357,12 +2356,12 @@ $(document).ready(async function(){
 		
 		oMyCtn.html("");
 		// https://9to5answer.com/stop-close-webcam-stream-which-is-opened-by-navigator-mediadevices-getusermedia
-		RegAsync(StopStream);
+		StopStream();
 		g_bSetup = !g_bTxtChat;
-		RegAsync(JoinRoom);
+		JoinRoom();
 		$("#eLpos").click();
 		SetRow1();
-		RegAsync(setMF);
+		setMF();
 	});
 	// video chat
 	oStartChat.click(async function(e){
@@ -2571,4 +2570,5 @@ $(document).ready(async function(){
 	}
 	$("#sI55").click(dlAllVideo);
 	$("#sI56").click(rmAllVd);
+	initLang();
 });

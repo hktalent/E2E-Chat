@@ -1,8 +1,18 @@
+
+
 # E2E-Chat
 端对端（E2E）、点对点(P2P)加密聊天系统
 不受任何国家、政府、组织、机构监管，安全可靠、隐秘
 
 https://127.0.0.1:2083/?eAi=true&cnId=51pwn&startChat=1
+
+# chrome crash
+```
+chrome://crashes/
+
+open ~/Library/Application\ Support/Google/Chrome/Crashpad/completed/
+
+```
 
 # 新特性
 - VIP 支持 AI 视频中对象检测

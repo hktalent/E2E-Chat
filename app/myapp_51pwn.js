@@ -238,6 +238,11 @@ fix.js`).split("\n")
         res.setHeader("Content-Type","application/javascript");
         // 获取 cookie 中 语言设置，并覆盖
         var lg = String(req.cookies.lang||req.headers["accept-language"] || "en").replace(/ /gm,"").split(",")[0];
+        if(req.query.lang)lg = String(req.query.lang).replace(/ /gm,"");
+        if(lg.length>8){
+            return res.end("alert('error');");
+        }
+
         lg = webStaticPath+"lang/"+lg+".js"
         if(!fs.existsSync(lg)){
             if(-1<lg.indexOf("-")){
@@ -246,6 +251,7 @@ fix.js`).split("\n")
             if(!fs.existsSync(lg))lg = webStaticPath+"lang/en.js"
         }
         // console.log([req.cookies.lang,req.headers["accept-language"],lg])
+        
         var s = fs.readFileSync(lg).toString("utf-8");
         res.end(s);
     });
