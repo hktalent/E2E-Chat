@@ -705,3 +705,6 @@ z-index: 21!important;
 #intro,#slctMtl{
 z-index: 26!important;
 }
+#logs{
+    display: none;
+}

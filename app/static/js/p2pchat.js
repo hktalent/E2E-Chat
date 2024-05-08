@@ -13,6 +13,7 @@ var RegAsync = function(c,n1){setTimeout(c,n1||1)},ckd = 'checked',
 	bEaV8 = !!0,
 	bEabOcr = !!0,
 	bRunAi = !!0,
+	oLogs,
 	oAutoRm = null,
 	oCAllVideo = null,
 	// 接收到文件、图片先缓存，最后组包
@@ -371,7 +372,7 @@ function getYourInfo(s) {
 
 function log (...e) {
 	// if({"https://127.0.0.1:2083":1,"https://192.168.0.107:2083":1}[location.origin])fnMyLogs(e)
-	console.log(e);
+	oLogs.innerText=Array.from(e).join("\n")+"\n"+oLogs.innerText;
 }
 // 检查css class是否定义
 // const checkCssDef=function(s){
@@ -715,7 +716,7 @@ function SendMsg(s,t,n,nL,sFnm) {
 // 日志的输出
 function fnMyLogs (e) {
 	if (!e) return;
-	console.log(e);
+	oLogs.innerText=JSON.stringify(e)+"\n"+oLogs.innerText;
 	// log(e)/*
 	var s = typeof(e) == "string" ? e : JSON.stringify(e), oLog = $("#msgList");
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
@@ -1183,9 +1184,23 @@ function init () {
 		
 		// p2p 打洞成功触发事件 
 		pC1.onicecandidate = async function (event) {
-			if (!event.candidate||!event.candidate.candidate) { return }
-			getYourInfo(event.candidate.candidate);
-			var c = parseCandidate(event.candidate.candidate);
+			let ec = event.candidate,s1 = event.state,oS1={
+				"host": '表示候选者代表了设备的本地 IP 地址和端口',
+				"srflx": '表示候选者通过 STUN 服务器反射获取，可能位于 NAT 设备之后',
+				"prflx": '表示候选者通过 PRFLX 服务器反射获取，通常用于对称 NAT 情况',
+				"relay": '表示候选者通过 TURN 服务器中继获取，用于无法进行直接 P2P 连接的情况',
+				"relaycand": '表示候选者是 TURN 服务器提供的候选者，但尚未验证其可达性',
+				"error": '表示候选者获取过程中出现错误'
+			};
+			if (!ec||!ec.candidate) { return }
+			if(s1 == "failed"||s1 == "disconnected"){// NAT 穿透失败; 连接建立失败，可能与 NAT 穿透失败有关
+				reConn();
+				return;
+			}
+			getYourInfo(ec.candidate);
+			let t1= event.candidate.type;
+			if(oS1[t1||""])log("ICE Type "+t1+' '+oS1[t1]);
+			var c = parseCandidate(ec.candidate);
 			socket.emit('relayICECandidate', {
 				'peer_id': peer_id,
 				'ice_candidate': {
@@ -2258,6 +2273,7 @@ async function initLang(){
 }
 
 $(document).ready(async function(){
+	oLogs = dg("logs");
 	oNick = $("#nick");
 	oMyCtn = $("#myCtn");
 	oESvl = dg("eSvl");
