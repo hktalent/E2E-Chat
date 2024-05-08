@@ -702,6 +702,6 @@ pre { white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap;
 #v8canvas{
 z-index: 21!important;
 }
-#intro{
+#intro,#slctMtl{
 z-index: 26!important;
 }

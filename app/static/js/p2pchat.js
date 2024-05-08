@@ -4,16 +4,16 @@ var RegAsync = function(c,n1){setTimeout(c,n1||1)},ckd = 'checked',
 	gaM = {},bIoIsOk = false,
 	db,
 	// https://www.webrtc-experiment.com/RecordRTC/simple-demos/
-	oStreamTrack = null, // run ai
+	// oStreamTrack = null, // run ai
 	oNick = null,
 	g_LbsIps = [], qWBox = 0, html5QrcodeScanner, charset4ai = true,
-	IS_SCREEN_STREAMING = !!0,
 	lM = null,// 本地 video
 	oESvl = null,
 	oEAi = null,
 	bEaV8 = !!0,
 	bEabOcr = !!0,
 	bRunAi = !!0,
+	oAutoRm = null,
 	oCAllVideo = null,
 	// 接收到文件、图片先缓存，最后组包
 	oCcFile = {},
@@ -24,7 +24,7 @@ var RegAsync = function(c,n1){setTimeout(c,n1||1)},ckd = 'checked',
 	szCltFg = "",clientJs,
 	bIsMobile,
 	// detect node-webkit
-	isNodeWebkit = window.process && (typeof window.process == 'object') && window.process.versions && window.process.versions['node-webkit'],
+	// isNodeWebkit = window.process && (typeof window.process == 'object') && window.process.versions && window.process.versions['node-webkit'],
 	socket = null, /* our socket.io connection to our webserver */
 	lMs = null, // 本地视频流
 	peers = {}, /* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
@@ -32,11 +32,10 @@ var RegAsync = function(c,n1){setTimeout(c,n1||1)},ckd = 'checked',
 	g_oYourInfo = {},
 	vWcStr = "video/webm",// https://www.webrtc-experiment.com/RecordRTC/simple-demos/isTypeSupported.html https://www.webrtc-experiment.com/RecordRTC/simple-demos/
 	g_bTxtChat = !!0,
-	nLogs = 0, bNbg = !!0,
+	bNbg = !!0,
 	szTOsTp = 'application/octet-stream',
 	szLstChannel = '',
 	nId = 0, bCloseQrcode = true,
-	g_bUseUpInfo = true,// submit current info to server
 	g_bSetup = !!0,
 	szgetYourInfo = '',
 	maxSendSize = 65535,// 64k
@@ -156,7 +155,11 @@ function fn009() {
 		t4.style.height = `${oMyCtn.height()}px`;
 		t4.style.display = bEaV8?"block":"none";
 	}
-	return false
+	if(oCAllVideo){
+		oCAllVideo.width = oMyCtn.width();
+		oCAllVideo.height = oMyCtn.height();
+	}
+	RegAsync(fn009,1000);
 }
 function T2Sha384(s,v){
 	var s1 = "SHA384-"+CryptoJS.SHA384(s).toString(CryptoJS.enc.Base64);
@@ -384,7 +387,7 @@ function log (...e) {
 // };
 
 setInterval(async function(){
-	if($("#atRd").prop(ckd)){
+	if(oAutoRm.prop(ckd)){
 		for(var i =0; i < fnTmArr.length; i++){
 			try{
 			if(fnTmArr[i]()){
@@ -1841,9 +1844,9 @@ const rmFnImg=function(fnCbk){
 	return false;
 },fnTmp89=function(){
 	if(window["OcrImg"]){
-		if(window.bEabOcr)imgOldCbk.push(window["OcrImg"]);else rmFnImg(window["OcrImg"]);
+		if(bEabOcr)imgOldCbk.push(window["OcrImg"]);else rmFnImg(window["OcrImg"]);
 	}
-	if(window.bEabOcr)setTimeout(fnTmp89, 3000);
+	if(bEabOcr)setTimeout(fnTmp89, 3000);
 };
 
 var g_oSdMsg = {},oLst1, oLst2,oLst3,oLst4;
@@ -1910,8 +1913,8 @@ function ldai(){
 	if(g_bTxtChat)return;
 	// ");// Is('/v8.js');// 依赖 /js/9.js tfjs
 	if(bEaV8 && !window.v8Load)window.v8Load = true,Is('/v8.js');//<script src=/js/face-api.min.js></script>"),initFc();
-	// if(window.bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
-	if(window.bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
+	// if(bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
+	if(bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
 
 function getObjInfo(o2,o1){
@@ -2265,11 +2268,6 @@ $(document).ready(async function(){
 	oEAi=$("#eAi");
 	oCAllVideo.id = "cAllVideo"
 	// $(oCAllVideo).hide();
-	fnTmArr.push(function(){
-		oCAllVideo.width = oMyCtn.width();
-		oCAllVideo.height = oMyCtn.height();
-		return false;
-	});
 	// genQrcd( `L: 最低的容错水平，可以纠正 7 个错误。
 	// 	M: 中等的容错水平，可以纠正 15 个错误。
 	// 	Q: 较高的容错水平，可以纠正 25 个错误。
@@ -2333,11 +2331,8 @@ $(document).ready(async function(){
 	var doKstart = false;
 	const dspNa=function(){
 		var oT0 = $("#cah,#nkid"),o7 = $("#qmI");
-		if(bIsMobile && "true" !=$("div.rtool").attr("show"))
-		{
-			oT0.hide();
-			o7.addClass("r1lft");
-		}else oT0.show(),o7.removeClass("r1lft")};
+		if(bIsMobile && "true" !=$("div.rtool").attr("show"))oT0.hide(),o7.addClass("r1lft");
+		else oT0.show(),o7.removeClass("r1lft")};
 	// navigator.mediaDevices.enumerateDevices().then(function(a){console.log(a[0])})
 	var szHs = document.location.hash,
 		oCnId = $("#cnId"),
@@ -2362,12 +2357,12 @@ $(document).ready(async function(){
 		
 		oMyCtn.html("");
 		// https://9to5answer.com/stop-close-webcam-stream-which-is-opened-by-navigator-mediadevices-getusermedia
-		StopStream();
+		RegAsync(StopStream);
 		g_bSetup = !g_bTxtChat;
-		JoinRoom();
+		RegAsync(JoinRoom);
 		$("#eLpos").click();
-		setMF();
 		SetRow1();
+		RegAsync(setMF);
 	});
 	// video chat
 	oStartChat.click(async function(e){
@@ -2417,7 +2412,7 @@ $(document).ready(async function(){
 		showWnSt()
 	});
 	$("#eOcr").change(async function(){
-		window.bEabOcr = this.checked;
+		bEabOcr = this.checked;
 		ldai(true);
 	});
 	szLstChannel = getRoomName();
@@ -2489,7 +2484,7 @@ $(document).ready(async function(){
 	$("form").submit(function(e){
 		return false
 	});
-	fnTmArr.push(fn009);
+	RegAsync(fn009,1000);
 	// window.addEventListener('resize', fn009);
 	// 微信浏览器 https://www.lixf.cc/2021/03/26/webrtc-in-ios-weixin-browser/
 	document.addEventListener("WeixinJSBridgeReady", async function () {  
