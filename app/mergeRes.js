@@ -29,27 +29,29 @@ var g_cache = {},
     { minify } = require("terser"),
     minifyOptions = {
     compress: {
+        // unused: true,//删除未引用的函数和变量
         // passes:5,
         drop_console: bJmi,//移除所有console相关代码；
         drop_debugger: bJmi,//移除自动断点功能；
-        // "console.log", "console.info", "console.error", "console.warn", "console.debug", "console.exception", "console.trace"
-        pure_funcs: bJmi?["console.log", "console.info", "console.error", "console.warn", "console.debug", "console.exception", "console.trace"]:[] // 配置移除指定的指令，如console.log,alert等
+        pure_funcs: bJmi?["console.log", "console.info", "console.error", "console.warn", "console.debug", "console.exception", "console.trace","window.confirm", "window.prompt"]:[] // 配置移除指定的指令，如console.log,alert等
     },
     format: {
+        beautify: false, // 是否美化代码
         comments: false // 删除注释
     }
 };
 
 var JsHxOpt = {
-    // selfDefending:true,
+    selfDefending:true,
     compact: true,      // 压缩代码到一行
     debugProtectionInterval: 33, // 如果设置为true，则会在“控制台”选项卡上使用一个间隔来强制调试模式，这使得使用开发人员工具的其他功能更加困难。 启用了debugProtection，才可以使用。
     disableConsoleOutput: true,     // 通过将它们替换为空函数，禁用console.log，console.info，console.error，console.warn，console.debug，console.exception和console.trace的使用。
     deadCodeInjectionThreshold: 0.2,// 节点加入废代码的概率，值越大，混淆代码大小越大
     controlFlowFlatteningThreshold: 0.35,// 必须 >= 0.3，否则各种冲突，报错，每个节点采用平展控制流的概率，该参数主要用来优化大代码的性能和代码大小。大量的平展控制流会是代码运行效率变差而且代码增大。 设置为0表示关闭平展控制流
     numbersToExpressions: true, // 将数字转换为等效的表达式。例如，将数字转换为等效的二进制表达式。 该选项会增加混淆代码的大小（最大100%）
-    simplify: true, // 简化代码，例如：将if语句转换为三元表达式。 该选项会增加混淆代码的大小（最大100%）
+    simplify: false, // 简化代码，例如：将if语句转换为三元表达式。 该选项会增加混淆代码的大小（最大100%）
     sourceMap: false, // 是否生成sourceMap
+    identifierNamesGenerator: 'mangled', // 变量名称生成器
     /*identifierNamesGenerator
     类型：string      默认值：hexadecimal
 
