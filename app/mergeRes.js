@@ -3,7 +3,7 @@ var fs = require('fs'),
     szPath = __dirname + "/static/js/",
     szPathC = __dirname + "/static/css/",
     aFCache = {},
-    bJmi = true,
+    bJmi = 0,
     bIsMacOsSelf = true&&os.platform() === 'darwin',// 0 才会加密服务端代码, 1 处理 静态资源
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
