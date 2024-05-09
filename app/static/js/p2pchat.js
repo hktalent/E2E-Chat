@@ -884,15 +884,15 @@ function AddStream2Canvas(e,s){
 		let sid = e.id,o = $("#Pmt"+sid),o1 = $(e);
 		let drawFrame=function(){
 			let o2 = $("#Pmt"+sid);
-			if(isEnded(s)||0 == o2.length||o2[0] != o[0])return;
+			if(isEnded(s)||0 == o2.length||o2[0] != o[0])return log(sid + " stream ended");
 			// requestAnimationFrame(drawFrame);// requestAnimationFrame的调用很频繁
 			let p=o.position(),x = p.left,y = p.top,w = o1.width(),h= o1.height();
 			const canvasCtx = oCAllVideo.getContext('2d');
 			if(lstRct[sid]&&lstRct[sid].length)canvasCtx.clearRect.apply(canvasCtx,lstRct[sid]);
 			canvasCtx.drawImage(e, x,y, w,h);
 			lstRct[sid]=[x,y, w,h];
-			// RegAsyncNoCtx(drawFrame);
-			RegAsync(drawFrame,1000/25)
+			RegAsyncNoCtx(drawFrame);
+			// RegAsync(drawFrame,1000/25)
 		};
 		e.onplay = drawFrame;
 	}catch(e){alert(e)}
@@ -1254,61 +1254,30 @@ function init () {
 			oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
 			$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0"});
 			if(isSvLc()||dg("saveMeVD").checked||oESvl.checked){
-				remote_media.addEventListener('play', async function() {
-					fnStartRct(stream,1,config.userdata.nick,remote_media);
-				});
+				fnStartRct(stream,1,config.userdata.nick,remote_media);
 			}
 			attachMediaStream(remote_media, stream);
 		};
 		let fnAddStream = async function(event){
 			var oCurmdm;
 			if(!g_bTxtChat && event.stream && !peer_media_elements[peer_id]){try {
-				var videoTracks = event.stream.getVideoTracks();
-    			if (videoTracks.length > 1) {
-					for (var i = 0; i < videoTracks.length; i++) {
+				var vt = event.stream.getVideoTracks();
+    			if (vt.length > 1) {
+					for (var i = 0; i < vt.length; i++) {
 						try{
-							var track = videoTracks[i];
-							// alert([videoTracks.length,track.id,track.label,track.readyState,track.stream])
+							var track = vt[i];
+							// alert([vt.length,track.id,track.label,track.readyState,track.stream])
 							if(track.readyState === 'ended')track.stop();
 							else{fnAddOneStream(track.stream||event.stream,track.id,track.label)}
 						}catch(e){log(e)}
 					}
 				}else{fnAddOneStream(event.stream)}
 
-				// var remote_media = fnCreateVid(0);
-				// remote_media.autoplay = true;
-				// remote_media.controls = false;
-				// oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
-				// $("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0"});
-				// if(isSvLc()||dg("saveMeVD").checked){
-				// 	remote_media.addEventListener('play', async function() {
-				// 		fnStartRct(event.stream,1,config.userdata.nick,remote_media);
-				// 	});
-				// }
-				// attachMediaStream(remote_media, event.stream);
-
-				// remote_media.addEventListener("loadedmetadata", function (e) {
-					// LogMsg("loadedmetadata");
-					// ctx.drawImage(video1, 10, 10, 341, 257);
-				// });
-				// Continuous drawing (optional)
-				// function drawFrames() {
-				// 	if (video1.playing && video2.playing) {
-				// 	ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous frames
-				// 	ctx.drawImage(video1, 10, 10, 341, 257);
-				// 	ctx.drawImage(video2, 351 + 10, 10, 341, 257);
-				// 	}
-				// 	requestAnimationFrame(drawFrames); // Schedule next frame drawing
-				// }
-				
-				// // Start continuous drawing if desired
-				// drawFrames();
-			} catch (e) { 
+			} catch(e) {
 				if(oCurmdm)oCurmdm.remove();
 				delete peer_media_elements[peer_id];
 			 }}
 		};
-		// pC1.addEventListener("track",fnAddStream);
 		pC1.onaddstream = fnAddStream;
 		// p2p 流事件
 		if (!g_bTxtChat) {
@@ -1339,20 +1308,28 @@ function init () {
 
 		// 根据NAT类型和带宽使用情况调整视频清晰度
 		function adjustVideoQuality(natType, bandwidth) {
-			let videoTrack = pC1.getSenders().find(sender => sender.track.kind === 'video').track;
+			let sd=pC1.getSenders();
+			if(!sd)return;
+			let stk =sd.find(sender => sender.track.kind === 'video'); 
+			if(!stk)return;
+			let vt = stk.track;
+			if(!vt)return;
+			log("adjustVideoQuality:" + natType + " " + bandwidth + "bps")
 			if (natType === 'host' || natType === 'srflx'|| natType === 'prflx') {
 				// bandwidth>=bandwidthThreshold
-				log(["natType:::>",natType,bandwidth,bandwidthThreshold,bandwidth>=bandwidthThreshold])
+				// log(["natType:::>",natType,bandwidth,bandwidthThreshold,bandwidth>=bandwidthThreshold])
 				// 如果都在一个内网或NAT成功，使用高清
-				videoTrack.applyConstraints({
+				// var opts2 = { advanced: [{ width: 640, height: 480 }] } // https://stackoverflow.com/questions/68342671/mediadevice-applyconstraints-doesnt-work
+				// https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/applyConstraints
+				vt.applyConstraints({
 					width: { ideal: n002 },
 					height: { ideal: n002 }
-				});
+				}).catch(log);
 			} else {// 如果NAT失败，使用低清
-				videoTrack.applyConstraints({
+				vt.applyConstraints({
 					width: { ideal: 640 },
 					height: { ideal: 480 }
-				});
+				}).catch(log);
 			}
 		}
 		let nCstt = setInterval(function(){
@@ -1367,13 +1344,13 @@ function init () {
 								let natType = report.localCandidateType;
 								let bandwidth = report.availableOutgoingBitrate;
 								// 根据NAT类型和带宽使用情况调整视频清晰度
-								adjustVideoQuality(natType, bandwidth);
+								try{adjustVideoQuality(natType, bandwidth)}catch(e){log(e)}
 								clearInterval(nCstt);
 							}
 						}
 					})
 				}catch(e){log(e)}
-			});
+			}).catch(e => {log(e)});
 		}, 10000);
 		
 	};
@@ -1709,7 +1686,7 @@ var bTm = 0, g_nTmxx9, nT090,fnStartRct = function(vSs,nT,nick,vd) {
 			RegAsyncNoCtx(fnStartRct,vSs,nT,nick,vd);
 			return;
 		}
-		if(isEnded(stream))return;
+		if(isEnded(stream))return log(vd.id + " stream ended");
 		// 70 秒内不重复执行
 		if(new Date().getTime() - (oC1.attr("bIsRvdRcd")||0) > 70000){
 			oC1.attr("bIsRvdRcd",new Date().getTime());
