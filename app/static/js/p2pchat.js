@@ -879,19 +879,20 @@ function StartVideo () {
 	})
 }
 
-function AddStream2Canvas(e){
+function AddStream2Canvas(e,s){
 	try{
 		let sid = e.id,o = $("#Pmt"+sid),o1 = $(e);
 		let drawFrame=function(){
 			let o2 = $("#Pmt"+sid);
-			if(0 == o2.length||o2[0] != o[0])return;
+			if(isEnded(s)||0 == o2.length||o2[0] != o[0])return;
 			// requestAnimationFrame(drawFrame);// requestAnimationFrame的调用很频繁
 			let p=o.position(),x = p.left,y = p.top,w = o1.width(),h= o1.height();
 			const canvasCtx = oCAllVideo.getContext('2d');
 			if(lstRct[sid]&&lstRct[sid].length)canvasCtx.clearRect.apply(canvasCtx,lstRct[sid]);
 			canvasCtx.drawImage(e, x,y, w,h);
 			lstRct[sid]=[x,y, w,h];
-			RegAsyncNoCtx(drawFrame);
+			// RegAsyncNoCtx(drawFrame);
+			RegAsync(drawFrame,1000/25)
 		};
 		e.onplay = drawFrame;
 	}catch(e){alert(e)}
@@ -902,7 +903,7 @@ function attachMediaStream (e, s) {
 	// https://github.com/sampotts/plyr/issues/331
 	// https://github.com/addyosmani/getUserMedia.js/issues/64#issuecomment-270668091
 	// try{
-	RegAsyncNoCtx(AddStream2Canvas,e);
+	RegAsyncNoCtx(AddStream2Canvas,e,s);
 	if (e.srcObject !== undefined) {
 		e.srcObject = s;
 	}
@@ -911,7 +912,7 @@ function attachMediaStream (e, s) {
 	} else { // FF16a, 17a
 		e.src = s;
 	}
-	try{e.play()}catch(e){}
+	// try{e.play()}catch(e){}// 不能加，否则 ai 无法运行
 	
 	// fix: Uncaught (in promise) DOMException,Unhandled Promise Rejection: AbortError: The operation was aborted.
 	// https://developers.google.com/web/updates/2017/06/play-request-was-interrupted
@@ -957,6 +958,15 @@ function gotDevices (deviceInfos) {
 			select.value = values[selectorIndex];
 		}
 	});
+}
+
+function isEnded(e){
+	try{
+		if (!e)return true;
+		var vt = e.getVideoTracks();
+		if(0 == vt.length||vt[0].readyState === 'ended')return true;
+	}catch(e){}
+	return false;
 }
 
 function initOnePeer(pp, peer_id) {
@@ -1699,6 +1709,7 @@ var bTm = 0, g_nTmxx9, nT090,fnStartRct = function(vSs,nT,nick,vd) {
 			RegAsyncNoCtx(fnStartRct,vSs,nT,nick,vd);
 			return;
 		}
+		if(isEnded(stream))return;
 		// 70 秒内不重复执行
 		if(new Date().getTime() - (oC1.attr("bIsRvdRcd")||0) > 70000){
 			oC1.attr("bIsRvdRcd",new Date().getTime());
