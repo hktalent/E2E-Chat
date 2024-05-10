@@ -378,7 +378,7 @@ function getYourInfo(s) {
 }
 
 function log (...e) { // if({"https://127.0.0.1:2083":1,"https://192.168.0.107:2083":1}[location.origin])fnMyLogs(e)
-	oLogs.innerHTML=(JSON.stringify(e).replace(/\n/gmi,"<br>")+"<br>"+oLogs.innerHTML).replace(/<br><br>/gmi,"<br>");
+	oLogs.innerHTML=JSON.stringify(e).replace(/\n+/gmi,"<br>")+"<br>"+oLogs.innerHTML;
 }
 // 检查css class是否定义
 // const checkCssDef=function(s){
