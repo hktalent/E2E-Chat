@@ -3,6 +3,7 @@ var fs = require('fs'),
     szPath = __dirname + "/static/js/",
     szPathC = __dirname + "/static/css/",
     aFCache = {},
+    expressOptions = require('./expressOptions'),
     bJmi = true,
     bIsMacOsSelf = true&&os.platform() === 'darwin',// 0 才会加密服务端代码, 1 处理 静态资源
     CleanCSS = require('clean-css'),
@@ -51,7 +52,7 @@ var JsHxOpt = {
     numbersToExpressions: true, // 将数字转换为等效的表达式。例如，将数字转换为等效的二进制表达式。 该选项会增加混淆代码的大小（最大100%）
     simplify: false, // 简化代码，例如：将if语句转换为三元表达式。 该选项会增加混淆代码的大小（最大100%）
     sourceMap: false, // 是否生成sourceMap
-    identifierNamesGenerator: 'mangled', // 变量名称生成器
+    // identifierNamesGenerator: 'mangled', // 变量名称生成器 会导致v8 运行不正常
     /*identifierNamesGenerator
     类型：string      默认值：hexadecimal
 
@@ -222,12 +223,6 @@ if(bIsMacOsSelf){// 启动时预处理，提高速度
     setTimeout(async ()=>{fnMerg("v,.js", "js")},1);
     setTimeout(async ()=>{fnMerg(",.css", "css")},1);
 }
-function setLongTermCache (res) {
-    const date = new Date();
-    date.setFullYear(date.getFullYear() + 1);
-    res.setHeader("Expires", date.toUTCString());
-    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-}
 
 function TrueIp(req){
     s = req.headers['true-client-ip'] || req.headers["HTTP_CF_CONNECTING_IP".toLowerCase()] || req.headers['HTTP_CF_IPCOUNTRY'.toLowerCase()]
@@ -243,7 +238,7 @@ async function fnDoMg (req, res, next, reRes) {
     s1 = String(req.connection.remoteAddress)
     // var bDebug = false //-1 < s1.indexOf('::ffff:127.0.0.1') || -1 < s1.indexOf('::ffff:192.168.')
     res.setHeader('content-type', 'text/' + tp);
-    setLongTermCache(res)
+    expressOptions.setLongTermCache(res);
     xx = await fnMerg(a[a.length - 1], t)
     res.end(String(xx));
 }
