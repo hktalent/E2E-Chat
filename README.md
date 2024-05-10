@@ -14,6 +14,17 @@ webrtc RTCPeerConnection传输视频时，
 
 5、存储的视频解码base64后存储，确保使用更少的空间【已经优化】
 
+6、性能、综合、评估测试【已经优化】
+https://www.ssllabs.com/ssltest/analyze.html?viaform=on&d=chat.51pwn.com
+https://www.webpagetest.org/result/240510_AiDcFM_BQF/
+https://pagespeed.web.dev/analysis/https-chat-51pwn-com/salr21qnwz?form_factor=mobile
+sslscan chat.51pwn.com:2083
+sslyze --regular chat.51pwn.com:2083
+
+ab -c 100 -n 5000 https://chat.51pwn.com:2083
+wrk -t8 -c200 -d30s --latency  "https://chat.51pwn.com:2083"
+
+
 # E2E-Chat
 端对端（E2E）、点对点(P2P)加密聊天系统
 不受任何国家、政府、组织、机构监管，安全可靠、隐秘
