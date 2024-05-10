@@ -21,7 +21,7 @@ var RegAsync = function(c,n1){setTimeout(c,n1||1)},ckd = 'checked',
 	g_nTs,g_nUs,g_nAs,// Total storage;Used storage;Available storage
 	// 接收到文件、图片先缓存，最后组包
 	oCcFile = {},
-	videoSelect, audioInputSelect, audioOutputSelect, selectors,vlst = [],
+	vs07, ais1, aos2, selectors,vlst = [],
 	szSelfK = "自己",fnTmArr = [],bAutoRm = false,siv = true,//{behavior: "auto",block: "start",inline: "start"};
 	szLstQrcode = "", // 上一次的二维码内容
 	oMyCtn=null,
@@ -377,9 +377,8 @@ function getYourInfo(s) {
 	}
 }
 
-function log (...e) {
-	// if({"https://127.0.0.1:2083":1,"https://192.168.0.107:2083":1}[location.origin])fnMyLogs(e)
-	oLogs.innerText=Array.from(e).join("\n")+"\n"+oLogs.innerText;
+function log (...e) { // if({"https://127.0.0.1:2083":1,"https://192.168.0.107:2083":1}[location.origin])fnMyLogs(e)
+	oLogs.innerHTML=(JSON.stringify(e).replace(/\n/gmi,"<br>")+"<br>"+oLogs.innerHTML).replace(/<br><br>/gmi,"<br>");
 }
 // 检查css class是否定义
 // const checkCssDef=function(s){
@@ -654,7 +653,7 @@ function send4C(ox1,s){
 // 1、当前人pc ok 就基于 P2P 发送
 // 2、当前人pc 不ok 就基于 服务器 发送
 function SendMsg(s,t,n,nL,sFnm) {
-	if (s) {
+	if (s &&socket && "function" == typeof socket.emit) {
 		t = t || 0;
 		n = n || 0;
 		nL = nL || 0;
@@ -723,7 +722,7 @@ function SendMsg(s,t,n,nL,sFnm) {
 // 日志的输出
 function fnMyLogs (e) {
 	if (!e) return;
-	oLogs.innerText=JSON.stringify(e)+"\n"+oLogs.innerText;
+	oLogs.innerText=JSON.stringify(e||"")+"\n"+oLogs.innerText;
 	// log(e)/*
 	var s = typeof(e) == "string" ? e : JSON.stringify(e), oLog = $("#msgList");
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
@@ -768,7 +767,7 @@ const onScanSuccess =function(decodedText, decodedResult){
 
 // 离开群聊
 part_chat_channel =function(channel){
-	socket.emit('part', channel);
+	if(socket)socket.emit('part', channel);
 },
 
 JoinRoom=function(){
@@ -795,13 +794,13 @@ join_chat_channel1 =function(channel, userdata){
 	userdata["nick"] = oNick.val();
 	
 	if (!bIoIsOk) {
-		RegAsyncNoCtx(join_chat_channel1,channel, userdata);
+		RegAsyncNoCtx(join_chat_channel1,channel,userdata);
 		return;
 	}
 	if (szLstChannel && szLstChannel != channel) {
 		part_chat_channel(szLstChannel)
 	}
-	socket.emit('join', { "channel": channel, "userdata": userdata ,f:szCltFg});
+	if(socket)socket.emit('join', { "channel": channel, "userdata": userdata ,f:szCltFg});
 	szLstChannel = channel
 },
 
@@ -891,13 +890,13 @@ function AddStream2Canvas(e,s){
 			if(lstRct[sid]&&lstRct[sid].length)canvasCtx.clearRect.apply(canvasCtx,lstRct[sid]);
 			canvasCtx.drawImage(e, x,y, w,h);
 			lstRct[sid]=[x,y, w,h];
-			RegAsyncNoCtx(drawFrame);
-			// RegAsync(drawFrame,1000/25)
+			// RegAsyncNoCtx(drawFrame);// 这个太快、太卡
+			RegAsync(drawFrame,1000/25)
 		};
 		e.onplay = drawFrame;
 	}catch(e){alert(e)}
 }
-function attachMediaStream (e, s) {
+function attachMediaStream(e, s) {
 	// fnMyLogs2('DEPRECATED, attachMediaStream will soon be removed.');
 	// Uncaught (in promise) DOMException
 	// https://github.com/sampotts/plyr/issues/331
@@ -922,7 +921,7 @@ function attachMediaStream (e, s) {
 	// }
 };
 
-function gotDevices (deviceInfos) {
+function gotDevices (dif1) {
 	const values = selectors.map(select => select.value);
 	selectors.forEach(function(select){
 		while (select.firstChild) {
@@ -930,23 +929,23 @@ function gotDevices (deviceInfos) {
 		}
 	});
 	vlst = [];
-	for (var i = 0; i < deviceInfos.length; i++) {
-		const deviceInfo = deviceInfos[i];
-		if (!deviceInfo.label || !deviceInfo.deviceId) {continue; }
-		const option = dc('option');
-		option.value = deviceInfo.deviceId;
-		if (deviceInfo.kind === 'audioinput') {
-			option.text = deviceInfo.label || `microphone ${audioInputSelect.length + 1}`;
-			audioInputSelect.appendChild(option);
-		} else if (deviceInfo.kind === 'audiooutput') {
-			option.text = deviceInfo.label || `speaker ${audioOutputSelect.length + 1}`;
-			audioOutputSelect.appendChild(option);
-		} else if (deviceInfo.kind === 'videoinput') {
-			option.text = deviceInfo.label || `camera ${videoSelect.length + 1}`;
-			videoSelect.appendChild(option);
-			vlst.push({label:option.text,deviceId:option.value,kind:'videoinput'});
+	for (var i = 0; i < dif1.length; i++) {
+		const df1 = dif1[i];
+		if (!df1.label || !df1.deviceId) {continue; }
+		const opt5 = dc('option');
+		opt5.value = df1.deviceId;
+		if (df1.kind === 'audioinput') {
+			opt5.text = df1.label || `microphone ${ais1.length + 1}`;
+			ais1.appendChild(opt5);
+		} else if (df1.kind === 'audiooutput') {
+			opt5.text = df1.label || `speaker ${aos2.length + 1}`;
+			aos2.appendChild(opt5);
+		} else if (df1.kind === 'videoinput') {
+			opt5.text = df1.label || `camera ${vs07.length + 1}`;
+			vs07.appendChild(opt5);
+			vlst.push({label:opt5.text,deviceId:opt5.value,kind:'videoinput'});
 		} else {
-			console.log('Some other kind of source/device: ', deviceInfo);
+			console.log('Some other kind of source/device: ', df1);
 		}
 	}
 	if(0 < vlst.length)setNickInfo();
@@ -965,13 +964,15 @@ function isEnded(e){
 		if (!e)return true;
 		var vt = e.getVideoTracks();
 		if(0 == vt.length||vt[0].readyState === 'ended')return true;
-	}catch(e){}
+	}catch(e){log(isEnded,e)}
 	return false;
 }
 
+// 将本地的视频流添加到所有的peer连接中
 function initOnePeer(pp, peer_id) {
 	let os = window.stream;
-	if (!os) {
+	if (!os) {// 本地视频流还没有准备好
+		RegAsyncNoCtx(initOnePeer,pp, peer_id);
 		return;
 	}
 	if(peer_id&&!pp)pp=peers[peer_id];
@@ -980,13 +981,13 @@ function initOnePeer(pp, peer_id) {
 	let calOne = function(p1){
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removeTrack
 		try{if(p1.oldStream){
-			p1.oldStream.getTracks().forEach(function(t) {
-				try{if(t.readyState === 'ended')t.stop()}catch(f){alert(f)}
-			});
+			// p1.oldStream.getTracks().forEach(function(t) {
+			// 	try{if(t.readyState === 'ended')t.stop(),log("p1.oldStream.getTracks().forEach stop "+t.label)}catch(f){log(f)}
+			// });
 			p1.removeStream(p1.oldStream)}}catch(e){alert(e)}
 		try{if(p1.oldSender){
-			if(p1.oldSender.track&& p1.oldSender.track.readyState === 'ended')p1.oldSender.track.stop();
-			p1.removeTrack(p1.oldSender),p1.oldSender.replaceTrack(track)}}catch(e){alert(e)}
+			// if(p1.oldSender.track&& p1.oldSender.track.readyState === 'ended')p1.oldSender.track.stop(),log("p1.oldSender.track.readyState stop "+p1.oldSender.track.label);
+			p1.removeTrack(p1.oldSender),p1.oldSender.replaceTrack(track)}}catch(e){log(e)}
 		if(typeof p1.addTrack == "function"){
 			p1.oldSender = p1.addTrack(track, os);
 		}else if(typeof p1.addStream == "function"){
@@ -1060,7 +1061,7 @@ function init () {
 	});
 	//重试失败后会调用reconnect_failed事件
 	socket.on('reconnect_failed', function () {
-		log('reconnect_failed');
+		log('socket reconnect_failed');
 		bIoIsOk = false;
 	});
 	// 处理服务器端的消息
@@ -1102,20 +1103,22 @@ function init () {
 		RevMsg({"data":JSON.stringify(o)})
 	});
 
-	function parseCandidate (text) {
-		const candidateStr = 'candidate:';
-		const pos = text.indexOf(candidateStr) + candidateStr.length;
-		let [foundation, component, protocol, priority, address, port, , type] = text.substr(pos).split(' ');
-		return {
-			'component': component,
-			'type': type,
-			'foundation': foundation,
-			'protocol': protocol,
-			'address': address,
-			'port': port,
-			'priority': priority
-		};
-	}
+	// function parseCandidate (text) {
+	// 	try{
+	// 		const cds = 'candidate:';
+	// 		const pos = text.indexOf(cds) + cds.length;
+	// 		let [foundation, component, protocol, priority, address, port, , type] = text.substr(pos).split(' ');
+	// 		return {
+	// 			'component': component,
+	// 			'type': type,
+	// 			'foundation': foundation,
+	// 			'protocol': protocol,
+	// 			'address': address,
+	// 			'port': port,
+	// 			'priority': priority
+	// 		}
+	// 	}catch(e){log("parseCandidate",e)}
+	// }
 	let addPeerCbk=function(config){
 		var peer_id = config.peer_id;
 		if(config.userdata && config.userdata.nick){
@@ -1151,6 +1154,7 @@ function init () {
 		peers[peer_id] = pC1;
 		let reConn = function(){
 			try{
+				log("start reConn "+config.userdata.nick);
 				pC1.setConfiguration(getIceCfg());
 				pC1.restartIce()
 			}catch(e){log('pC1.restartIce ',e)}
@@ -1177,8 +1181,11 @@ function init () {
 			// 		return;
 			// }
 			let is1 = cc.iceConnectionState,is2 = cc.connectionState,is3 = cc.iceGatheringState,is4 = cc.signalingState;
-			log("P2P ICE state: "+is1 + " iceGatheringState: "+is3+"  connectionState: " + is2+" signalingState: "+is4);
-			if(is1 == "failed"){reConn();}
+			log("P2P ICE state: "+is1 + "\niceGatheringState: "+is3+"\nconnectionState: " + is2+"\nsignalingState: "+is4+"\n");
+			if(is1 == "failed"){
+				log("onicegatheringstatechange reConn "+ is1)
+				reConn()
+			}
 			// switch(is1){
 			// 	case "new","checking":
 			// 		break;
@@ -1201,6 +1208,7 @@ function init () {
 		}
 		
 		// p2p 打洞成功触发事件 
+		let nRpt6 = {}
 		pC1.onicecandidate = async function (event) {
 			let ec = event.candidate,s1 = event.state,oS1={
 				"host": '候选者是本地 IP 地址和端口',
@@ -1212,13 +1220,11 @@ function init () {
 			};
 			if (!ec||!ec.candidate) { return }
 			if(s1 == "failed"||s1 == "disconnected"){// NAT 穿透失败; 连接建立失败，可能与 NAT 穿透失败有关
+				log("onicecandidate reConn "+ s1)
 				reConn();
 				return;
 			}
 			getYourInfo(ec.candidate);
-			let t1= event.candidate.type;
-			if(oS1[t1||""])log("ICE Type "+t1+' '+oS1[t1]);
-			var c = parseCandidate(ec.candidate);
 			socket.emit('relayICECandidate', {
 				'peer_id': peer_id,
 				'ice_candidate': {
@@ -1226,6 +1232,13 @@ function init () {
 					'candidate': event.candidate.candidate
 				}
 			});
+			try{
+				let t1= event.candidate.type;
+				if(oS1[t1||""]&& !nRpt6[t1]){
+					nRpt6[t1]=1;
+					log("ICE Type "+t1+' '+oS1[t1]+"\n",parseCandidate(ec.candidate));
+				}
+			}catch(e){log(e)}
 		}
 		// https://stackoverflow.com/questions/55379332/onaddstream-event-not-called
 		//  addStream and onaddstream are deprecated
@@ -1267,12 +1280,13 @@ function init () {
 						try{
 							var track = vt[i];
 							// alert([vt.length,track.id,track.label,track.readyState,track.stream])
-							if(track.readyState === 'ended')track.stop();
-							else{fnAddOneStream(track.stream||event.stream,track.id,track.label)}
+							// if(track.readyState === 'ended')track.stop();
+							// else{fnAddOneStream(track.stream||event.stream,track.id,track.label)}
+							fnAddOneStream(track.stream||event.stream,track.id,track.label);
+							log("fnAddStream",track.readyState)
 						}catch(e){log(e)}
 					}
 				}else{fnAddOneStream(event.stream)}
-
 			} catch(e) {
 				if(oCurmdm)oCurmdm.remove();
 				delete peer_media_elements[peer_id];
@@ -1283,13 +1297,13 @@ function init () {
 		if (!g_bTxtChat) {
 			initOnePeer(pC1, peer_id)
 		}
-		let cof = async function(){
-			pC1.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true,iceRestart: true}).then(async function(lds){
+		let cof = async function(){//,iceRestart: true // 导致内网无法p2p
+			pC1.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true}).then(async function(lds){
 				// log("Local offer description is: ", local_description);
 				pC1.setLocalDescription(lds).then(async function(){
-					socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
+					if(socket)socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
 				},async function(){fnMyLogs("Offer setLocalDescription failed!",lds)});
-			});
+			},log);
 		};
 		if (config.should_create_offer) {
 			cof();
@@ -1301,15 +1315,15 @@ function init () {
 				delete gaM[peer_id]["pc"];
 				delete gaM[peer_id]['sendChannel'];
 			};
-		// 	pC1.onicecandidateerror=log;
-		// 	pC1.ontrack=log;
-		// 	pC1.onerror=log;
+			pC1.onicecandidateerror=log;
+			pC1.ontrack=log;
+			pC1.onerror=log;
 		}catch(e){log("onclose::",e)}
 
 		// 根据NAT类型和带宽使用情况调整视频清晰度
 		function adjustVideoQuality(natType, bandwidth) {
 			let sd=pC1.getSenders();
-			if(!sd)return;
+			if(!sd || !natType)return;
 			let stk =sd.find(sender => sender.track.kind === 'video'); 
 			if(!stk)return;
 			let vt = stk.track;
@@ -1321,11 +1335,13 @@ function init () {
 				// 如果都在一个内网或NAT成功，使用高清
 				// var opts2 = { advanced: [{ width: 640, height: 480 }] } // https://stackoverflow.com/questions/68342671/mediadevice-applyconstraints-doesnt-work
 				// https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/applyConstraints
+				log(config.userdata.nick+" NAT ok 使用高清");
 				vt.applyConstraints({
 					width: { ideal: n002 },
 					height: { ideal: n002 }
 				}).catch(log);
 			} else {// 如果NAT失败，使用低清
+				log(config.userdata.nick+" NAT失败 使用低清");
 				vt.applyConstraints({
 					width: { ideal: 640 },
 					height: { ideal: 480 }
@@ -1352,7 +1368,6 @@ function init () {
 				}catch(e){log(e)}
 			}).catch(e => {log(e)});
 		}, 10000);
-		
 	};
 	socket.on('addPeer', addPeerCbk);// 这里每个节点上线都会被调用1次，因此会产生若干 pC1
 
@@ -1586,6 +1601,7 @@ const b64toBlob = function(b64Data, contentType='', sliceSize=512){
 	const blob = new Blob(byteArrays, {type: contentType});
 	return blob;
 }
+let nTtSize = 0;
 function crtDel(o,id,oDv){
 	let rm = dc("span");
 	rm.className = "rm";
@@ -1596,6 +1612,7 @@ function crtDel(o,id,oDv){
 			else if(o.download) db.friends.where("name").anyOf(o.download).delete();
 			cntVideo()
 		}
+		nTtSize -= o.size;
 		o.remove();
 		this.remove();
 		oDv.remove();
@@ -1625,18 +1642,23 @@ function rmAllVd(){
 			if(aX.length)db.friends.bulkDelete(aX).then(function(){
 				cntVideo();
 				cbk1();
+				nTtSize = 0;
+				dg('sI55').innerText = "⤓ All Video  "
 			});
 			else cbk1();
 		});
 	}else cbk1();
 	oXa.attr("disabled",false);
 }
+
 // 本地浏览器保存
 function CrtDldA(s,beSvl,szId,nick,szName){
 	var nMax = dg("iVdnm").value||100;
 	let a1 = s.split(";base64,");
 	let link = dc("a");
 	const blob = b64toBlob(a1[1],a1[0].substr(5));
+	link.size = blob.size;
+	nTtSize+=blob.size;
 	const s11 = prettyBytes(blob.size);
 	let objectURL = window.URL.createObjectURL(blob)
 	var oDv = dc("div");
@@ -1665,7 +1687,7 @@ function CrtDldA(s,beSvl,szId,nick,szName){
 				db.friends.add({date:new Date().getTime(),video:atob(d13),name:s1}).then(function(){
 					cntVideo();
 					storageInfo(function(){// 这里可以做一个柄图，显示剩余空间
-						// sI55.innerText = "⤓ All Video ("+ prettyBytes(g_nUs - g_nUs_old)+")  "
+						dg('sI55').innerText = "⤓ All Video ("+ prettyBytes(nTtSize)+")  "
 					});
 				});
 			}
@@ -1774,7 +1796,7 @@ function setupLm (callback, errorback) {
 				// minFaceSize：最小人脸尺寸。默认值为20
 				// https://vladmandic.github.io/face-api/TUTORIAL.html
 				const faceOpt = new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.6,minConfidence:0.6,maxResults:100});
-				lM.addEventListener('play', function (){
+				lM.addEventListener('play', function(){
 					// 人脸识别
 					const n42 = setInterval(async function (){
 						try{
@@ -1798,7 +1820,7 @@ function setupLm (callback, errorback) {
 			var oXv = $("#Pmt" + lM.id),oCps = $("div.compass-circle");
 			oCps.css("display","none");
 			$("#showme").attr(ckd, true),oXv.removeClass('d-none');
-			
+
 			// try{
 				lM.muted = true;
 				lM.autoplay = true;
@@ -2385,6 +2407,7 @@ function storageInfo(cbk){
 			if(g_nUs < g_nUs_old)g_nUs_old=g_nUs;
 			g_nTs = es.quota;// Total storage
 			g_nAs=es.quota - es.usage; // Available storage
+			// dg('iVdnm').value = Math.round(g_nAs/1024/1024/40);
 			// log(`Used storage: ${prettyBytes(es.usage)}; Total storage: ${prettyBytes(es.quota)}; Available storage: ${prettyBytes(es.quota - es.usage)}`)
 			if(cbk)cbk();
 		})
@@ -2418,12 +2441,12 @@ $(document).ready(async function(){
 	bIsMobile = clientJs.isMobile();
 	szCltFg = clientJs.getFingerprint();
 	clientHeight = document.documentElement.clientHeight;
-	videoSelect = document.querySelector('select#videoSelect');
-	audioInputSelect = document.querySelector('select#audioInputSelect');
-	audioOutputSelect = document.querySelector('select#audioOutputSelect');
-	selectors = [audioInputSelect, audioOutputSelect, videoSelect];
+	vs07 = document.querySelector('select#videoSelect');
+	ais1 = document.querySelector('select#audioInputSelect');
+	aos2 = document.querySelector('select#audioOutputSelect');
+	selectors = [ais1, aos2, vs07];
 	selectors.forEach(function (select) { $(select).change(appSet) });
-	$(videoSelect).change(function(){
+	$(vs07).change(function(){
 		g_bSetup = false;
 		StartVideo();
 	});

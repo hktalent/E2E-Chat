@@ -1,3 +1,4 @@
+var Debug = 0;
 function setNoCache(res) {
   const date = new Date();
   date.setFullYear(date.getFullYear() - 1);
@@ -10,6 +11,10 @@ function setNoCache(res) {
 var oNow = new Date(),sz1 = oNow.toUTCString();
 oNow.setFullYear(oNow.getFullYear() + 1);
 function setLongTermCache(res,stat) {
+  if(Debug){
+    setNoCache(res)
+    return;
+  }
   // res.setHeader("Expires", sz1);
   res.setHeader("Cache-Control", "public, max-age=31536000");
   res.setHeader("Date", sz1);
@@ -28,13 +33,15 @@ function setLongTermCache(res,stat) {
 
 module.exports = {
   setNoCache:setNoCache,
-  setLongTermCache,setLongTermCache,
+  setLongTermCache:setLongTermCache,
   etag: true,
   lastModified: true,
   setHeaders: function (res, path, stat) {
     res.setHeader("Strict-Transport-Security", "max-age=15552000; includeSubDomains; preload");
     var isSw = !!path.match(/sw\.js$/);
-    if(!isSw && (path.match(/\/(js|css)\//) || path.match(/model|(socket\.io\.js)/))) {
+    if(Debug){
+      setNoCache(res);
+    }else if(!isSw && (path.match(/\/(js|css)\//) || path.match(/model|(socket\.io\.js)/))) {
       setLongTermCache(res,stat)
     }else{
       setNoCache(res)
