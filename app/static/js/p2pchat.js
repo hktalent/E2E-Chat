@@ -2370,7 +2370,7 @@ function initLang(){
 			oMs.hide();
 		});
 		
-		if(!!language&&"en" != lcg){
+		if(!!language&&"en-us" != lcg){
 			let k = 0;
 			let fnSlg = async function(){
 				if(k < language.length){
