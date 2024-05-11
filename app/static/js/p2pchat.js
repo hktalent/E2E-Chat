@@ -2317,7 +2317,7 @@ function GetLg(){
 		lang = lang.toLowerCase();
 		if(-1 < lang.indexOf("zh"))lang= "cn";
 	}
-	return lang||"us";
+	return lang||"en";
 }
 // 创建一个Intersection Observer,懒加载图片，可见再加载
 let observer = new IntersectionObserver((entries, observer) => {
@@ -2330,9 +2330,10 @@ let observer = new IntersectionObserver((entries, observer) => {
 });
 function initLang(){
 	Is("/js/lang.js"+(location.search||""),function(){
-		var oMs = $("#slctMtl"),bS1 = true,ostL= $("#stL"),lcg = GetLg(),nDl3 = 64;
+		var oMs = $("#slctMtl"),bS1 = true,ostL= $("#stL"),lcg = GetLg().toLowerCase(),nDl3 = 64;
+		if(aLang[lcg]&&aLang[lcg]["contry"])lcg=aLang[lcg]["contry"];// 从语言得到国家
 		// https://cdn.simplelocalize.io/public/v1/flags/es.svg
-		ostL.html("<img src=/flags/"+lcg.toLowerCase()+".svg>").click(async function(){
+		ostL.html("<img src=/flags/"+lcg+".svg>").click(async function(){
 			if(bS1){
 				if(!!aLang){
 					let fragment = document.createDocumentFragment(),_s = "_self",sH = "/?lang=";
