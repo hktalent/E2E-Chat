@@ -2334,6 +2334,7 @@ function initLang(){
 		if(aLang[lcg]&&aLang[lcg]["contry"])lcg=aLang[lcg]["contry"];// 从语言得到国家
 		// https://cdn.simplelocalize.io/public/v1/flags/es.svg
 		ostL.html("<img src=/flags/"+lcg+".svg>").click(async function(){
+			oMs=$("#slctMtl");
 			if(bS1){
 				if(!!aLang){
 					let fragment = document.createDocumentFragment(),_s = "_self",sH = "/?lang=";
@@ -2346,6 +2347,7 @@ function initLang(){
 						let a = document.createElement('a');
 						a.href = sH + k;
 						a.target = _s;
+						a.title = aLang[k]["desCn"];
 						a.appendChild(d1);
 				
 						let img = document.createElement('img');
@@ -2730,5 +2732,5 @@ $(document).ready(async function(){
 	}
 	$("#sI55").click(dlAllVideo);
 	$("#sI56").click(rmAllVd);
-	RegAsync(initLang,1000)
+	RegAsync(initLang,666)
 });
