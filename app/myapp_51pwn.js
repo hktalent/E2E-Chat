@@ -202,7 +202,8 @@ fix.js`).split("\n")
                 "blob:", // 允许加载 blob：URL
                 "https://static.cloudflareinsights.com/*"
             ],
-            scriptSrcElem: "*"
+            scriptSrcElem: "*",
+            mediaSrc: ["*"] // 允许任意的<video>元素访问任意的URL
         },
     }));
     app.use(function(req, res, next){
