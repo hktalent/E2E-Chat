@@ -130,7 +130,7 @@ echoCancellation 是回声消除
 // 	}
 //   ],
 	// nPos07 选择 3
-	g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 1,n002 = 1920,n003 = 1080,
+	g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 1,n002 = 1920,n003 = 1080, // n002 = 640,n003 = 480,
 	aNoCtxCbk = [],
 	clientHeight = 0,
 	bStopRsize = false,
@@ -2334,7 +2334,7 @@ function initLang(){
 		if(aLang[lcg]&&aLang[lcg]["contry"])lcg=aLang[lcg]["contry"];// 从语言得到国家
 		// https://cdn.simplelocalize.io/public/v1/flags/es.svg
 		ostL.html("<img src=/flags/"+lcg+".svg>").click(async function(){
-			oMs=$("#slctMtl");
+			if(!oMs||!oMs.length)oMs=$("#slctMtl");
 			if(bS1){
 				if(!!aLang){
 					let fragment = document.createDocumentFragment(),_s = "_self",sH = "/?lang=";
