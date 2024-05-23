@@ -1003,7 +1003,10 @@ function isEnded(e){
 	return false;
 }
 
-// 将本地的视频流添加到所有的peer连接中
+/* 将本地的视频流添加到所有的peer连接中
+ 一个RTCPeerConnection对象可以添加多个不同的媒体流（MediaStream）。每个媒体流可以包含多个媒体轨道（MediaStreamTrack），例如视频轨道和音频轨道。
+ 你可以使用addTrack()方法将单个媒体轨道添加到RTCPeerConnection，或者使用addStream()方法将整个媒体流添加到RTCPeerConnection。
+ */
 function initOnePeer(pp, peer_id,lcSs) {
 	let os = lcSs||window.stream;
 	if (!os) {// 本地视频流还没有准备好
@@ -1012,24 +1015,35 @@ function initOnePeer(pp, peer_id,lcSs) {
 	}
 	if(peer_id&&!pp)pp=peers[peer_id];
 	const [track] = os.getVideoTracks();
+	if(!os.id)os.id="Id"+new Date().getTime();
 	
 	let calOne = function(p1){
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removeTrack
-		try{if(p1.oldStream){
-			// p1.oldStream.getTracks().forEach(function(t) {
-			// 	try{if(t.readyState === 'ended')t.stop(),log("p1.oldStream.getTracks().forEach stop "+t.label)}catch(f){log(f)}
-			// });
-			p1.removeStream(p1.oldStream)}}catch(e){alert(e)}
-		try{if(p1.oldSender){
-			// if(p1.oldSender.track&& p1.oldSender.track.readyState === 'ended')p1.oldSender.track.stop(),log("p1.oldSender.track.readyState stop "+p1.oldSender.track.label);
-			p1.removeTrack(p1.oldSender),p1.oldSender.replaceTrack(track)}}catch(e){log(e)}
-		if(typeof p1.addTrack == "function"){
-			p1.oldSender = p1.addTrack(track, os);
-		}else if(typeof p1.addStream == "function"){
+		try{
+			let os01 = p1.oldStream && p1.oldStream[os.id]||0;
+			if(os01){
+				// p1.oldStream.getTracks().forEach(function(t) {
+				// 	try{if(t.readyState === 'ended')t.stop(),log("p1.oldStream.getTracks().forEach stop "+t.label)}catch(f){log(f)}
+				// });
+				p1.removeStream(os01);
+				delete p1.oldStream[os.id];
+			}}catch(e){alert(e)}
+		try{
+			let ot0 = p1.oldSender && p1.oldSender[os.id]||0;
+			if(ot0){
+				// if(p1.oldSender.track&& p1.oldSender.track.readyState === 'ended')p1.oldSender.track.stop(),log("p1.oldSender.track.readyState stop "+p1.oldSender.track.label);
+				p1.removeTrack(ot0);
+				ot0.replaceTrack(track);
+				delete p1.oldSender[os.id];
+			}
+		}catch(e){log(e)}
+		if(typeof p1.addStream == "function"){
 			p1.addStream(os);
+		}else if(typeof p1.addTrack == "function"){
+			try{p1.oldSender[os.id] = p1.addTrack(track, os);}catch(e){log("p1.addTrack",e)}
 		}
-		
-		p1.oldStream = os;
+		p1.oldStream=p1.oldStream||{};
+		p1.oldStream[os.id] = os;
 	};
 	if(pp)calOne(pp);else{
 		for(peer_id in peers){
@@ -1933,7 +1947,9 @@ function CanPlay(v1){
 
 // 播放 multipart/x-mixed-replace 流， img
 function PlayImgStream(s){
-	var szId = "Id"+String(s).hashCode(),v1 = fnCreateVid(0,szId);
+	var szId = "Esp_"+String(s).hashCode();
+	if(dg(szId))return;
+	var v1 = fnCreateVid(0,szId);
 	let img = new Image();
 	let canvas = document.createElement('canvas');
 	let ctx = canvas.getContext('2d');
@@ -1960,7 +1976,29 @@ function PlayImgStream(s){
 	initOnePeer(0, 0,stream);
 }
 
-
+// for safari
+if (!HTMLVideoElement.prototype.captureStream) {
+	HTMLVideoElement.prototype.captureStream = function(frameRate) {
+	  let canvas = document.createElement('canvas');
+	  let ctx = canvas.getContext('2d');
+	  let video = this;
+	  let stream = canvas.captureStream(frameRate);
+  
+	  function drawVideoFrame(time) {
+		try{
+			if (video.readyState === video.HAVE_ENOUGH_DATA) {
+			canvas.width = video.videoWidth;
+			canvas.height = video.videoHeight;
+			ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+			}
+		}catch(e){}
+		RegAsyncNoCtx(drawVideoFrame,1000/25);
+		// requestAnimationFrame(drawVideoFrame);
+	  }
+	  drawVideoFrame();
+	  return stream;
+	};
+  }
 // ffmpeg -i rtsp://admin:MJAmg%40028@192.168.0.124/live/main -c:v copy -c:a copy -f hls -hls_time 2  output.m3u8
 // 本地视频初始化，还要加流到 p2p 中
 // https://github.com/phoboslab/jsmpeg
@@ -1968,7 +2006,9 @@ function CreateUrlVd(s,n,szHs){
 	// var o1 = dc("canvas")
 	// dg("myCtn").appendChild(o1);
 	// var player = new JSMpeg.Player(s, {canvas:o1,loop:false,autoplay:false,audio:true});
-	var szId = "Id"+(szHs||new Date().getTime()),v1 = fnCreateVid(0,szId);
+	var szId = "Rtsp_"+(szHs||new Date().getTime());
+	if(dg(szId))return;
+	var v1 = fnCreateVid(0,szId);
 	v1.muted = true;
 	v1.autoplay = true;
 	v1.controls = false;
@@ -1979,7 +2019,7 @@ function CreateUrlVd(s,n,szHs){
 	// o3.attr("data-autoplay","true");
 	// v1.src = s;
 	let cbkSt = function(){
-		if(CanPlay(v1)){
+		if(CanPlay(v1) && (!v1.src || ""==v1.src)){
 			return v1.src = s;
 		}
 		let cbk1 = function(){
@@ -1991,12 +2031,11 @@ function CreateUrlVd(s,n,szHs){
 					v1.muted = true;
 					v1.play();
 				});
-			}else{v1.src = s}
+			}else if(!v1.src || ""==v1.src){v1.src = s}
 		};
 		if(typeof Hls == "undefined")Is("/js/hls.js",cbk1);
 		else cbk1();
 	};
-	
 	// v1.style.transform = "rotate(180deg)"; // 设置视频反转180度
 	let stream;
 	if(0 < n){// 旋转视频流
@@ -2006,13 +2045,23 @@ function CreateUrlVd(s,n,szHs){
 		cbkSt();
 		if (typeof v1.captureStream === 'function')stream = v1.captureStream()
 	}
-	// alert([v1.tagName,typeof stream,typeof v1.captureStream,stream])
-	if(stream){
-		// 处理到隐藏图层，便于统一 ai 处理
-		attachMediaStream(v1, stream);
-		RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
-		initOnePeer(0, 0,stream);
-	}
+	// safari 不支持 captureStream
+	let xxSetS=function(){
+		// v1.style.transform = "rotate(180deg)"; // 设置视频反转180度
+		if (typeof v1.captureStream === 'function')stream = v1.captureStream();
+		// 
+		if(stream){
+			// 处理到隐藏图层，便于统一 ai 处理
+			attachMediaStream(v1, stream);
+			RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
+			initOnePeer(0, 0,stream);
+		}else{
+			log(v1.id,v1.tagName,typeof v1.captureStream);
+			// RegAsync(xxSetS,1000);
+			// alert([v1.tagName,typeof stream,typeof v1.captureStream,stream])
+		}
+	};
+	xxSetS();
 }
 // computeHash(input).then(hashValue => console.log(hashValue));
 function computeHash(input) {
@@ -2646,9 +2695,11 @@ $(document).ready(async function(){
 		else clearInterval(bTm);
 	});
 	$("#iRtsp").change(function(){
-		let a1 = String(this.value|"").replace(/^\s*|\s*$/gmi,"").split("\n"),a2=[];
+		let a1 = String(this.value||"").replace(/^\s*|\s*$/gmi,"").split("\n"),a2=[];
 		if(a1.length){
 			for(let i = 0;i<a1.length;i++){
+				a1[i]=String(a1[i]||"").replace(/^\s*|\s*$/gmi,"");
+				if(!a1[i])continue;
 				if(-1 <a1[i].indexOf("?type=img"))PlayImgStream(a1[i]);
 				else a2.push(a1[i]);
 			}

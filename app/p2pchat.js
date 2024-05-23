@@ -13,9 +13,12 @@ function computeHash(input) {
 
 function StopRtsp(s2,oRtsp){
     if(!oRtsp[s2]){return}
-    fs.rmdirSync("static/vt/" + s2, { recursive: true });
-    oRtsp[s2].kill();
+    try{oRtsp[s2].kill()}catch(e){}
     delete oRtsp[s2];
+    try{
+        var s4 = "static/vt/" + s2;
+        if(fs.existsSync(s4))fs.rm(s4, { recursive: true,force: true });
+    }catch(e){}
 }
 
 function RunRtsp(s1,s2,socket,oRtsp){
@@ -291,8 +294,12 @@ async function readIps(szfg){
 }
 
 function fnInit(io){
+    io.on('error', (err) => {
+        console.log(err);
+    });
     io.on('connection', (socket) => 
 {
+    var oRtsp = {};
     nOnline++;
     socket.channels = {};// 当前频道
     sockets[socket.id] = socket;
@@ -429,13 +436,13 @@ function fnInit(io){
         }
         // console.log("["+ socket.id + "] disconnected");
         delete sockets[socket.id];
+        StopRtsp("",oRtsp);
     });
     // 添加 p2p 信息
     socket.on('p2f', (s) => {
         g_oP2f[s]=1;
         fs.writeFileSync(szP2f,JSON.stringify(g_oP2f));
     });
-    var oRtsp = {};
     // 后台运行 rtsp
     socket.on('RunRtsp', function(s){
         RunRtsps(s,socket,oRtsp);

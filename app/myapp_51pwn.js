@@ -56,8 +56,7 @@ function myapp(option)
     bUseHttps = option.useHttps || false;
     if(option.useHttps && fs.existsSync(key) && fs.existsSync(cert))
     {
-        if(bUseHttps == true)
-        {
+        if(bUseHttps == true){
             credentials = {
                 "key": fs.readFileSync(key, 'utf8'),
                 "cert": fs.readFileSync(cert, 'utf8'),
@@ -234,6 +233,7 @@ fix.js`).split("\n")
     // 从 "http://192.168.0.125:81/stream" 读取视频流并返回
     app.get("/stream",function(req,res,next){
         let url = decodeURIComponent(req.query.u||"");
+        console.log(url)
         if(!url || !isUrlAllowed[url]){
             res.end("error");
             return;
