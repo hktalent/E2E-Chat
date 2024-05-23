@@ -10,6 +10,7 @@ var RegAsync = function(c,n1){setTimeout(c,n1||1)},ckd = 'checked',
 	lM = null,// 本地 video
 	oESvl = null,
 	oEAi = null,
+	szVideoId = "webcam",
 	bEaV8 = !!0,
 	bEabOcr = !!0,
 	bRunAi = !!0,
@@ -130,7 +131,7 @@ echoCancellation 是回声消除
 // 	}
 //   ],
 	// nPos07 选择 3
-	g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 1,n002 = 1920,n003 = 1080, // n002 = 640,n003 = 480,
+	g_Constraints = {"video":true,"audio":true},n001 = 5,nPos07 = 1,n002 = 640,n003 = 480,//n002 = 1920,n003 = 1080, // 
 	aNoCtxCbk = [],
 	clientHeight = 0,
 	bStopRsize = false,
@@ -222,6 +223,13 @@ function crtLoader(){
 	$("#st2").append(l);
 	return l;
 }
+
+function RunRtsp(s){
+	if(socket&&s){
+		socket.emit('RunRtsp',s);
+	}
+}
+// 压缩、下载所有视频文件
 async function dlAllVideo(){
 	let c1 = async function(){
 		const zip = new JSZip();
@@ -291,8 +299,10 @@ function rmHisVideo(){
 			lT.remove();
 		});
 	}
-}// delete
+}
+// 更新状态
 function cntVideo(cbk){// https://dexie.org/docs/Collection/Collection.count()
+	let aCo = dg("svHs"),bS = 0;
 	if(!!db)db.friends.count().then(function (count) {
 		try{
 			vdCnt1 = count;
@@ -301,8 +311,29 @@ function cntVideo(cbk){// https://dexie.org/docs/Collection/Collection.count()
 				s1 = "("+count+")";
 				if(typeof cbk == "function")cbk(count);
 			}
-			$("#svHs").text(s1);
+			aCo.innerText = s1;
+			bS=1;
 		}catch(e){alert(e)}
+	});
+	let nTtSize = 0;
+	let fetchPromises = [];
+	// 从 url 计算出的视频的所有字节数，url 转blob 后计算字节数
+	let aAs = $("#ocrRst div.x4 a");
+	if(!bS)aCo.innerText = !aAs.length?"":"("+aAs.length+")";
+	aAs.each(function(){
+		var n = this.getAttribute("size")||0,s1 = this.href;
+		nTtSize += parseInt(n);
+		if(!n){
+			let fetchPromise = fetch(s1).then(response => response.blob()).then(blob => {
+					nTtSize += parseInt(blob.size);
+				}).catch(()=>{});
+			fetchPromises.push(fetchPromise);
+		}
+	});
+	Promise.all(fetchPromises).then(() => {
+		let o1 = dg('sI55')
+		if(0 == nTtSize)o1.innerText = "⤓ All Video  ";
+		else o1.innerText = "⤓ All Video ("+prettyBytes(nTtSize)+")  ";
 	});
 }
 
@@ -394,7 +425,7 @@ function log (...e) { // if({"https://127.0.0.1:2083":1,"https://192.168.0.107:2
 // };
 
 setInterval(async function(){
-	if(oAutoRm.prop(ckd)){
+	if(oAutoRm!=null && oAutoRm.prop(ckd)){
 		for(var i =0; i < fnTmArr.length; i++){
 			try{
 			if(fnTmArr[i]()){
@@ -471,6 +502,10 @@ function CreateMsgDiv (n, s,t,sFnm,nSize) {
 	o1.attr("tm",new Date().getTime());
 	var szTag = "d";
 	if(0 == t){ // 普通消息
+		switch(s){
+			case "->jg":plWarn(true);o1.remove();return;
+			case "->kb":playSd(4);o1.remove();return;
+		}
 		if(lMs)setTips("收到["+n+"]消息",s);
 		var oT1 = o1.find(szTag)
 		oT1.text(s);
@@ -714,7 +749,7 @@ function SendMsg(s,t,n,nL,sFnm) {
 			}
 		}
 		// 文本消息时，给自己 留一条
-		if(0 == onL)CreateMsgDiv(szSelfK, oldS + oks,t);
+		if(0 == onL && -1 == s.indexOf("->"))CreateMsgDiv(szSelfK, oldS + oks,t);
 	}
 	
 }
@@ -969,8 +1004,8 @@ function isEnded(e){
 }
 
 // 将本地的视频流添加到所有的peer连接中
-function initOnePeer(pp, peer_id) {
-	let os = window.stream;
+function initOnePeer(pp, peer_id,lcSs) {
+	let os = lcSs||window.stream;
 	if (!os) {// 本地视频流还没有准备好
 		RegAsyncNoCtx(initOnePeer,pp, peer_id);
 		return;
@@ -1053,6 +1088,9 @@ function init () {
 	socket.io.reconnectionAttempts(Infinity); // 无限次尝试重新连接
 	socket.io.reconnectionDelay(1000); // 1秒延迟
 	socket.io.reconnectionDelayMax(5000); // 最大5秒延迟
+	socket.on('RunRtspR',function(k1){
+		CreateUrlVd("/vt/"+k1+"/"+k1+".m3u8",0,k1)
+	});
 	socket.on('p2f', function (o) {
 		if(g_bEableP2pFs)
 		Object.entries(o).map(async function([k,v]){
@@ -1077,6 +1115,8 @@ function init () {
 		// get nick
 		if(szCltFg)socket.emit("getNick", szCltFg)
 		JoinRoom();
+		let s4 =$("#iRtsp").val(); 
+		if(s4)RunRtsp(s4);
 	});
 	socket.on('disconnect', function () {
 		bIoIsOk = false;
@@ -1119,6 +1159,7 @@ function init () {
 	// 		}
 	// 	}catch(e){log("parseCandidate",e)}
 	// }
+	
 	let addPeerCbk=function(config){
 		var peer_id = config.peer_id;
 		if(config.userdata && config.userdata.nick){
@@ -1242,13 +1283,12 @@ function init () {
 		}
 		// https://stackoverflow.com/questions/55379332/onaddstream-event-not-called
 		//  addStream and onaddstream are deprecated
-		// ontrack event.stream[0]
-		// var xxGet = function(o,a,prefix){
-		// 	for(var k in o){
-		// 		a.push(prefix+k + ":" + o[k]);
-		// 	}
-		// 	return a;
+		// pC1.ontrack = function(event){
+		// 	let stream = new MediaStream(),track = event.track;
+		// 	stream.addTrack(track);
+		// 	fnAddOneStream(stream,track.id,track.label);
 		// }
+
 		// https://gist.github.com/Xeoncross/6bb446dc2241461422e3
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removestream_event
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/track_event
@@ -1260,16 +1300,16 @@ function init () {
 		let fnAddOneStream = async function(stream,id,label){
 			id=id||"";
 			label=label||"";
-			var remote_media = fnCreateVid(0);
-			remote_media.autoplay = true;
-			remote_media.controls = false;
-			remote_media.title = config.userdata.nick+" -- "+label;
-			oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + remote_media.id);
+			var rmv = fnCreateVid(0);
+			rmv.autoplay = true;
+			rmv.controls = false;
+			rmv.title = config.userdata.nick+" -- "+label;
+			oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + rmv.id);
 			$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0"});
 			if(isSvLc()||dg("saveMeVD").checked||oESvl.checked){
-				fnStartRct(stream,1,config.userdata.nick,remote_media);
+				fnStartRct(stream,1,config.userdata.nick,rmv);
 			}
-			attachMediaStream(remote_media, stream);
+			attachMediaStream(rmv, stream);
 		};
 		let fnAddStream = async function(event){
 			var oCurmdm;
@@ -1301,14 +1341,15 @@ function init () {
 			pC1.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true}).then(async function(lds){
 				// log("Local offer description is: ", local_description);
 				pC1.setLocalDescription(lds).then(async function(){
+					log(peer_id + " setLocalDescription ok");
 					if(socket)socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
 				},async function(){fnMyLogs("Offer setLocalDescription failed!",lds)});
 			},log);
 		};
 		if (config.should_create_offer) {
-			cof();
+			// cof();
+			pC1.onnegotiationneeded = cof;
 		}
-		// pC1.onnegotiationneeded=cof;
 		
 		try{
 			pC1.onclose = async function () {
@@ -1371,40 +1412,43 @@ function init () {
 	};
 	socket.on('addPeer', addPeerCbk);// 这里每个节点上线都会被调用1次，因此会产生若干 pC1
 
+	// addPeerCbk({peer_id:"xxxxx",userdata:{nick:"kt"},should_create_offer:true});
 	socket.on('sessionDescription', function (config) {
 		var peer_id = config.peer_id;
 		var peer = peers[peer_id];
-		var remote_description = config.session_description;
+		var rmtDs = config.session_description;
 		// LogMsg(`用户 ${config.userdata.nick} E2E/P2P 安全连接ok`);
 		try{
 			// log("sessionDescription == ",config)
 			xM = config["session_description"]["sdp"].match(/a=max-message-size:\s*(\d+)/);
 			if (xM && xM.length >= 2) {
 				var n08 = parseInt(xM[1]) - 800;
-				gaM[peer_id]["maxSendSize"]=n08;
+				gaM[peer_id]["maxSendSize"] = n08;
 				// LogMsg(`set ${peer_id} maxSendSize = ${n08}`)
 			}
 		}catch(e){log(e)}
 		// log('1 Remote Session-description received from ', config);
 		/*允许设置多个 setRemoteDescription。您可以在连接的生命周期内多次调用 setRemoteDescription 方法，以接收来自不同远程对等方的会话描述。
 		每次调用 setRemoteDescription 时，它会更新连接的远程描述，从而允许您在同一个连接上与多个不同的远程对等方进行通信 */
-		var desc = new RTCSessionDescription(remote_description);
+		// 应该在收到offer后（此时状态应该是"have-remote-offer"），再设置远程的answer
+		var desc = new RTCSessionDescription(rmtDs);
 		peer.setRemoteDescription(desc,async function(){
-			if (remote_description.type == "offer") {
-				peer.createAnswer(async function (local_description) {
-						peer.setLocalDescription(local_description,async function () {
-								socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': local_description });
+			log(peer_id + " setRemoteDescription ok");
+			if (rmtDs.type == "offer") {
+				peer.createAnswer(async function (lcDs) {
+						peer.setLocalDescription(lcDs,async function () {
+								socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lcDs });
 								gaM[peer_id]["pcok"] = true;
 								fnTxtChatOne(null,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 								// log("setRemoteDescription -> createAnswer -> setLocalDescription - > relaySessionDescription")
-							},async function () { log("Answer setLocalDescription failed!",local_description); }
+							},async function () { log(peer_id,"Answer setLocalDescription failed!",lcDs); }
 						);
 					},async function (error) {
 						fnMyLogs2("Error creating answer: ", error, peer);
 					});
 			}
-		},async function (error) {
-			log("setRemoteDescription error: ", error,remote_description);
+		},async function (e) {
+			if(e)log(peer_id,"setRemoteDescription error: ", e.message,rmtDs);
 		});
 	});
 
@@ -1601,7 +1645,6 @@ const b64toBlob = function(b64Data, contentType='', sliceSize=512){
 	const blob = new Blob(byteArrays, {type: contentType});
 	return blob;
 }
-let nTtSize = 0;
 function crtDel(o,id,oDv){
 	let rm = dc("span");
 	rm.className = "rm";
@@ -1612,7 +1655,6 @@ function crtDel(o,id,oDv){
 			else if(o.download) db.friends.where("name").anyOf(o.download).delete();
 			cntVideo()
 		}
-		nTtSize -= o.size;
 		o.remove();
 		this.remove();
 		oDv.remove();
@@ -1642,8 +1684,6 @@ function rmAllVd(){
 			if(aX.length)db.friends.bulkDelete(aX).then(function(){
 				cntVideo();
 				cbk1();
-				nTtSize = 0;
-				dg('sI55').innerText = "⤓ All Video  "
 			});
 			else cbk1();
 		});
@@ -1657,8 +1697,7 @@ function CrtDldA(s,beSvl,szId,nick,szName){
 	let a1 = s.split(";base64,");
 	let link = dc("a");
 	const blob = b64toBlob(a1[1],a1[0].substr(5));
-	link.size = blob.size;
-	nTtSize+=blob.size;
+	link.setAttribute("size",blob.size);
 	const s11 = prettyBytes(blob.size);
 	let objectURL = window.URL.createObjectURL(blob)
 	var oDv = dc("div");
@@ -1686,14 +1725,13 @@ function CrtDldA(s,beSvl,szId,nick,szName){
 				let d13 = a1[1];
 				db.friends.add({date:new Date().getTime(),video:atob(d13),name:s1}).then(function(){
 					cntVideo();
-					storageInfo(function(){// 这里可以做一个柄图，显示剩余空间
-						dg('sI55').innerText = "⤓ All Video ("+ prettyBytes(nTtSize)+")  "
-					});
+					// storageInfo(function(){});// 这里可以做一个柄图，显示剩余空间
 				});
 			}
 		}catch(e){log(e)}
 	});
 }
+
 let isSvLc = ()=>{return typeof SaveMp4 == "function"};
 // 触发保存 https://recordrtc.org/   https://www.webrtc-experiment.com/
 // https://recordrtc.org/CanvasRecorder.html
@@ -1786,7 +1824,7 @@ function setupLm (callback, errorback) {
 			if(window.stream)window.oldStream=window.stream;
 			window.stream = stream;
 			lMs = stream;
-			let szVideoId = "webcam";
+			
 			lM = fnCreateVid(bNbg,szVideoId);
 			window.webcam = lM;
 			const initFaceCbk = function(){// https://justadudewhohacks.github.io/face-api.js/docs/index.html
@@ -1845,7 +1883,113 @@ function setupLm (callback, errorback) {
 	} catch (e) { fnMyLogs(e) }
 	// if(callback) callback()
 }
+function flipVideoStream(video, n) {
+    let canvas = document.createElement('canvas');
+    let context = canvas.getContext('2d');
 
+    let render = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.save();
+
+        // 移动坐标原点到图像的中心
+        context.translate(canvas.width / 2, canvas.height / 2);
+
+        // 旋转n度
+        context.rotate(n * Math.PI / 180);
+
+        // 将坐标原点移动回去
+        context.translate(-canvas.width / 2, -canvas.height / 2);
+
+        // 绘制图像
+        context.drawImage(video, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+
+        context.restore();
+		RegAsync(render,1000/25);// requestAnimationFrame(render);
+    };
+	if(0 < video.videoWidth && 0 < video.videoHeight){
+		canvas.width = video.videoWidth;
+		canvas.height = video.videoHeight;
+		render();
+	}else{
+		video.onloadedmetadata = () => {
+			canvas.width = video.videoWidth;
+			canvas.height = video.videoHeight;
+			render();
+		}
+	}
+
+    return canvas.captureStream();
+}
+
+function CanPlay(v1){
+	let videoTypes = ['application/vnd.apple.mpegurl', 'multipart/x-mixed-replace', 'video/mp4', 'video/webm', 'video/ogg'];
+	for (let type of videoTypes) {
+		if (v1.canPlayType(type)) {
+			return true;
+		}
+	}
+	return false;
+}
+// ffmpeg -i rtsp://admin:MJAmg%40028@192.168.0.124/live/main -c:v copy -c:a copy -f hls -hls_time 2  output.m3u8
+// 本地视频初始化，还要加流到 p2p 中
+// https://github.com/phoboslab/jsmpeg
+function CreateUrlVd(s,n,szHs){
+	// var o1 = dc("canvas")
+	// dg("myCtn").appendChild(o1);
+	// var player = new JSMpeg.Player(s, {canvas:o1,loop:false,autoplay:false,audio:true});
+	var szId = "Id"+(szHs||new Date().getTime()),v1 = fnCreateVid(0,szId);
+	v1.muted = true;
+	v1.autoplay = true;
+	v1.controls = false;
+	// var o3 = $(v1.parentElement);
+	// o3.addClass('jsmpeg');
+	// o3.attr("data-url",s);
+	// o3.attr("data-loop","true");
+	// o3.attr("data-autoplay","true");
+	// v1.src = s;
+	let cbkSt = function(){
+		if(CanPlay(v1)){
+			return v1.src = s;
+		}
+		let cbk1 = function(){
+			if (Hls.isSupported()) {
+				var hls = new Hls({debug: false});
+				hls.loadSource(s);
+				hls.attachMedia(v1);
+				hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+					v1.muted = true;
+					v1.play();
+				});
+			}else{v1.src = s}
+		};
+		if(typeof Hls == "undefined")Is("/js/hls.js",cbk1);
+		else cbk1();
+	};
+	
+	// v1.style.transform = "rotate(180deg)"; // 设置视频反转180度
+	let stream;
+	if(0 < n){// 旋转视频流
+		stream = flipVideoStream(v1, n);
+		cbkSt();
+	}else{
+		cbkSt();
+		if (typeof v1.captureStream === 'function')stream = v1.captureStream()
+	}
+	// 处理到隐藏图层，便于统一 ai 处理
+	attachMediaStream(v1, stream);
+	RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
+	initOnePeer(0, 0,stream);
+}
+// computeHash(input).then(hashValue => console.log(hashValue));
+function computeHash(input) {
+    return new Promise(async function(resolve, reject) {
+        const msgUint8 = new TextEncoder().encode(input);                                  
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);                
+        const hashArray = Array.from(new Uint8Array(hashBuffer));                     
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); 
+        resolve(hashHex);
+    });
+}
 var captureImage = function(v,w){
 	var c = dc("canvas");
 	c.width = v.videoWidth * w;
@@ -2243,8 +2387,9 @@ window.addEventListener("beforeunload",function(){
 	StopStream();
 });
 
-function plWarn(){
+function plWarn(bMsg){
 	playSd(3);
+	if(!bMsg)SendMsg("->jg");
 	clearTimeout(nWarn);
 	g_bWarn = true;
 	nWarn = setTimeout(function(){g_bWarn = !!0}, 25000);
@@ -2466,6 +2611,9 @@ $(document).ready(async function(){
 		}
 		else clearInterval(bTm);
 	});
+	$("#iRtsp").change(function(){
+		RunRtsp(this.value,this);
+	});
 
 	$("#showme").on("change", async function () {
 		if(!lM)return;
@@ -2547,6 +2695,8 @@ $(document).ready(async function(){
 		ovChat.show();
 		dspNa();
 		StartVideo();
+		// CreateUrlVd("/vt/output.m3u8",180);
+		// CreateUrlVd("rtsp://admin:MJAmg%40028@192.168.0.124/live/main",180);
 		ldai()
 	});
 	var bELpos,bposInit = false;

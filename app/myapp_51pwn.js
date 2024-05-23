@@ -1,5 +1,6 @@
 var fs = require('fs'),
     os = require('os'),
+    request = require('request'),
     socketIo=new require('socket.io'),
     // crypto = require("crypto"),
     // brotli = require('brotli'),
@@ -230,6 +231,20 @@ fix.js`).split("\n")
         }
         next();
     })
+    // 从 "http://192.168.0.125:81/stream" 读取视频流并返回
+    app.get("/stream",function(req,res,next){
+        let url = "http://192.168.0.125:81/stream";
+        let ss2;
+        let stream1 = request(url).on('response', function(response) {// 将流媒体的头信息一起输出到客户端
+            res.set(response.headers);
+            ss2=response.pipe(res);
+        });
+        req.on('close', function() {// 当客户端关闭连接时，结束流
+            stream1.destroy();
+            ss2.destroy();
+            console.log("stream close");
+        });
+    });
     app.get("/lang/index.js",function(req,res,next){
         res.setHeader("Content-Type","application/javascript");
         var s = fs.readFileSync(webStaticPath+req.path).toString("utf-8");
@@ -394,14 +409,15 @@ fix.js`).split("\n")
             else g_oPmap={};
         }
         var szIp = String(req.connection.remoteAddress);
+        var szUrl = req.url.split("?")[0].split("#"[0]);
         if(-1 < szIp.indexOf("127.0.0.1")){
             if(-1 == req.url.indexOf("?")){
                 // mergeRes.setJm();
-                g_oPmap[req.url]=1;
+                g_oPmap[szUrl]=1;
                 fs.writeFileSync(szPm,JSON.stringify(g_oPmap));
                 // req.connection.destroy();
             }
-        }else if(!g_oPmap[req.url] && !fs.existsSync(webStaticPath+req.url)){
+        }else if(!g_oPmap[szUrl] && !fs.existsSync(webStaticPath+szUrl)){
             console.log("终止",req.url)
             req.connection.destroy();
             return;

@@ -15,6 +15,7 @@
 <script src="/js/9.js"></script>
 <script src="/js/15.js"></script>
 <script src="/js/index.js"></script>
+<!-- <script src="/js/jsmpeg.min.js"></script> -->
 </head><body><header><div class="row1">
 <div class="cel1 i" id="cah"><input type="text" placeholder="Channel | room name | 频道 | 暗号 | 聊天室名字" id="cnId" results=10 autocomplete="off"></div>
 <div class="cel1 i" id="nkid"><input type="text" placeholder="nick | 昵称" id="nick" results=10 autocomplete="off"></div>
@@ -46,7 +47,7 @@
 <i title="Record screen" id="sI7"><input type="checkbox" id="rScreen"><span id="sI8">Record screen</i>
 <i title="save jpg to server" id="sI9"><input type="checkbox" id="saveMe"><span id="sI10">Save JPG</span></i>
 <i title="save Me video to server" id="sI11"><input type="checkbox" id="saveMeVD"><span id="sI12">Save Video</span></i>
-<i title="本地保存视频，默认不发送到服务器" id="sI13"><input type="checkbox" id="eSvl" checked><span id="svHs"></span><span id="sI14">Save Video Locally</span></i>
+<i title="本地保存视频，默认不发送到服务器" id="sI13"><input type="checkbox" id="eSvl"><span id="svHs"></span><span id="sI14">Save Video Locally</span></i>
 <i title="max video file,浏览器内存视频保留文件数"><input type="input" id="iVdnm" value="100"></i>
 <i title="enable OCR"><input type="checkbox" id="eOcr"><span>OCR</span></i>
 <i title="enable Detect Face" id="sI15"><input type="checkbox" id="eFace"><span id="sI16">Detect Face</span></i>
@@ -58,6 +59,7 @@
 
 <i title="use front camera" id="sI21"><input type="checkbox" id="evdUser"><span id="sI22">Use front camera</i>
 <i title="Sports information: longitude, altitude" id="sI23"><input type="checkbox" id="eLpos"><span id="sI24">Motion info</span></i>
+<i title="rtsp list"><textarea placeholder="rtsp url list" id="iRtsp"></textarea></i>
 
 <br>
 <i><k id="sI25">state</k>: <span id="gInfo"></span></i>
