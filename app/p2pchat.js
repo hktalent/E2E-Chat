@@ -11,8 +11,15 @@ function computeHash(input) {
     return hash.digest('hex');
 }
 
+function StopRtsp(s2,oRtsp){
+    if(!oRtsp[s2]){return}
+    fs.rmdirSync("static/vt/" + s2, { recursive: true });
+    oRtsp[s2].kill();
+    delete oRtsp[s2];
+}
+
 function RunRtsp(s1,s2,socket,oRtsp){
-    console.log(["RunRtsp",s1,s2]);
+    // console.log(["RunRtsp",s1,s2]);
     if(oRtsp[s2]){
         socket.emit('RunRtspR',s2);
         return;
@@ -28,33 +35,29 @@ function RunRtsp(s1,s2,socket,oRtsp){
     let bFst = true;
     // 打印脚本的 stderr
     runRtsp1.stderr.on('data', (data) => {
-        if(bFst && fs.existsSync("vt/" + s2 + "/"+s2+".m3u8")){
+        if(bFst && fs.existsSync("static/vt/" + s2 + "/"+s2+".m3u8")){
             setTimeout(function(){
                 socket.emit('RunRtspR',s2);
                 console.log("send RunRtspR "+s2)
-            },2000);
+            },4000);
             bFst = false;
         }
-        console.log(`stderr: ${data}`);
+        // console.log(`stderr: ${data}`);
     });
 
     // 当脚本结束时，打印退出码
     runRtsp1.on('close', (code) => {
-        delete oRtsp[s2];
+        StopRtsp(s2,oRtsp);
         console.log(`child process exited with code ${code}`);
     });
 }
 function RunRtsps(s,socket,oRtsp){
     if(!s){
         for(var k in oRtsp){
-            if(oRtsp[k]){
-                oRtsp[k].kill();
-                delete oRtsp[k];
-            }
+            StopRtsp(k,oRtsp);
         }
         return;
     }
-    console.log(s);
     let a=String(s).replace(/^\s*|\s*$/gmi,"").split("\n"),ak={};
     for(var i = 0; i < a.length; i++){
         let a1 = a[i].replace(/^\s*|\s*$/gmi,""),k3 = computeHash(a1);
@@ -63,9 +66,8 @@ function RunRtsps(s,socket,oRtsp){
     }
     // 多人的情况下，不能这样删除
     for(var k in oRtsp){
-        if(!ak[k] && oRtsp[k]){
-            oRtsp[k].kill();
-            delete oRtsp[k];
+        if(!ak[k]){
+            StopRtsp(k,oRtsp);
         }
     }
 }
