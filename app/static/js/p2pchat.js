@@ -225,7 +225,7 @@ function crtLoader(){
 }
 
 function RunRtsp(s){
-	if(socket&&s){
+	if(socket){
 		socket.emit('RunRtsp',s);
 	}
 }
@@ -1930,6 +1930,7 @@ function CanPlay(v1){
 	}
 	return false;
 }
+CreateUrlVd("/stream",0);
 // ffmpeg -i rtsp://admin:MJAmg%40028@192.168.0.124/live/main -c:v copy -c:a copy -f hls -hls_time 2  output.m3u8
 // 本地视频初始化，还要加流到 p2p 中
 // https://github.com/phoboslab/jsmpeg

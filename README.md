@@ -1,4 +1,7 @@
 # 下一个版本
+0、增加对 RTSP 视频流的支持（ rtsp://admin:MJAmg%40028@192.168.0.124/live/main ）
+web -> send rtsp -> server start ffmpeg -> socket -> web 创建UI
+
 1、根据 p2p类型设置视频清晰度【已经优化，但是目前测试相应的代码没有运行】
 webrtc RTCPeerConnection传输视频时，
 1)、都在一个内网就高清；
