@@ -25,8 +25,8 @@ var fs = require('fs'),
     expressOptions = require('./expressOptions'),
     compression = require('compression'),
     bUseHttps = true,
-    credentials = {};
-
+    credentials = {},
+    isUrlAllowed={"http://192.168.0.125:81/stream":1}
 function getNowStr() {
 	var now = new Date();
 	var year = now.getFullYear(),month = now.getMonth() + 1,date = now.getDate(),hour = now.getHours(),minute = now.getMinutes(),second = now.getSeconds();
@@ -230,10 +230,14 @@ fix.js`).split("\n")
             return;
         }
         next();
-    })
+    });
     // 从 "http://192.168.0.125:81/stream" 读取视频流并返回
     app.get("/stream",function(req,res,next){
-        let url = "http://192.168.0.125:81/stream";
+        let url = decodeURIComponent(req.query.u||"");
+        if(!url || !isUrlAllowed[url]){
+            res.end("error");
+            return;
+        }
         let ss2;
         let stream1 = request(url).on('response', function(response) {// 将流媒体的头信息一起输出到客户端
             res.set(response.headers);
