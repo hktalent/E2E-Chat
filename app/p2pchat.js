@@ -1,5 +1,104 @@
 // var Peer = require('simple-peer'),wrtc = require('wrtc');
-var fs = require('fs'), { Level } = require('level'),http = require('http');
+var fs = require('fs'), { Level } = require('level'),http = require('http'),{ spawn } = require('child_process'),crypto = require('crypto');
+
+const https = require('https');
+const { type } = require('os');
+const querystring = require('querystring');
+
+function computeHash(input) {
+    const hash = crypto.createHash('sha256');
+    hash.update(input);
+    return hash.digest('hex');
+}
+
+var oRtsp = {};
+function RunRtsp(s1,s2,socket){
+    console.log(["RunRtsp",s1,s2]);
+    if(oRtsp[s2]){
+        socket.emit('RunRtspR',s2);
+        return;
+        // oRtsp[s2].kill();
+    }
+    // 启动 runRtsp.sh 脚本
+    const runRtsp1 = spawn('sh', ['runRtsp.sh', s1,s2]);
+    oRtsp[s2]=runRtsp1
+    // 打印脚本的 stdout
+    runRtsp1.stdout.on('data', (data) => {
+        // console.log(`stdout: ${data}`);
+    });
+    let bFst = true;
+    // 打印脚本的 stderr
+    runRtsp1.stderr.on('data', (data) => {
+        if(bFst && fs.existsSync("vt/" + s2 + "/"+s2+".m3u8")){
+            setTimeout(function(){
+                socket.emit('RunRtspR',s2);
+                console.log("send RunRtspR "+s2)
+            },2000);
+            bFst = false;
+        }
+        console.log(`stderr: ${data}`);
+    });
+
+    // 当脚本结束时，打印退出码
+    runRtsp1.on('close', (code) => {
+        delete oRtsp[s2];
+        console.log(`child process exited with code ${code}`);
+    });
+}
+function RunRtsps(s,socket){
+    if(!s)return;
+    console.log(s);
+    let a=String(s).replace(/^\s*|\s*$/gmi,"").split("\n");
+    for(var i = 0; i < a.length; i++){
+        let a1 = a[i].replace(/^\s*|\s*$/gmi,"");
+        RunRtsp(a1,computeHash(a1),socket);
+    }
+}
+function addRtsp(s, sdp, ckb) {
+    s = s || "rtsp://admin:MJAmg%40028@192.168.0.124/live/main";
+    // Prepare the data
+    const postData = querystring.stringify({
+        url: s,
+        sdp: Buffer.from(JSON.stringify({sdp:sdp,type:"offer"})).toString('base64')
+    });
+
+    // Prepare the request options
+    const options = {
+        hostname: '127.0.0.1',
+        port: 8081,
+        rejectUnauthorized: false,
+        path: '/rtsp2rtc',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': Buffer.byteLength(postData)
+        }
+    };
+
+    // Make the request
+    const req = https.request(options, (res) => {
+        res.setEncoding('utf8');
+        let rawData = '';
+        res.on('data', (chunk) => { rawData += chunk; });
+        res.on('end', () => {
+            try {
+                const pd1 =JSON.parse(Buffer.from(rawData.replace(/\\+/gmi,"\\").replace(/"exit status 1"/g,""), 'base64').toString()); 
+                ckb(pd1);// offer answer
+            } catch (e) {
+                console.warn(e);
+            }
+        });
+    });
+
+    req.on('error', (e) => {
+        console.error(`problem with request: ${e.message}`);
+    });
+
+    // Write data to request body
+    req.write(postData);
+    req.end();
+}
+
 // const { url } = require('inspector');
 /*
 ln -s  /usr/share/node/lib/node_modules/stunsrv/bin/stunsrv.js /usr/local/bin/stunsrv
@@ -19,7 +118,6 @@ https://gist.github.com/sagivo/3a4b2f2c7ac6e1b5267c2f1f59ac6c6b
 */
 var channels = {},// 全局频道
     sockets = {},
-    https = require('https'),
     db = new Level('dbChat', { valueEncoding: 'json' }),
     dbIp = new Level('dbChatIp', { valueEncoding: 'json' });
 
@@ -176,28 +274,6 @@ async function readIps(szfg){
 }
 
 function fnInit(io){
-    // client:
-    // auth: {
-    //     token: 'xxx' // 客户端传递令牌
-    //   }
-
-    // io.use((socket, next) => {
-    //     const token = socket.handshake.auth.token;
-      
-    //     if (!token) {
-    //       return next(new Error('Authentication error: missing token'));
-    //     }
-      
-    //     // 根据 token 验证用户身份
-    //     // 如果身份验证成功，将 user 对象附加到 socket 上
-    //     const user = authenticateUser(token);
-    //     if (!user) {
-    //       return next(new Error('Authentication error: invalid token'));
-    //     }
-      
-    //     socket.user = user;
-    //     next();
-    //   });
     io.on('connection', (socket) => 
 {
     nOnline++;
@@ -342,6 +418,10 @@ function fnInit(io){
         g_oP2f[s]=1;
         fs.writeFileSync(szP2f,JSON.stringify(g_oP2f));
     });
+    // 后台运行 rtsp
+    socket.on('RunRtsp', function(s){
+        RunRtsps(s,socket);
+    });
     socket.on('leave', (config) => {
         const channel = config.channel;
         if (!(channel in socket.channels)) {return;}
@@ -475,7 +555,18 @@ function fnInit(io){
         let session_description = config.session_description;
         // console.log("relaySessionDescription ==> ["+ socket.id + "] relaying session description to [" + peer_id + "] ", session_description);
         let o = {'peer_id': socket.id, 'session_description': session_description};
-        if (peer_id in sockets) {
+        // if (peer_id in sockets) {
+        //     sockets[peer_id].emit('sessionDescription', o);
+        // }
+        // addPeerCbk({peer_id:"xxxxx",userdata:{nick:"kt"},should_create_offer:true});
+        if(peer_id == "xxxxx"){
+            console.log("relaySessionDescription ==> addRtsp");
+            addRtsp("",session_description.sdp,function(s){
+                o = {'peer_id': peer_id, 'session_description': s};
+                // console.log("send sessionDescription "+peer_id);
+                socket.emit('sessionDescription', o);
+            })
+        }else if (peer_id in sockets) {
             sockets[peer_id].emit('sessionDescription', o);
         }
     });

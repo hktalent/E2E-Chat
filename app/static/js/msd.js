@@ -51,6 +51,9 @@ async function playSd (n) {
     case 3:
       s = "wh01";
       break;
+    case 4:
+      s = "k01";
+      break;
   }
 
   if (bpIn) return;
