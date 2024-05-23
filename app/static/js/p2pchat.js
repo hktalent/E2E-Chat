@@ -1922,7 +1922,7 @@ function flipVideoStream(video, n) {
 }
 
 function CanPlay(v1){
-	let videoTypes = ['application/vnd.apple.mpegurl', 'multipart/x-mixed-replace', 'video/mp4', 'video/webm', 'video/ogg'];
+	let videoTypes = ['application/vnd.apple.mpegurl', 'video/mp4', 'video/webm', 'video/ogg'];
 	for (let type of videoTypes) {
 		if (v1.canPlayType(type)) {
 			return true;
@@ -1930,7 +1930,37 @@ function CanPlay(v1){
 	}
 	return false;
 }
-CreateUrlVd("/stream",0);
+
+// 播放 multipart/x-mixed-replace 流， img
+function PlayImgStream(s){
+	var szId = "Id"+String(s).hashCode(),v1 = fnCreateVid(0,szId);
+	let img = new Image();
+	let canvas = document.createElement('canvas');
+	let ctx = canvas.getContext('2d');
+	img.src=s;
+	v1.muted = true;
+	v1.autoplay = true;
+	v1.controls = false;
+	function drawImage234() {
+		try{
+			canvas.width = img.width || 640;
+			canvas.height = img.height || 480;
+			ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+		}catch(e){log("PlayImgStream -> drawImage234",e)}
+		// requestAnimationFrame(drawImage);// 屏幕中若干视频对象，变化太多 导致性能下降
+		RegAsyncNoCtx(drawImage234,1000/25);
+	}
+	drawImage234();
+	// 获取canvas的流
+	let stream = canvas.captureStream();
+	// 将流赋予给video对象
+	v1.srcObject = stream;
+	attachMediaStream(v1, stream);
+	RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
+	initOnePeer(0, 0,stream);
+}
+
+PlayImgStream("/stream?u=http://192.168.0.125:81/stream",0);
 // ffmpeg -i rtsp://admin:MJAmg%40028@192.168.0.124/live/main -c:v copy -c:a copy -f hls -hls_time 2  output.m3u8
 // 本地视频初始化，还要加流到 p2p 中
 // https://github.com/phoboslab/jsmpeg
@@ -1976,6 +2006,7 @@ function CreateUrlVd(s,n,szHs){
 		cbkSt();
 		if (typeof v1.captureStream === 'function')stream = v1.captureStream()
 	}
+	alert([typeof stream,typeof v1.captureStream,stream])
 	// 处理到隐藏图层，便于统一 ai 处理
 	attachMediaStream(v1, stream);
 	RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
