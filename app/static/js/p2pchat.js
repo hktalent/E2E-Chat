@@ -1960,7 +1960,7 @@ function PlayImgStream(s){
 	initOnePeer(0, 0,stream);
 }
 
-PlayImgStream("/stream?u=http://192.168.0.125:81/stream",0);
+
 // ffmpeg -i rtsp://admin:MJAmg%40028@192.168.0.124/live/main -c:v copy -c:a copy -f hls -hls_time 2  output.m3u8
 // 本地视频初始化，还要加流到 p2p 中
 // https://github.com/phoboslab/jsmpeg
@@ -2006,11 +2006,13 @@ function CreateUrlVd(s,n,szHs){
 		cbkSt();
 		if (typeof v1.captureStream === 'function')stream = v1.captureStream()
 	}
-	alert([typeof stream,typeof v1.captureStream,stream])
-	// 处理到隐藏图层，便于统一 ai 处理
-	attachMediaStream(v1, stream);
-	RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
-	initOnePeer(0, 0,stream);
+	// alert([v1.tagName,typeof stream,typeof v1.captureStream,stream])
+	if(stream){
+		// 处理到隐藏图层，便于统一 ai 处理
+		attachMediaStream(v1, stream);
+		RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
+		initOnePeer(0, 0,stream);
+	}
 }
 // computeHash(input).then(hashValue => console.log(hashValue));
 function computeHash(input) {
@@ -2644,7 +2646,14 @@ $(document).ready(async function(){
 		else clearInterval(bTm);
 	});
 	$("#iRtsp").change(function(){
-		RunRtsp(this.value,this);
+		let a1 = String(this.value|"").replace(/^\s*|\s*$/gmi,"").split("\n"),a2=[];
+		if(a1.length){
+			for(let i = 0;i<a1.length;i++){
+				if(-1 <a1[i].indexOf("?type=img"))PlayImgStream(a1[i]);
+				else a2.push(a1[i]);
+			}
+		}
+		RunRtsp(a2.join("\n"),this);
 	});
 
 	$("#showme").on("change", async function () {
