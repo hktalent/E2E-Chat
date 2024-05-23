@@ -11,8 +11,7 @@ function computeHash(input) {
     return hash.digest('hex');
 }
 
-var oRtsp = {};
-function RunRtsp(s1,s2,socket){
+function RunRtsp(s1,s2,socket,oRtsp){
     console.log(["RunRtsp",s1,s2]);
     if(oRtsp[s2]){
         socket.emit('RunRtspR',s2);
@@ -45,13 +44,29 @@ function RunRtsp(s1,s2,socket){
         console.log(`child process exited with code ${code}`);
     });
 }
-function RunRtsps(s,socket){
-    if(!s)return;
+function RunRtsps(s,socket,oRtsp){
+    if(!s){
+        for(var k in oRtsp){
+            if(oRtsp[k]){
+                oRtsp[k].kill();
+                delete oRtsp[k];
+            }
+        }
+        return;
+    }
     console.log(s);
-    let a=String(s).replace(/^\s*|\s*$/gmi,"").split("\n");
+    let a=String(s).replace(/^\s*|\s*$/gmi,"").split("\n"),ak={};
     for(var i = 0; i < a.length; i++){
-        let a1 = a[i].replace(/^\s*|\s*$/gmi,"");
-        RunRtsp(a1,computeHash(a1),socket);
+        let a1 = a[i].replace(/^\s*|\s*$/gmi,""),k3 = computeHash(a1);
+        ak[k3]=1;
+        RunRtsp(a1,k3,socket,oRtsp);
+    }
+    // 多人的情况下，不能这样删除
+    for(var k in oRtsp){
+        if(!ak[k] && oRtsp[k]){
+            oRtsp[k].kill();
+            delete oRtsp[k];
+        }
     }
 }
 function addRtsp(s, sdp, ckb) {
@@ -418,10 +433,12 @@ function fnInit(io){
         g_oP2f[s]=1;
         fs.writeFileSync(szP2f,JSON.stringify(g_oP2f));
     });
+    var oRtsp = {};
     // 后台运行 rtsp
     socket.on('RunRtsp', function(s){
-        RunRtsps(s,socket);
+        RunRtsps(s,socket,oRtsp);
     });
+    
     socket.on('leave', (config) => {
         const channel = config.channel;
         if (!(channel in socket.channels)) {return;}
