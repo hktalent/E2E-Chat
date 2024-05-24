@@ -12,13 +12,13 @@ function computeHash(input) {
 }
 
 function StopRtsp(s2,oRtsp){
+    try{
+        var s4 = "static/vt/" + s2;
+        if(fs.existsSync(s4))fs.rm(s4, ()=>{});
+    }catch(e){}
     if(!oRtsp[s2]){return}
     try{oRtsp[s2].kill()}catch(e){}
     delete oRtsp[s2];
-    try{
-        var s4 = "static/vt/" + s2;
-        if(fs.existsSync(s4))fs.rm(s4, { recursive: true,force: true });
-    }catch(e){}
 }
 
 function RunRtsp(s1,s2,socket,oRtsp){
@@ -26,16 +26,23 @@ function RunRtsp(s1,s2,socket,oRtsp){
     if(oRtsp[s2]){
         socket.emit('RunRtspR',s2);
         return;
-        // oRtsp[s2].kill();
     }
     // 启动 runRtsp.sh 脚本
     const runRtsp1 = spawn('sh', ['runRtsp.sh', s1,s2]);
     oRtsp[s2]=runRtsp1
+    let bFst = true;
     // 打印脚本的 stdout
     runRtsp1.stdout.on('data', (data) => {
-        // console.log(`stdout: ${data}`);
+        if(bFst && fs.existsSync("static/vt/" + s2 + "/"+s2+".m3u8")){
+            setTimeout(function(){
+                socket.emit('RunRtspR',s2);
+                console.log("send RunRtspR "+s2)
+            },4000);
+            bFst = false;
+        }
+        console.log(`stdout: ${data}`);
     });
-    let bFst = true;
+    
     // 打印脚本的 stderr
     runRtsp1.stderr.on('data', (data) => {
         if(bFst && fs.existsSync("static/vt/" + s2 + "/"+s2+".m3u8")){
@@ -51,14 +58,13 @@ function RunRtsp(s1,s2,socket,oRtsp){
     // 当脚本结束时，打印退出码
     runRtsp1.on('close', (code) => {
         StopRtsp(s2,oRtsp);
-        console.log(`child process exited with code ${code}`);
     });
 }
 function RunRtsps(s,socket,oRtsp){
     if(!s){
-        for(var k in oRtsp){
-            StopRtsp(k,oRtsp);
-        }
+        // for(var k in oRtsp){
+        //     StopRtsp(k,oRtsp);
+        // }
         return;
     }
     let a=String(s).replace(/^\s*|\s*$/gmi,"").split("\n"),ak={};
@@ -68,11 +74,11 @@ function RunRtsps(s,socket,oRtsp){
         RunRtsp(a1,k3,socket,oRtsp);
     }
     // 多人的情况下，不能这样删除
-    for(var k in oRtsp){
-        if(!ak[k]){
-            StopRtsp(k,oRtsp);
-        }
-    }
+    // for(var k in oRtsp){
+    //     if(!ak[k]){
+    //         StopRtsp(k,oRtsp);
+    //     }
+    // }
 }
 function addRtsp(s, sdp, ckb) {
     s = s || "rtsp://admin:MJAmg%40028@192.168.0.124/live/main";

@@ -155,12 +155,6 @@ function fn009() {
 	setWhOne();
 	if(bEaV8)getImgFromStream();
 	// if(lM && lM.id)qrS(fnV2I(lM.id));
-	var t4 = window.ov8canvas;
-	if(t4){
-		t4.style.width = `${oMyCtn.width()}px`;
-		t4.style.height = `${oMyCtn.height()}px`;
-		t4.style.display = bEaV8?"block":"none";
-	}
 	if(oCAllVideo){
 		oCAllVideo.width = oMyCtn.width();
 		oCAllVideo.height = oMyCtn.height();
@@ -409,7 +403,12 @@ function getYourInfo(s) {
 }
 
 function log (...e) { // if({"https://127.0.0.1:2083":1,"https://192.168.0.107:2083":1}[location.origin])fnMyLogs(e)
-	oLogs.innerHTML=JSON.stringify(e).replace(/\n+/gmi,"<br>")+"<br>"+oLogs.innerHTML;
+	let a = [];
+	e.forEach(function(i){
+		if(i && i.toString) a.push(i.toString());
+		else a.push(JSON.stringify(i));
+	});
+	oLogs.innerHTML=a.join("\n")+"\n"+oLogs.innerHTML;
 }
 // 检查css class是否定义
 // const checkCssDef=function(s){
@@ -680,7 +679,7 @@ function send4C(ox1,s){
 		return
 	}
 	try {ox1.send(s);} catch (e) { 
-		log(e.toString());
+		log(e);
 		// RegAsync(function () { send4C(ox1,s) });// 可能导致chrome崩溃
 	}
 }
@@ -758,7 +757,6 @@ function SendMsg(s,t,n,nL,sFnm) {
 function fnMyLogs (e) {
 	if (!e) return;
 	oLogs.innerText=JSON.stringify(e||"")+"\n"+oLogs.innerText;
-	// log(e)/*
 	var s = typeof(e) == "string" ? e : JSON.stringify(e), oLog = $("#msgList");
 	if (e && e['toString'] && -1 == e.toString().indexOf("object Object")) s += e.toString();
 	doCErr(s);
@@ -876,10 +874,22 @@ initQrcode =function(){
 		else c1();
 	}
 };
+var nOldJ=0;
+
 // 只有自己的视频才会调整大小,居中，撑满，在ai 检测的时候会影响检测结果图层的位置不对齐
 function setWhOne(){
 	RegAsync(function(){
-		bStopRsize = $("video").length > 1;
+		let vds = $("video"),n = vds.length,nV = 0;
+		// 计算每行应有的div数量
+		const j = Math.ceil(Math.sqrt(n))||1;
+		let x2 = dg("myCtn"),x5 = document.body.clientHeight - 60;
+		x2.style.height = x5 + "px";
+		nOldJ=x5;
+		nV=((n%j!=0?1:0)+parseInt(n/j)) || 1;
+		x2.style.gridTemplateColumns = `repeat(${j}, 1fr)`;
+		$(x2).find(">div").width(100/j+"%").height(98/nV+"%");
+		
+		bStopRsize = n > 1;
 		if(typeof window.webcam == "undefined"){window.webcam = dg('webcam');}
 		if(window.webcam && !bStopRsize){
 			var bd = $("body");
@@ -888,12 +898,15 @@ function setWhOne(){
 			var bw = bd.clientWidth,bh = bd.clientHeight - 80,blF = webcam.videoHeight/webcam.videoWidth,
 			w = bw,h = bw * blF;
 			if(h > bh){h = bh;w = bh/blF;}
-			$("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
+			// $("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
+
 			var t4 = window.ov8canvas;
-			if(t4){
+			if(t4 && oMyCtn){
 				t4.style.top = `${oMyCtn[0].offsetTop}px`;
 				t4.style.left = `${oMyCtn[0].offsetLeft}px`;
-				t4.style.display = "block";
+				t4.style.width = `${oMyCtn.width()}px`;
+				t4.style.height = `${oMyCtn.height()}px`;
+				t4.style.display = bEaV8?"block":"none";
 			}
 		}
 	});
@@ -937,15 +950,18 @@ function attachMediaStream(e, s) {
 	// https://github.com/sampotts/plyr/issues/331
 	// https://github.com/addyosmani/getUserMedia.js/issues/64#issuecomment-270668091
 	// try{
+	
 	RegAsyncNoCtx(AddStream2Canvas,e,s);
-	if (e.srcObject !== undefined) {
-		e.srcObject = s;
+	if(!e.src && e.src !=s){
+		if (e.srcObject !== undefined) {
+			e.srcObject = s;
+		}else if (e.mozSrcObject !== undefined) { // FF18a
+			e.mozSrcObject = s;
+		} else{ // FF16a, 17a
+			e.src = s;
+		}
 	}
-	else if (e.mozSrcObject !== undefined) { // FF18a
-		e.mozSrcObject = s;
-	} else { // FF16a, 17a
-		e.src = s;
-	}
+	try{if(!s.kind)s.kind="video"}catch(e){log("video",e)}
 	// try{e.play()}catch(e){}// 不能加，否则 ai 无法运行
 	
 	// fix: Uncaught (in promise) DOMException,Unhandled Promise Rejection: AbortError: The operation was aborted.
@@ -999,48 +1015,68 @@ function isEnded(e){
 		if (!e)return true;
 		var vt = e.getVideoTracks();
 		if(0 == vt.length||vt[0].readyState === 'ended')return true;
-	}catch(e){log(isEnded,e)}
+	}catch(e){log("isEnded",e)}
 	return false;
 }
 
-/* 将本地的视频流添加到所有的peer连接中
- 一个RTCPeerConnection对象可以添加多个不同的媒体流（MediaStream）。每个媒体流可以包含多个媒体轨道（MediaStreamTrack），例如视频轨道和音频轨道。
- 你可以使用addTrack()方法将单个媒体轨道添加到RTCPeerConnection，或者使用addStream()方法将整个媒体流添加到RTCPeerConnection。
- */
+/* 
+1、将本地的视频流添加到所有的peer连接中
+2、相同的摄像头切换视频源、前后置调整 进行移除、替换操作
+3、允许将多个视频流（包含音频） 添加到每一个 webrtc peer 连接中
+*/
 function initOnePeer(pp, peer_id,lcSs) {
 	let os = lcSs||window.stream;
-	if (!os) {// 本地视频流还没有准备好
-		RegAsyncNoCtx(initOnePeer,pp, peer_id);
+	if (!os) {// 视频流还没有准备好
+		RegAsyncNoCtx(initOnePeer,pp,peer_id,lcSs);
 		return;
 	}
 	if(peer_id&&!pp)pp=peers[peer_id];
-	const [track] = os.getVideoTracks();
 	if(!os.id)os.id="Id"+new Date().getTime();
+	let trackCbk = function(cbk){
+		let bRs=false;
+		os.getTracks().forEach(function(t) {
+			try{
+				if(t.kind == "video"||t.kind == "audio")bRs=true,cbk(t)
+			}catch(f){log(f)}
+		});
+		return bRs
+	}
 	
 	let calOne = function(p1){
 		// https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removeTrack
-		try{
-			let os01 = p1.oldStream && p1.oldStream[os.id]||0;
-			if(os01){
-				// p1.oldStream.getTracks().forEach(function(t) {
-				// 	try{if(t.readyState === 'ended')t.stop(),log("p1.oldStream.getTracks().forEach stop "+t.label)}catch(f){log(f)}
-				// });
-				p1.removeStream(os01);
-				delete p1.oldStream[os.id];
-			}}catch(e){alert(e)}
-		try{
-			let ot0 = p1.oldSender && p1.oldSender[os.id]||0;
-			if(ot0){
-				// if(p1.oldSender.track&& p1.oldSender.track.readyState === 'ended')p1.oldSender.track.stop(),log("p1.oldSender.track.readyState stop "+p1.oldSender.track.label);
-				p1.removeTrack(ot0);
-				ot0.replaceTrack(track);
-				delete p1.oldSender[os.id];
-			}
-		}catch(e){log(e)}
-		if(typeof p1.addStream == "function"){
+		// try{
+		// 	let os01 = p1.oldStream && p1.oldStream[os.id]||0;
+		// 	if(os01){
+		// 		// p1.oldStream.getTracks().forEach(function(t) {
+		// 		// 	try{if(t.readyState === 'ended')t.stop(),log("p1.oldStream.getTracks().forEach stop "+t.label)}catch(f){log(f)}
+		// 		// });
+		// 		p1.removeStream(os01);
+		// 		delete p1.oldStream[os.id];
+		// 	}
+		// }catch(e){alert(e)}
+		// try{
+		// 	let ot0 = p1.oldSender && p1.oldSender[os.id]||0;
+		// 	if(ot0 && ot0.length){
+		// 		// if(p1.oldSender.track&& p1.oldSender.track.readyState === 'ended')p1.oldSender.track.stop(),log("p1.oldSender.track.readyState stop "+p1.oldSender.track.label);
+		// 		ot0.forEach(function(t) {
+		// 			p1.removeTrack(t);	
+		// 			trackCbk(t.replaceTrack);
+		// 		});
+		// 		delete p1.oldSender[os.id];
+		// 	}
+		// }catch(e){log(e)}
+		log("typeof p1.addTrack",typeof p1.addTrack)
+		if(typeof p1.addTrack == "function"){
+			try{
+				p1.oldSender = p1.oldSender||{};
+				let a12 = [];
+				if(trackCbk(function(t){
+					if(!peer_id)log("p1.addTrack -> ",t.label,t.kind);
+					a12.push(p1.addTrack(t, os))
+				}))p1.oldSender[os.id] = a12;
+			}catch(e){log("p1.addTrack",e)}
+		}else if(typeof p1.addStream == "function"){
 			p1.addStream(os);
-		}else if(typeof p1.addTrack == "function"){
-			try{p1.oldSender[os.id] = p1.addTrack(track, os);}catch(e){log("p1.addTrack",e)}
 		}
 		p1.oldStream=p1.oldStream||{};
 		p1.oldStream[os.id] = os;
@@ -1214,6 +1250,7 @@ function init () {
 				pC1.restartIce()
 			}catch(e){log('pC1.restartIce ',e)}
 		};
+		// https://blog.mozilla.org/webrtc/the-evolution-of-webrtc/
 		pC1.onicegatheringstatechange = async function(e){
 			let cc = e.target;
 			// switch(pC1.iceGatheringState){
@@ -1236,7 +1273,7 @@ function init () {
 			// 		return;
 			// }
 			let is1 = cc.iceConnectionState,is2 = cc.connectionState,is3 = cc.iceGatheringState,is4 = cc.signalingState;
-			log("P2P ICE state: "+is1 + "\niceGatheringState: "+is3+"\nconnectionState: " + is2+"\nsignalingState: "+is4+"\n");
+			// log("P2P ICE state: "+is1 + "\niceGatheringState: "+is3+"\nconnectionState: " + is2+"\nsignalingState: "+is4+"\n");
 			if(is1 == "failed"){
 				log("onicegatheringstatechange reConn "+ is1)
 				reConn()
@@ -1262,6 +1299,31 @@ function init () {
 			if(gaM[peer_id])gaM[peer_id]["pc"]=cc;
 		}
 		
+		function getStream(e){
+			let stream = new MediaStream(),bAdd = false,isM=(m)=>{return m&&(m.kind === 'video'||m.kind === 'audio')};
+			if(e.track && isM(e.track))stream.addTrack(e.track);
+			if(e.streams && e.streams.length){
+				e.streams.forEach(function(s){
+					if("function" == typeof s.getTracks)s.getTracks().forEach(function(t){
+						if(isM(t)) {
+							stream.addTrack(t);
+							bAdd = true;
+						}
+					});
+				});
+			}
+			if(!bAdd && e.stream){
+				if("function" == typeof e.stream.getTracks)e.stream.getTracks().forEach(function(t){
+					if(isM(t)) {
+						stream.addTrack(t);
+						bAdd = true;
+					}
+				});
+				if(!bAdd)stream = e.stream;
+			}
+			return stream
+		}
+
 		// p2p 打洞成功触发事件 
 		let nRpt6 = {}
 		pC1.onicecandidate = async function (event) {
@@ -1297,10 +1359,14 @@ function init () {
 		}
 		// https://stackoverflow.com/questions/55379332/onaddstream-event-not-called
 		//  addStream and onaddstream are deprecated
-		// pC1.ontrack = function(event){
-		// 	let stream = new MediaStream(),track = event.track;
-		// 	stream.addTrack(track);
-		// 	fnAddOneStream(stream,track.id,track.label);
+		let bBindAdd = false;
+		// 测试发现这样无法正确添加流
+		// bBindAdd=true,pC1.ontrack = function(e){
+		// 	try{
+		// 		let stream = getStream(e),track = e.track||{};
+		// 		var rmv = fnAddOneStream(stream,track.id,track.label);
+		// 		if(rmv)e.track.onended = e => rmv.srcObject = rmv.srcObject; // Chrome/Firefox bug
+		// 	}catch(e1){log("pC1.ontrack",e1)}
 		// }
 
 		// https://gist.github.com/Xeoncross/6bb446dc2241461422e3
@@ -1324,29 +1390,26 @@ function init () {
 				fnStartRct(stream,1,config.userdata.nick,rmv);
 			}
 			attachMediaStream(rmv, stream);
+			return rmv
 		};
-		let fnAddStream = async function(event){
-			var oCurmdm;
-			if(!g_bTxtChat && event.stream && !peer_media_elements[peer_id]){try {
-				var vt = event.stream.getVideoTracks();
-    			if (vt.length > 1) {
-					for (var i = 0; i < vt.length; i++) {
-						try{
-							var track = vt[i];
-							// alert([vt.length,track.id,track.label,track.readyState,track.stream])
-							// if(track.readyState === 'ended')track.stop();
-							// else{fnAddOneStream(track.stream||event.stream,track.id,track.label)}
-							fnAddOneStream(track.stream||event.stream,track.id,track.label);
-							log("fnAddStream",track.readyState)
-						}catch(e){log(e)}
-					}
-				}else{fnAddOneStream(event.stream)}
-			} catch(e) {
+		let fnAddStream = async function(e){
+			var oCurmdm,rmv;
+			var stream = getStream(e),track=e.track||{};
+			if(!g_bTxtChat && stream && !peer_media_elements[peer_id]){try {
+				rmv = fnAddOneStream(stream,track.id,track.label);
+				// 常见的解决方法，用于解决Chrome和Firefox中的一个已知问题。这个问题是，当媒体轨道结束时，视频元素（在这里是video）可能不会立即更新，导致视频仍然显示最后一帧图像，而不是显示黑屏或者其他表示视频结束的视觉提示。 
+				if(rmv && e.stream)e.stream.onaddtrack = e => {// Chrome/Firefox hack 强制视频元素更新，从而立即反映媒体轨道的结束
+					e.track.onended =  (e)=>{
+						rmv.srcObject = rmv.srcObject
+					};
+				}
+			} catch(e1) {
+				log("fnAddStream",e1)
 				if(oCurmdm)oCurmdm.remove();
 				delete peer_media_elements[peer_id];
 			 }}
 		};
-		pC1.onaddstream = fnAddStream;
+		if(!bBindAdd)pC1.onaddstream = fnAddStream;
 		// p2p 流事件
 		if (!g_bTxtChat) {
 			initOnePeer(pC1, peer_id)
@@ -1355,7 +1418,7 @@ function init () {
 			pC1.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true}).then(async function(lds){
 				// log("Local offer description is: ", local_description);
 				pC1.setLocalDescription(lds).then(async function(){
-					log(peer_id + " setLocalDescription ok");
+					// log(peer_id + " setLocalDescription ok");
 					if(socket)socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
 				},async function(){fnMyLogs("Offer setLocalDescription failed!",lds)});
 			},log);
@@ -1447,7 +1510,7 @@ function init () {
 		// 应该在收到offer后（此时状态应该是"have-remote-offer"），再设置远程的answer
 		var desc = new RTCSessionDescription(rmtDs);
 		peer.setRemoteDescription(desc,async function(){
-			log(peer_id + " setRemoteDescription ok");
+			// log(peer_id + " setRemoteDescription ok");
 			if (rmtDs.type == "offer") {
 				peer.createAnswer(async function (lcDs) {
 						peer.setLocalDescription(lcDs,async function () {
@@ -1972,30 +2035,31 @@ function PlayImgStream(s){
 	// 将流赋予给video对象
 	v1.srcObject = stream;
 	attachMediaStream(v1, stream);
-	RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
 	initOnePeer(0, 0,stream);
+	RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
+	log("PlayImgStream -> initOnePeer");
 }
 
 // for safari
 if (!HTMLVideoElement.prototype.captureStream) {
 	HTMLVideoElement.prototype.captureStream = function(frameRate) {
-	  let canvas = document.createElement('canvas');
-	  let ctx = canvas.getContext('2d');
-	  let video = this;
-	  let stream = canvas.captureStream(frameRate);
+	  let cvs = document.createElement('canvas');
+	  let ctx = cvs.getContext('2d');
+	  let v1 = this;
+	  let stream = cvs.captureStream(frameRate);
   
-	  function drawVideoFrame(time) {
+	  function drawVideoTmp(time) {
 		try{
-			if (video.readyState === video.HAVE_ENOUGH_DATA) {
-			canvas.width = video.videoWidth;
-			canvas.height = video.videoHeight;
-			ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+			if (v1.readyState === v1.HAVE_ENOUGH_DATA) {
+				cvs.width = v1.videoWidth;
+				cvs.height = v1.videoHeight;
+				ctx.drawImage(v1, 0, 0, cvs.width, cvs.height);
 			}
-		}catch(e){}
-		RegAsyncNoCtx(drawVideoFrame,1000/25);
+		}catch(e){log("drawVideoTmp",e)}
+		RegAsyncNoCtx(drawVideoTmp,1000/25);
 		// requestAnimationFrame(drawVideoFrame);
 	  }
-	  drawVideoFrame();
+	  drawVideoTmp();
 	  return stream;
 	};
   }
@@ -2007,7 +2071,7 @@ function CreateUrlVd(s,n,szHs){
 	// dg("myCtn").appendChild(o1);
 	// var player = new JSMpeg.Player(s, {canvas:o1,loop:false,autoplay:false,audio:true});
 	var szId = "Rtsp_"+(szHs||new Date().getTime());
-	if(dg(szId))return;
+	if(dg(szId))return log("skip "+szId);
 	var v1 = fnCreateVid(0,szId);
 	v1.muted = true;
 	v1.autoplay = true;
@@ -2043,25 +2107,21 @@ function CreateUrlVd(s,n,szHs){
 		cbkSt();
 	}else{
 		cbkSt();
-		if (typeof v1.captureStream === 'function')stream = v1.captureStream()
+		try{stream = v1.captureStream()}catch(e){log("v1.captureStream",e.toString())}
 	}
 	// safari 不支持 captureStream
-	let xxSetS=function(){
-		// v1.style.transform = "rotate(180deg)"; // 设置视频反转180度
-		if (typeof v1.captureStream === 'function')stream = v1.captureStream();
-		// 
-		if(stream){
-			// 处理到隐藏图层，便于统一 ai 处理
-			attachMediaStream(v1, stream);
-			RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
-			initOnePeer(0, 0,stream);
-		}else{
-			log(v1.id,v1.tagName,typeof v1.captureStream);
-			// RegAsync(xxSetS,1000);
-			// alert([v1.tagName,typeof stream,typeof v1.captureStream,stream])
-		}
-	};
-	xxSetS();
+	// v1.style.transform = "rotate(180deg)"; // 设置视频反转180度
+	if(stream){
+		// 处理到隐藏图层，便于统一 ai 处理
+		attachMediaStream(v1, stream);
+		RegAsyncNoCtx(fnStartRct,stream,1,szId,v1);
+		initOnePeer(0, 0,stream);
+	}else{
+		log(v1.id,v1.tagName,typeof v1.captureStream);
+		// RegAsync(xxSetS,1000);
+		// alert([v1.tagName,typeof stream,typeof v1.captureStream,stream])
+	}
+	
 }
 // computeHash(input).then(hashValue => console.log(hashValue));
 function computeHash(input) {
@@ -2242,7 +2302,7 @@ const qrS =function(I){
 	}catch(e){}
 	if(a.length){
 		playSd(2);
-		fnMyLogs(a.join("<br>"));
+		// fnMyLogs(a.join("<br>"));
 	}
 };
 
@@ -2397,7 +2457,7 @@ function StartPosInfo(){
 			g_oSdMsg["gps"] = getObjInfo(position.coords,o1);
 			var s1 = JSON.stringify(g_oSdMsg["gps"],null," ");
 			$("#gInfo").text(s1);
-            fnMyLogs(s1);
+            // fnMyLogs(s1);
 			locationHandler(position);
 			socket.emit('svClientInfo', g_oYourInfo, szCltFg,window.aMacIps,g_oSdMsg);
 			if(!dg("eLpos").checked)stopPosInfo(idGps);
