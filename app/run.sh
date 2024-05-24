@@ -9,9 +9,10 @@ echo "最近 1 天修改过文件 end"
 # npm prune --production=true
 # npm prune --omit=dev
 rm -rf tmp
-rm -rf static/js.js static/v8.js static/css.css static/js/,.js;
+rm -rf static/js.js static/v8.js static/css.css static/js/,.js static/vt/*
 # DEBUG=true 
 # NODE_DEBUG=true 
 # node --inspect --trace-deprecation server.js
 NODE_ENV=production node server.js
+# DEBUG=true node server.js
 # DEBUG=true NODE_ENV=debug node server.js

@@ -231,23 +231,23 @@ fix.js`).split("\n")
         next();
     });
     // 从 "http://192.168.0.125:81/stream" 读取视频流并返回
-    app.get("/stream",function(req,res,next){
-        let url = decodeURIComponent(req.query.u||"");
-        console.log(url)
-        if(!url || !isUrlAllowed[url]){
-            res.end("error");
-            return;
-        }
-        let ss2;
-        let stream1 = request(url).on('response', function(response) {// 将流媒体的头信息一起输出到客户端
-            res.set(response.headers);
-            ss2=response.pipe(res);
-        });
-        req.on('close', function() {// 当客户端关闭连接时，结束流
-            stream1.destroy();
-            ss2.destroy();
-            console.log("stream close");
-        });
+    app.get("/stream",async function(req,res,next){
+        try{
+            let url = decodeURIComponent(req.query.u||"");
+            if(!url || !isUrlAllowed[url]){
+                res.end("error");
+                return;
+            }
+            let ss2;
+            let stream1 = request(url).on('response', async function(response) {// 将流媒体的头信息一起输出到客户端
+                res.set(response.headers);
+                ss2=response.pipe(res);
+            });
+            req.on('close', async function() {// 当客户端关闭连接时，结束流
+                stream1.destroy();
+                console.log("stream close");
+            });
+        }catch(e){console.log(e)}
     });
     app.get("/lang/index.js",function(req,res,next){
         res.setHeader("Content-Type","application/javascript");

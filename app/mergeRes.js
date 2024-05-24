@@ -10,7 +10,7 @@ var fs = require('fs'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  true;
 
-if(process.env['DEBUG'])useCc = false;
+if(process.env['DEBUG'])useCc = false,bJmi=false;
 // console.log(["debug",process.env['DEBUG'],"useCc",useCc])
 function fnWc () {
     var a = [szPath, szPathC];
