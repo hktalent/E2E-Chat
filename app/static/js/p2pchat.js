@@ -1217,7 +1217,7 @@ function init () {
 			// if(config.userdata.nick)setTips("Online",config.userdata.nick);
 			upListMb()
 		}
-		if (peer_id in peers)return;// 避免重复添加
+		if (peer_id in peers)return log("skip "+peer_id);// 避免重复添加
 		if(!config.should_create_offer){
 			playSd(1);
 			// safari 会报错 https://juejin.cn/post/6844903741838082062
@@ -1235,15 +1235,15 @@ function init () {
 		// iceTransportPolicy, iceCandidatePoolSize
 		// chrome 不支持：DtlsSrtpKeyAgreement "DtlsSrtpKeyAgreement": true
 		let nCIce = 0;
-		let getIceCfg = ()=>{
+		let getIceCfg = function(){
 			let oTp12 = { "iceServers": ICE_SERVERS.slice(nCIce,nCIce + 2),iceTransportPolicy: 'all'};
 			nCIce += 2;
 			if(nCIce >= ICE_SERVERS.length)nCIce = 0;
 			return oTp12;
-		}
+		};
 		let pC1 = new RTCPeerConnection(getIceCfg());
 		peers[peer_id] = pC1;
-		let reConn = function(){
+		let reConn = async function(){
 			try{
 				log("start reConn "+config.userdata.nick);
 				pC1.setConfiguration(getIceCfg());
@@ -1323,7 +1323,7 @@ function init () {
 			}
 			return stream
 		}
-
+		var iceOkCbk;
 		// p2p 打洞成功触发事件 
 		let nRpt6 = {}
 		pC1.onicecandidate = async function (event) {
@@ -1335,19 +1335,22 @@ function init () {
 				"relaycand": '候选者是 TURN 服务器提供的候选者，但尚未验证其可达性',
 				"error": '候选者获取过程中出现错误'
 			};
-			if (!ec||!ec.candidate) { return }
+			if (!ec||!ec.candidate) { if(iceOkCbk && pC1.ice && pC1.ice.length)iceOkCbk(),iceOkCbk=0;return}
 			if(s1 == "failed"||s1 == "disconnected"){// NAT 穿透失败; 连接建立失败，可能与 NAT 穿透失败有关
 				log("onicecandidate reConn "+ s1)
 				reConn();
 				return;
 			}
 			getYourInfo(ec.candidate);
+			pC1.ice=pC1.ice||[];
+			var ice = {
+				'sdpMLineIndex': event.candidate.sdpMLineIndex,
+				'candidate': event.candidate.candidate
+			};
+			pC1.ice.push(ice);
 			socket.emit('relayICECandidate', {
 				'peer_id': peer_id,
-				'ice_candidate': {
-					'sdpMLineIndex': event.candidate.sdpMLineIndex,
-					'candidate': event.candidate.candidate
-				}
+				'ice_candidate': ice
 			});
 			try{
 				let t1= event.candidate.type;
@@ -1419,7 +1422,9 @@ function init () {
 				// log("Local offer description is: ", local_description);
 				pC1.setLocalDescription(lds).then(async function(){
 					// log(peer_id + " setLocalDescription ok");
-					if(socket)socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds });
+					iceOkCbk = async function(){
+						if(socket)socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lds,"ice": pC1.ice});
+					};
 				},async function(){fnMyLogs("Offer setLocalDescription failed!",lds)});
 			},log);
 		};
@@ -1488,12 +1493,18 @@ function init () {
 		}, 10000);
 	};
 	socket.on('addPeer', addPeerCbk);// 这里每个节点上线都会被调用1次，因此会产生若干 pC1
-
+	
 	// addPeerCbk({peer_id:"xxxxx",userdata:{nick:"kt"},should_create_offer:true});
 	socket.on('sessionDescription', function (config) {
 		var peer_id = config.peer_id;
 		var peer = peers[peer_id];
 		var rmtDs = config.session_description;
+		var ice = config.ice||0;
+		if(ice){
+			for(var i = 0; i < ice.length; i++){
+				try{peer.addIceCandidate(new RTCIceCandidate(ice[i]));}catch(e){log(e)}
+			}
+		}
 		// LogMsg(`用户 ${config.userdata.nick} E2E/P2P 安全连接ok`);
 		try{
 			// log("sessionDescription == ",config)
@@ -1514,7 +1525,7 @@ function init () {
 			if (rmtDs.type == "offer") {
 				peer.createAnswer(async function (lcDs) {
 						peer.setLocalDescription(lcDs,async function () {
-								socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lcDs });
+								socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lcDs,"ice": peer.ice});
 								gaM[peer_id]["pcok"] = true;
 								fnTxtChatOne(null,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
 								// log("setRemoteDescription -> createAnswer -> setLocalDescription - > relaySessionDescription")
