@@ -84,12 +84,14 @@ function RunRtsps(s,socket,oRtsp){
         }
     }
 }
-function addRtsp(s, sdp, ckb) {
+function addRtsp(s, sdp,ice, ckb) {
+    // console.log("addRtsp sdp",sdp);
+    console.log("addRtsp ice",ice);
     s = s || "rtsp://admin:MJAmg%40028@192.168.0.124/live/main";
     // Prepare the data
     const postData = querystring.stringify({
         url: s,
-        sdp: Buffer.from(JSON.stringify({sdp:sdp,type:"offer"})).toString('base64')
+        sdp: Buffer.from(JSON.stringify({sdp:sdp,type:"offer","ice":ice})).toString('base64')
     });
 
     // Prepare the request options
@@ -115,7 +117,7 @@ function addRtsp(s, sdp, ckb) {
                 const pd1 =JSON.parse(Buffer.from(rawData.replace(/\\+/gmi,"\\").replace(/"exit status 1"/g,""), 'base64').toString()); 
                 ckb(pd1);// offer answer
             } catch (e) {
-                console.warn(e);
+                console.warn(e, rawData);
             }
         });
     });
@@ -580,6 +582,9 @@ function fnInit(io){
     socket.on('relayICECandidate', (config) => {
         let peer_id = config.peer_id;
         let ice_candidate = config.ice_candidate;
+        socket.ice=socket.ice||[];
+        socket.ice.push(ice_candidate);
+        // console.log("relayICECandidate ice:",ice_candidate);
         //console.log("["+ socket.id + "] relaying ICE candidate to [" + peer_id + "] ", ice_candidate);
         let o = {'peer_id': socket.id, 'ice_candidate': ice_candidate};
         if (peer_id in sockets) {
@@ -589,17 +594,17 @@ function fnInit(io){
 
     socket.on('relaySessionDescription', (config) => {
         let peer_id = config.peer_id;
-        let session_description = config.session_description;
+        let oSd = config.session_description;
         // console.log("relaySessionDescription ==> ["+ socket.id + "] relaying session description to [" + peer_id + "] ", session_description);
-        let o = {'peer_id': socket.id, 'session_description': session_description};
+        let o = {'peer_id': socket.id, 'session_description': oSd};
         // if (peer_id in sockets) {
         //     sockets[peer_id].emit('sessionDescription', o);
         // }
         // addPeerCbk({peer_id:"xxxxx",userdata:{nick:"kt"},should_create_offer:true});
         if(peer_id == "xxxxx"){
             console.log("relaySessionDescription ==> addRtsp");
-            addRtsp("",session_description.sdp,function(s){
-                o = {'peer_id': peer_id, 'session_description': s};
+            addRtsp("",oSd,socket.ice||config.ice,function(s){
+                o = {'peer_id': peer_id, 'session_description': s.sdp,"ice":s.ice};
                 // console.log("send sessionDescription "+peer_id);
                 socket.emit('sessionDescription', o);
             })
