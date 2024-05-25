@@ -25,6 +25,7 @@ function RunRtsp(s1,s2,socket,oRtsp){
     // console.log(["RunRtsp",s1,s2]);
     if(oRtsp[s2]){
         socket.emit('RunRtspR',s2);
+        console.log("RunRtspR "+ s2)
         return;
     }
     // 启动 runRtsp.sh 脚本
@@ -58,13 +59,15 @@ function RunRtsp(s1,s2,socket,oRtsp){
     // 当脚本结束时，打印退出码
     runRtsp1.on('close', (code) => {
         StopRtsp(s2,oRtsp);
+        console.log(`child process exited with code ${code}`);
     });
 }
 function RunRtsps(s,socket,oRtsp){
     if(!s){
-        // for(var k in oRtsp){
-        //     StopRtsp(k,oRtsp);
-        // }
+        for(var k in oRtsp){
+            console.log("stop "+ k)
+            StopRtsp(k,oRtsp);
+        }
         return;
     }
     let a=String(s).replace(/^\s*|\s*$/gmi,"").split("\n"),ak={};
@@ -74,11 +77,12 @@ function RunRtsps(s,socket,oRtsp){
         RunRtsp(a1,k3,socket,oRtsp);
     }
     // 多人的情况下，不能这样删除
-    // for(var k in oRtsp){
-    //     if(!ak[k]){
-    //         StopRtsp(k,oRtsp);
-    //     }
-    // }
+    for(var k in oRtsp){
+        if(!ak[k]){
+            console.log("stop "+ k)
+            StopRtsp(k,oRtsp);
+        }
+    }
 }
 function addRtsp(s, sdp, ckb) {
     s = s || "rtsp://admin:MJAmg%40028@192.168.0.124/live/main";
@@ -451,6 +455,7 @@ function fnInit(io){
     });
     // 后台运行 rtsp
     socket.on('RunRtsp', function(s){
+        console.log(s);
         RunRtsps(s,socket,oRtsp);
     });
     
