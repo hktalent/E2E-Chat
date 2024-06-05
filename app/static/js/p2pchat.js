@@ -504,6 +504,7 @@ function CreateMsgDiv (n, s,t,sFnm,nSize) {
 		switch(s){
 			case "->jg":plWarn(true);o1.remove();return;
 			case "->kb":playSd(4);o1.remove();return;
+			case "->ai":oEAi.checked=true;oEAi.onchange();return;
 		}
 		if(lMs)setTips("收到["+n+"]消息",s);
 		var oT1 = o1.find(szTag)

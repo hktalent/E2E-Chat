@@ -4,9 +4,9 @@
 # export rport=26188
 export xxx="app1"
 function rcp(){
-	rport=26188
-	rip="65.49.208.113"
-	scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -C -r -P ${rport} "$1"  root@${rip}:"$2"
+	# rport=26188
+	# rip="65.49.208.113"
+	# scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -C -r -P ${rport} "$1"  root@${rip}:"$2"
 	rport=22
 	rip="144.202.116.91"
 	scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -C -r -P ${rport} "$1"  root@${rip}:"$2"
@@ -18,16 +18,43 @@ ls app/*.js|xargs -I % ./rcp.sh % /root/${xxx}/%
 ls app/static/*.js|xargs -I % ./rcp.sh % /root/${xxx}/%
 ls app/static/js/*.js|xargs -I % ./rcp.sh % /root/${xxx}/%
 
-
-
+rcp app/static/k01.mp3 /root/${xxx}/app/static/
+rcp app/static/css.css /root/${xxx}/app/static/
+rcp app/static/lang /root/${xxx}/app/static/
+rcp app/static/index.html /root/${xxx}/app/static/
 rcp app/static/v8.js /root/${xxx}/app/static/
+rcp app/static/js/,.js /root/${xxx}/app/static/js/
+rcp app/static/js/adapter-latest.js /root/${xxx}/app/static/js/
+rcp app/static/js/jquery.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/webtorrent.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/face-api.js /root/${xxx}/app/static/js/
+rcp app/static/js/fix.js /root/${xxx}/app/static/js/
+rcp app/static/js/crypto-js.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/html5-qrcode.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/plyr.js /root/${xxx}/app/static/js/
+rcp app/static/js/html2canvas.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/qrcode.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/RecordRTC.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/client.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/i.js /root/${xxx}/app/static/js/
+rcp app/static/js/index.js /root/${xxx}/app/static/js/
+rcp app/static/js/jszip.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/streamedian.min.js /root/${xxx}/app/static/js/
+rcp app/static/js/hls.js /root/${xxx}/app/static/js/
+rcp app/static/js/pmap.json /root/${xxx}/app/static/js/
+rcp app/static/js/dexie.js /root/${xxx}/app/static/js/
+
+rcp app/static/lang /root/${xxx}/app/static/
+rcp app/static/flags /root/${xxx}/app/static/
+
+
 ls app/static/js/*.js|xargs -I % ./rcp.sh % /root/${xxx}/%
 
 rcp app/static/lang/index.js /root/${xxx}/app/static/lang/
 rcp app/static/js/pmap.json /root/${xxx}/app/static/js/
 rcp app/static/js/,.js /root/${xxx}/app/static/js/
 rcp app/static/js/jszip.min.js /root/${xxx}/app/static/js/
-rcp app/static/index.html /root/${xxx}/app/static/
+
 
 rcp app/package.json /root/${xxx}/app/
 rcp app/nodemon.json /root/${xxx}/app/
@@ -41,7 +68,7 @@ rcp app/static/js/pmap.json /root/${xxx}/app/static/js/
 rcp app/static/index.html /root/${xxx}/app/static/
 rcp app/static/js.js /root/${xxx}/app/static/
 rcp app/static/js/p2pchat.js /root/${xxx}/app/static/js/
-rcp app/static/css.css /root/${xxx}/app/static/
+
 
 
 rcp app/static/js/bundle.js /root/${xxx}/app/static/js/
