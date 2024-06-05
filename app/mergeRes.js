@@ -5,13 +5,13 @@ var fs = require('fs'),
     aFCache = {},
     expressOptions = require('./expressOptions'),
     bJmi = true,
-    bIsMacOsSelf = 0&&os.platform() === 'darwin',// 0 才会加密服务端代码, 1 处理 静态资源
+    bIsMacOsSelf = 1&&os.platform() === 'darwin',// 0 才会加密服务端代码, 1 处理 静态资源
     CleanCSS = require('clean-css'),
     JavaScriptObfuscator = require('javascript-obfuscator'),
     useCc =  true;
 
 if(process.env['DEBUG'])useCc = false,bJmi=false;
-// console.log(["debug",process.env['DEBUG'],"useCc",useCc])
+console.log(["debug",process.env['DEBUG'],"useCc",useCc,"bJmi",bJmi])
 function fnWc () {
     var a = [szPath, szPathC];
     for (var i = 0; i < a.length; i++)
@@ -153,12 +153,12 @@ async function HxJs(s){
 async function HxJs1(s){
     return UglifyJS.minify((await minify(s, minifyOptions)).code).code;
 }
-async function fnMerg (s, t) {
+async function fnMerg(s, t) {
     var szXf = "static/"+t + "." + t;
     
     // if (t == "js") s = "client.min,jquery,RecordRTC.min,adapter-latest,stunLists,qrcode.min,plyr,html5-qrcode.min,aes,fix,p2pchat,bundle";
     if (t == "js"){ 
-        if(s == "v,.js"){
+        if(s == "v8.js"){
             s = "v8";
             szXf = "static/"+s + "." + t
         }else{ 
@@ -220,7 +220,7 @@ async function fnMerg (s, t) {
 
 if(bIsMacOsSelf){// 启动时预处理，提高速度
     setTimeout(async ()=>{fnMerg(",.js", "js")},1);
-    setTimeout(async ()=>{fnMerg("v,.js", "js")},1);
+    setTimeout(async ()=>{fnMerg("v8.js", "js")},1);
     setTimeout(async ()=>{fnMerg(",.css", "css")},1);
 }
 

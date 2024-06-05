@@ -1,7 +1,11 @@
 // https://gist.github.com/mondain/b0ec1cf5f60ae726202e
 var ICE_SERVERS = [
 {"urls":"stun:stun.l.google.com:19302"},
-{"urls":"turn:65.49.208.113:3478","credential":"e2zeuP_p","username":"e2eu"},
+{"urls": "stun:freestun.net:3478?transport=udp"},
+{"urls":"turn:192.158.29.39:3478?transport=udp","credential": "JZEOEt2V3Qb0y27GRntt2u2PAYA=","username":   "28224511:1379330808"},
+{"url":"turn:turn.anyfirewall.com:443?transport=tcp","credential":"webrtc","username":"webrtc"},
+{"url":"turn:turn.bistri.com:80","credential":"homeo","username":"homeo"},
+{"urls":"turn:rsh.51pwn.com:3478?transport=udp","credential":"e2zeuP_p","username":"e2eu"},
 {"urls":"stun:120.132.47.26:3478"},
 {"urls":"stun:120.132.47.24:3478"},
 {"urls":"stun:74.125.24.127:19305"},
