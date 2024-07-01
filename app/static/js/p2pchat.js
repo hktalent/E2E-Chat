@@ -1237,8 +1237,9 @@ function init () {
 		// chrome 不支持：DtlsSrtpKeyAgreement "DtlsSrtpKeyAgreement": true
 		let nCIce = 0;
 		let getIceCfg = function(){
-			let oTp12 = { "iceServers": ICE_SERVERS.slice(nCIce,nCIce + 2),iceTransportPolicy: 'all'};
-			nCIce += 2;
+			let n = 5;if(navigator.userAgent.indexOf("Firefox") > -1)n = 2;
+			let oTp12 = { "iceServers": ICE_SERVERS.slice(nCIce,nCIce + n),iceTransportPolicy: 'all'};
+			nCIce += n;
 			if(nCIce >= ICE_SERVERS.length)nCIce = 0;
 			return oTp12;
 		};
@@ -1501,11 +1502,7 @@ function init () {
 		var peer = peers[peer_id];
 		var rmtDs = config.session_description;
 		var ice = config.ice||0;
-		if(ice){
-			for(var i = 0; i < ice.length; i++){
-				try{peer.addIceCandidate(new RTCIceCandidate(ice[i]));}catch(e){log(e)}
-			}
-		}
+		
 		// LogMsg(`用户 ${config.userdata.nick} E2E/P2P 安全连接ok`);
 		try{
 			// log("sessionDescription == ",config)
@@ -1526,6 +1523,11 @@ function init () {
 			if (rmtDs.type == "offer") {
 				peer.createAnswer(async function (lcDs) {
 						peer.setLocalDescription(lcDs,async function () {
+								if(ice){
+									for(var i = 0; i < ice.length; i++){
+										try{peer.addIceCandidate(new RTCIceCandidate(ice[i]));}catch(e){log(e)}
+									}
+								}
 								socket.emit('relaySessionDescription', { 'peer_id': peer_id, 'session_description': lcDs,"ice": peer.ice});
 								gaM[peer_id]["pcok"] = true;
 								fnTxtChatOne(null,peer_id);// 最大坑，必须在RTCPeerConnection之后，否则调用失败
