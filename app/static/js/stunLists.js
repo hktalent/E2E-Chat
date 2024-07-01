@@ -1,7 +1,7 @@
 // https://gist.github.com/mondain/b0ec1cf5f60ae726202e
 var ICE_SERVERS = [
 {"urls":"stun:stun.l.google.com:19302"},
-{"urls": "stun:freestun.net:3478?transport=udp"},
+{"urls":"turn:turn.example.com:3478?transport=udp","credential":"REDACTED_TURN_CREDENTIAL","username":"REDACTED_TURN_USER"},
 {"urls":"stun:120.132.47.26:3478"},
 {"urls":"turn:192.158.29.39:3478?transport=udp","credential": "REDACTED_TURN_CREDENTIAL=","username":   "REDACTED_TURN_USER"},
 {"urls":"stun:120.132.47.24:3478"},
@@ -9,7 +9,7 @@ var ICE_SERVERS = [
 {"urls":"stun:74.125.24.127:19305"},
 {"url":"turn:turn.bistri.com:80","credential":"homeo","username":"homeo"},
 {"urls":"stun:111.230.157.11:3478"},
-{"urls":"turn:turn.example.com:3478?transport=udp","credential":"REDACTED_TURN_CREDENTIAL","username":"REDACTED_TURN_USER"},
+{"urls": "stun:freestun.net:3478?transport=udp"},
 {"urls":"stun:stun.miwifi.com:3478"},
 {"urls":"stun:18.195.48.242:3478"},
 {"urls":"stun:stun.hoiio.com:3478"},
