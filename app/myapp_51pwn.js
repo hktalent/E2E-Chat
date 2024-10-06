@@ -208,6 +208,10 @@ fix.js`).split("\n")
     }));
     app.use(function(req, res, next){
         res.setHeader("Alt-Svc", 'h3=":'+option.port+'"; ma=2592000');
+        res.setHeader("Access-Control-Allow-Origin","*");
+        res.setHeader("Timing-Allow-Origin", "*")
+        res.setHeader("Vary", "Origin")
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin")
         res.setHeader("Permissions-Policy", 'camera=*, microphone=*, geolocation=*,gyroscope=*');
         next();
     });

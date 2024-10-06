@@ -29,7 +29,8 @@ function RunRtsp(s1,s2,socket,oRtsp){
         return;
     }
     // 启动 runRtsp.sh 脚本
-    const runRtsp1 = spawn('sh', ['runRtsp.sh', s1,s2]);
+    // console.log([s1,s2])
+    const runRtsp1 = spawn('/bin/sh', ['./runRtsp.sh', s1,s2]);
     oRtsp[s2]=runRtsp1
     let bFst = true;
     // 打印脚本的 stdout
@@ -41,7 +42,7 @@ function RunRtsp(s1,s2,socket,oRtsp){
             },4000);
             bFst = false;
         }
-        console.log(`stdout: ${data}`);
+        // console.log(`stdout: ${data}`);
     });
     
     // 打印脚本的 stderr
