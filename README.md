@@ -218,7 +218,79 @@ WRN Failed to dial a quic connection ... timeout: no recent network activity
 
 ---
 
-## 三、故障排查
+## 三、自启动 / 崩溃自愈（三层保障）
+
+### 第 1 层：Docker Desktop 开机自启（系统登录时）
+
+Docker.app 已通过 macOS Login Items 加入登录自启。
+
+```sh
+# 手动查看/管理
+osascript -e 'tell application "System Events" to get the name of every login item'
+# 想移除 Docker：
+osascript -e 'tell application "System Events" to delete login item "Docker"'
+```
+
+### 第 2 层：容器 `restart: unless-stopped`
+
+`docker-compose.yaml` 里的 `restart: unless-stopped` 保证：
+- 容器崩了 → Docker daemon 自动拉起
+- Docker Desktop 重启后 → 容器自动恢复
+- `docker stop e2e_chat` 手动停的 → **不会**被自动拉起（`unless-stopped` 语义）
+
+### 第 3 层：cloudflared 通过 launchd 常驻
+
+已创建 LaunchAgent：`~/Library/LaunchAgents/com.user.cloudflared.tunnel.plist`
+
+内容要点（绝对路径、协议 http2、KeepAlive 无限重试）：
+
+```xml
+<key>Label</key><string>com.user.cloudflared.tunnel</string>
+<key>ProgramArguments</key>
+<array>
+  <string>/usr/local/bin/cloudflared</string>
+  <string>--config</string><string><HOME>/.cloudflared/config.yml</string>
+  <string>tunnel</string><string>--protocol</string><string>http2</string><string>run</string>
+</array>
+<key>RunAtLoad</key><true/>
+<key>KeepAlive</key>
+<dict><key>SuccessfulExit</key><false/></dict>
+```
+
+**启用/禁用**（需要自己在系统终端里执行，IDE 沙箱权限不足）：
+
+```sh
+# 启用（开机自启 + 当前立即启动）
+launchctl load -w ~/Library/LaunchAgents/com.user.cloudflared.tunnel.plist
+
+# 禁用
+launchctl unload ~/Library/LaunchAgents/com.user.cloudflared.tunnel.plist
+
+# 查看状态
+launchctl list | grep cloudflared
+ps aux | grep "cloudflared.*tunnel.*run" | grep -v grep
+```
+
+**注意**：
+- 登录项 Docker Desktop 自启 + 容器 `unless-stopped` = **容器自动恢复** ✅
+- launchd RunAtLoad = **cloudflared 自动恢复** ✅
+- 任何一层挂了，`sh startServer.sh` 都能一键补位
+
+### 崩溃自愈验证清单
+
+```sh
+# 容器挂了
+docker kill e2e_chat; sleep 3; docker ps --filter name=e2e_chat   # 应自动复活
+curl -sk -o /dev/null -w "%{http_code}\n" --max-time 5 https://127.0.0.1:2083/
+
+# cloudflared 挂了
+pkill -f "cloudflared.*tunnel.*run"; sleep 6
+curl -sk -o /dev/null -w "%{http_code}\n" --max-time 15 https://chat.51pwn.com/   # 应自动恢复
+```
+
+---
+
+## 四、故障排查
 
 | 现象 | 原因 | 解决 |
 |------|------|------|
