@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Segmentation with YOLOv8-Seg</title>
+</head>
+<body>
+    <h1>Object Segmentation with YOLOv8-Seg</h1>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="output"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs" crossorigin="anonymous"></script>
+    
+    <script>
+        async function loadModel() {
+            const model = await tf.loadGraphModel('/model/yolov8n_web_model/model.json');
+            return model;
+        }
+
+        async function detectObjects(model) {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('output');
+            const ctx = canvas.getContext('2d');
+
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+
+            const predictions = await model.executeAsync(video);
+            // Process predictions (get labels, track motion, etc.)
+
+            // Example: Draw bounding boxes on the canvas
+            predictions.forEach(prediction => {
+                const [x, y, width, height] = prediction.bbox;
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, width, height);
+            });
+
+            // Example: Log labels and timestamp
+            console.log('Detected objects:', predictions.map(p => p.class));
+            console.log('Timestamp:', new Date());
+
+            // Continue tracking or processing as needed
+        }
+
+        async function main() {
+            const model = await loadModel();
+            await detectObjects(model);
+        }
+
+        main();
+    </script>
+</body>
+</html>
