@@ -9,6 +9,7 @@ app/static/vt
 log/
 dist/
 app/dbChat/
+app/dbChatIp/
 node_modules/
 bower_components/
 backup/
