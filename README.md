@@ -1,100 +1,245 @@
-# Docker + cloudflared 一键部署（chat.51pwn.com）
+# Docker + cloudflared 部署指南
 
-## 一键启动
+## 快速启动
 
 ```sh
 sh startServer.sh
 ```
 
-脚本自动完成以下 5 步（幂等，可重复执行）：
-1. 检查 docker 可用性
-2. 启动/复用容器 `e2e_chat`（`app/docker-compose.yaml`）
-3. 等待本地 `https://127.0.0.1:2083` 返回 200
-4. 检查 cloudflared 配置：凭证文件、ingress 规则、DNS CNAME 路由（缺失自动修复）
-5. 启动隧道（未运行时）并验证 `https://chat.51pwn.com` 返回 200
+脚本幂等，自动完成：检查 docker → 启动容器 → 等待本地 HTTPS → 检查 cloudflared 配置（缺失自动修复）→ 启动隧道 → 验证公网 200。
 
 ## 架构
 
 ```
-浏览器 -> Cloudflare Edge -> cloudflared 隧道(http2) -> 127.0.0.1:2083 -> docker 容器 e2e_chat (node:20-alpine, /app/run.sh -> node server.js)
+浏览器
+  │  HTTPS (cloudflare 签发证书)
+  ▼
+Cloudflare Edge
+  │  Argo Tunnel (http2)
+  ▼
+cloudflared 本机隧道进程
+  │  HTTPS (Cloudflare Origin CA 自签证书, noTLSVerify)
+  ▼
+127.0.0.1:2083
+  │  docker 端口映射 2083→2083
+  ▼
+容器 e2e_chat  (node:20-alpine, /app/run.sh → node server.js)
 ```
 
-## Docker 部署细节
+---
 
-compose 文件：[app/docker-compose.yaml](app/docker-compose.yaml)
+## 一、Docker 容器
+
+### 镜像选型（坑）
+
+| 镜像 | 结果 |
+|------|------|
+| `node:17.0.1-alpine3.14` | ❌ **必用** → `classic-level` musl 预编译库报 `_ZSt28__throw_bad_array_new_lengthv: symbol not found`（alpine 3.14 的 libstdc++ 太旧），异常被 `uncaughtException` 吞掉，进程僵死、不监听端口 |
+| `node:20-alpine` | ✅ **稳定工作**，自带的 musl glibc 兼容 classic-level 当前预编译 |
+
+另：classic-level 会预加载 `darwin-x64+arm64`、`linux-x64` 两套 `.node`（宿主机 macOS 和容器 Linux 各用各的，volume 挂载不会互相污染）。
+
+### docker-compose.yaml 详解（文件：`app/docker-compose.yaml`）
 
 ```yaml
 services:
   my-app:
-    image: node:20-alpine        # 注意：不能用 node:17.0.1-alpine3.14
-    container_name: e2e_chat
-    restart: unless-stopped
-    working_dir: /app            # 必须设置，否则 run.sh 在 / 下执行 find 会扫描整个文件系统
+    image: node:20-alpine
+    container_name: e2e_chat                 # 固定名字便于 docker 命令定位
+    restart: unless-stopped                  # 容器崩溃自动拉起，daemon 重启后不自动启动
+    working_dir: /app                        # ⚠️ 必须，否则 run.sh 里 find . 会从 / 扫整个文件系统
     ports:
       - "2083:2083"
     volumes:
-      - /Users/51pwn/MyWork/E2E_chat/app:/app
-      - /Users/51pwn/MyWork/E2E_chat/ca:/ca   # Cloudflare Origin 证书 fullchain.pem / privkey.pem
+      - <PROJECT_ROOT>/app:/app              # 源码/运行时数据（dbChat、dbChatIp）
+      - <PROJECT_ROOT>/ca:/ca                # Cloudflare Origin CA: fullchain.pem / privkey.pem
     command: /app/run.sh
 ```
 
-踩过的坑：
-- **镜像版本**：`node:17.0.1-alpine3.14` 的 libstdc++ 太旧，`classic-level` 的 musl 预编译库报
-  `Error relocating .../node.napi.musl.node: _ZSt28__throw_bad_array_new_lengthv: symbol not found`，
-  且被 `uncaughtException` 吞掉导致进程僵死不监听端口。换 `node:20-alpine` 解决。
-- **working_dir**：不设置时 `run.sh` 里 `find .` 从 `/` 开始扫描（日志里全是 /proc、/sys）。
-- 证书是 Cloudflare Origin CA（SAN: `*.51pwn.com, 51pwn.com`），宿主机直接 curl 需 `-k`。
+关键配置项说明：
 
-常用命令：
+- **working_dir**：容器默认 `/`，`run.sh` 第一行 `find . -name ".DS_Store*" -delete` 会扫到 `/proc/*`、`/sys/*`。显式指定 `/app` 后所有路径相对 app 目录。
+- **volumes 挂载 dbChat/dbChatIp**：LevelDB 运行时数据持久化在本机，容器重建不丢失。但 `.gitignore` 必须排除这两个目录，避免误提交（本机 `.gitignore` 已含 `app/dbChat/` 与 `app/dbChatIp/`）。
+- **ca 目录**：`server.js` 读取 `../ca/privkey.pem`（相对 app 是 `../ca`），因此挂载点必须是 `/ca` 且宿主机相对路径 `../ca`。证书是 Cloudflare Origin CA（SAN: `*.51pwn.com, 51pwn.com`），不在系统信任链，cloudflared 入口需要 `noTLSVerify: true`。
+
+### 生命周期命令
 
 ```sh
-docker logs -f e2e_chat          # 看日志
-docker compose -f app/docker-compose.yaml restart   # 重启
-curl -sk https://127.0.0.1:2083/ # 本地验证
+cd <PROJECT_ROOT>/app
+
+# 启动/首次构建
+docker compose up -d
+
+# 重启（容器名固定后，两种命令都可用）
+docker compose restart
+docker restart e2e_chat
+
+# 停止
+docker compose stop
+docker stop e2e_chat
+
+# 删除容器（保留数据卷）
+docker compose down
+# 连同数据卷一起删（慎用）
+docker compose down -v
+
+# 看日志
+docker logs -f e2e_chat
+docker logs e2e_chat --tail 100
+
+# 进容器排查
+docker exec -it e2e_chat sh
+
+# 验证本地 HTTPS 服务
+curl -sk https://127.0.0.1:2083/
 ```
 
-## cloudflared 隧道配置
+### 启动状态观察
 
-隧道：`goSqlite_gorm`（ID `416d8666-6b3c-4232-8fde-a3995eabfa40`），配置文件 `~/.cloudflared/config.yml`：
+容器启动后有个耗时几十秒的**同步阻塞阶段**——`myapp_51pwn.js` 里要遍历 static/js 下所有 JS 做缓存预读。期间：
+
+- `docker ps` 显示 `Up` ✅
+- `netstat -tln` 端口 2083 **尚未监听** ❌
+- curl 直接报 `SSL_ERROR_SYSCALL` / `Connection reset` ❌
+- 最后一条日志是 `init tfjs.js ...ms`
+
+**正常标志**：日志出现 `start port 2083`，此时 2083 开始监听。
+
+---
+
+## 二、cloudflared Argo Tunnel
+
+### 前置条件
+
+1. 安装 cloudflared（macOS）：
+   ```sh
+   brew install cloudflared
+   cloudflared --version   # 应有输出
+   ```
+2. Cloudflare 账号已登录过该机器（首次需执行）：
+   ```sh
+   cloudflared tunnel login
+   # 浏览器打开选择 Zone（51pwn.com）后本机生成 cert.pem
+   ls ~/.cloudflared/      # 应能看到 cert.pem
+   ```
+
+### 创建隧道（首次）
+
+```sh
+cloudflared tunnel create <TUNNEL_NAME>
+# 输出形如：
+# Created tunnel <TUNNEL_ID>
+# Using tunnel credentials <HOME>/.cloudflared/<TUNNEL_ID>.json
+
+cloudflared tunnel list   # 列出所有隧道及活跃连接
+```
+
+**安全原则**：隧道 JSON 凭证文件内容（含私钥）**绝对不能**贴到代码/文档里，保持在 `~/.cloudflared/` 并加入 `.gitignore`。
+
+### config.yml 说明（`~/.cloudflared/config.yml`）
 
 ```yaml
-tunnel: 416d8666-6b3c-4232-8fde-a3995eabfa40
-credentials-file: /Users/51pwn/.cloudflared/416d8666-6b3c-4232-8fde-a3995eabfa40.json
+tunnel: <TUNNEL_ID>                              # cloudflared tunnel create 输出的 416d... 格式
+credentials-file: <HOME>/.cloudflared/<TUNNEL_ID>.json
 
 ingress:
-  - hostname: web.51pwn.com
-    service: https://127.0.0.1:8080
+  # hostname 顺序从上到下匹配，最后一条兜底 404
   - hostname: chat.51pwn.com
     service: https://127.0.0.1:2083
     originRequest:
-      noTLSVerify: true        # Origin CA 证书不在系统信任链，必须加
-  - service: http_status:404
+      noTLSVerify: true                          # Origin CA 不在系统信任链，必须加
+  # 其他子域名继续追加
+  # - hostname: xxx.51pwn.com
+  #   service: http://127.0.0.1:3000
+  - service: http_status:404                     # 兜底：所有未匹配子域名返回 404
 ```
 
-配置步骤（首次）：
+⚠️ **不要**把自己真实的 TUNNEL_ID 或 credentials-file 路径提交到共享仓库；每个 clone 机器本地各自维护。
+
+### DNS 路由（Cloudflare 后台与隧道的绑定）
 
 ```sh
-# 1. 追加 chat.51pwn.com ingress 到 ~/.cloudflared/config.yml（见上）
-# 2. DNS 路由：把 chat.51pwn.com CNAME 到隧道（已有同名 A/CNAME 记录时需 --overwrite-dns）
-cloudflared tunnel route dns --overwrite-dns 416d8666-6b3c-4232-8fde-a3995eabfa40 chat.51pwn.com
-# 3. 启动隧道（当前网络 QUIC/UDP 不稳定，强制 http2）
-nohup cloudflared --config ~/.cloudflared/config.yml tunnel --protocol http2 run > /tmp/cloudflared_chat.log 2>&1 &
-# 4. 验证
-cloudflared tunnel info 416d8666-6b3c-4232-8fde-a3995eabfa40   # 应有活跃连接
-curl -sI https://chat.51pwn.com/                              # 应 200
+# 把 chat.51pwn.com CNAME 指向隧道
+cloudflared tunnel route dns <TUNNEL_ID> chat.51pwn.com
+
+# 若 Cloudflare DNS 后台已有同名 A/CNAME 记录需要覆盖
+cloudflared tunnel route dns --overwrite-dns <TUNNEL_ID> chat.51pwn.com
+
+# 检查 DNS 记录
+dig +short chat.51pwn.com CNAME
+# 应有输出：<TUNNEL_ID>.cfargotunnel.com
 ```
 
-踩过的坑：
-- 公网返回 **530 / error code: 1033**：隧道无活跃连接（进程未运行或连接未注册）。
-- **QUIC 报 `timeout: no recent network activity` 反复断线**：网络环境对 UDP 不友好，加 `--protocol http2` 解决。
-- 源站 502：`dial tcp 127.0.0.1:2083: connect: connection refused`，说明容器没起来或还在初始化（启动时静态资源压缩合并需数十秒，等日志出现 `start port 2083`）。
-- 系统级 `/Library/LaunchDaemons/com.cloudflare.cloudflared.plist` 与 `/usr/local/etc/cloudflared/config.yml` 是残留配置（只含 logDirectory），与本文档使用的用户级 `~/.cloudflared/config.yml` 互不影响。
+### 启动隧道
 
-访问入口：
+```sh
+# 前台启动（调试用，直接看日志）
+cloudflared --config ~/.cloudflared/config.yml tunnel run
 
-- 公网：https://chat.51pwn.com/
-- 带参数：https://chat.51pwn.com/?eAi=true&cnId=51pwn&startChat=1
-- 本地：https://127.0.0.1:2083/
+# 后台常驻（日常用）
+nohup cloudflared --config ~/.cloudflared/config.yml tunnel run \
+  > /tmp/cloudflared.log 2>&1 &
+
+# ⚠️ 当前网络 QUIC/UDP 不稳定，强制走 http2（TCP）
+nohup cloudflared --config ~/.cloudflared/config.yml tunnel --protocol http2 run \
+  > /tmp/cloudflared.log 2>&1 &
+```
+
+**protocol 选择**：
+
+| 协议 | 命令 | 适用场景 |
+|------|------|----------|
+| QUIC（默认） | `tunnel run` | 家庭宽带/UDP 通畅 → 延迟低、稳定 |
+| http2（TCP） | `tunnel --protocol http2 run` | 公司网/VPN/运营商对 UDP 干扰大 → **推荐本项目用** |
+
+### 隧道状态监控
+
+```sh
+cloudflared tunnel info <TUNNEL_ID>
+# 输出中 CONNECTOR ID 行显示活跃连接数；CONNECTED 是运行时状态
+# 没有任何活跃连接 = 隧道进程未运行或连不上 edge
+
+tail -f /tmp/cloudflared.log                    # 实时日志
+curl -sI https://chat.51pwn.com/                # 公网验证，应返回 200
+```
+
+正常日志关键行：
+
+```
+Registered tunnel connection connIndex=0 ... location=lax09 protocol=http2
+# ↑ 注册成功，edge 节点已就绪
+ERR ... no more connections active and exiting
+# ↑ 隧道进程退出，需重启
+ERR Unable to reach the origin service ... dial tcp 127.0.0.1:2083: connect: connection refused
+# ↑ cloudflared 到源站失败 → 容器没起来/端口未监听
+WRN Failed to dial a quic connection ... timeout: no recent network activity
+# ↑ UDP 被干扰，改用 --protocol http2
+```
+
+---
+
+## 三、故障排查
+
+| 现象 | 原因 | 解决 |
+|------|------|------|
+| 容器反复重启（exit 1），日志无 `start port 2083` | classic-level 符号缺失 / 其他未捕获异常 | 换 `node:20-alpine` 镜像；`docker logs e2e_chat` 定位具体异常 |
+| curl 本地 2083 连接被 reset | 容器尚未启动完成（正在合并静态资源） | 等日志出现 `start port 2083` |
+| cloudflared 日志 `dial tcp 127.0.0.1:2083 refused` | 容器挂了 / 还没 listen | `docker start e2e_chat` 或重启 |
+| 公网 530 / error code 1033 | Cloudflare edge 找不到活动隧道连接 | `cloudflared tunnel info` 检查活跃连接；重启隧道 |
+| 公网 502 | cloudflared 连得上 edge 但源站 127.0.0.1:2083 拒绝 | 同本地 2083 refused |
+| QUIC 日志反复断 | 本机/路由器 UDP 被干扰 | 加 `--protocol http2` |
+| 本地 curl 报 SSL issuer 校验失败 | 证书是 Cloudflare Origin CA | 加 `-k`，cloudflared ingress 加 `noTLSVerify: true` |
+| `cloudflared tunnel route dns` 报已有记录 | Cloudflare 后台有 A 记录占位 | 加 `--overwrite-dns` 覆盖 |
+
+---
+
+## 访问入口
+
+| 类型 | URL |
+|------|-----|
+| 公网（推荐） | https://chat.51pwn.com/ |
+| 公网带参数 | https://chat.51pwn.com/?eAi=true&cnId=51pwn&startChat=1 |
+| 本地直连（证书校验需 -k） | https://127.0.0.1:2083/ |
 
 # 下一个版本
 0、增加对 RTSP 视频流的支持（ rtsp://admin:MJAmg%40028@192.168.0.124/live/main ）
