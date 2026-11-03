@@ -1,3 +1,4 @@
+// window["x8md"]="yolov11n";
 var RegAsync = function(c,n1){setTimeout(c,n1||1)},ckd = 'checked',
 	lstRct = {},// 保存每个视频流的上一次的位置，便于下次清除
 	nVideoSn = 7, // 保留 最近 7 天

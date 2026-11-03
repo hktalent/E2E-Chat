@@ -2,7 +2,10 @@ version: '3'
 services:
   my-app:
     # docker-compose up -d --build
-    image: node:17.0.1-alpine3.14
+    image: node:20-alpine
+    container_name: e2e_chat
+    restart: unless-stopped
+    working_dir: /app
     ports:
       - "2083:2083"  # 映射容器端口到主机端口
     volumes:
