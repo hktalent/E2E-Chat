@@ -144,23 +144,41 @@ function getRoomName(){// return $("#cnId").val();
 	return "Pwn"+String($("#cnId").val()).hashCode()
 }
 
-function fn009() {
-	let oT2 = $("div.r1rt"),w = 0,n=0,oA = oT2.find("a.i,span.i");
-	oA.each(function(){
-		let oT = $(this);
-		if(oT.is(":visible"))n++,w += oT.width();
-	});
-	w += n*10+20;
-	oT2.css({"left":"calc(100vw - " + (w + n * 3 + (n - 1) * 3) + "px)",width:w+"px"});
+// 布局改为事件驱动：只在窗口/视口/视频数量变化时重排，避免每秒强制回流
+var bLayQueued = false;
+// 根据视频数量设置自适应网格：1 铺满、2/3 一行平分、4 2x2、5-6 3x2、7-9 3x3...
+function layoutGrid(){
+	if(!oMyCtn || !oMyCtn.length)return;
+	var n = oMyCtn.children(":visible").length;
+	if(n < 1)return;
+	var cols = 1, rows = 1;
+	if(n === 1){ cols = 1; rows = 1; }
+	else if(n === 2){ cols = 2; rows = 1; }
+	else if(n === 3){ cols = 3; rows = 1; }
+	else if(n === 4){ cols = 2; rows = 2; }
+	else if(n === 5 || n === 6){ cols = 3; rows = 2; }
+	else if(n <= 9){ cols = 3; rows = 3; }
+	else if(n <= 12){ cols = 4; rows = 3; }
+	else { cols = 4; rows = Math.ceil(n/4); }
+	oMyCtn[0].style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+	oMyCtn[0].style.gridTemplateRows = "repeat(" + rows + ", 1fr)";
+}
+function layoutNow(){
+	bLayQueued = false;
 	setMF();
 	setWhOne();
-	if(bEaV8)getImgFromStream();
-	// if(lM && lM.id)qrS(fnV2I(lM.id));
-	if(oCAllVideo){
-		oCAllVideo.width = oMyCtn.width();
-		oCAllVideo.height = oMyCtn.height();
+	layoutGrid();
+	if(bEaV8 && typeof getImgFromStream == "function")getImgFromStream();
+	if(oCAllVideo && oMyCtn && oMyCtn.length){
+		var w = oMyCtn.width(),h = oMyCtn.height();
+		if(oCAllVideo.width != w)oCAllVideo.width = w;
+		if(oCAllVideo.height != h)oCAllVideo.height = h;
 	}
-	RegAsync(fn009,1000);
+}
+function fn009(){
+	if(bLayQueued)return;
+	bLayQueued = true;
+	requestAnimationFrame(layoutNow);
 }
 function T2Sha384(s,v){
 	var s1 = "SHA384-"+CryptoJS.SHA384(s).toString(CryptoJS.enc.Base64);
@@ -480,11 +498,22 @@ function formatBytes(bytes, decimals = 2) {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 function copyText(o,x) {
-	// o.select();
-	// o.setSelectionRange(0, 99999)
-	// document.execCommand("copy");
-	navigator.clipboard.writeText(o.text());
-	setTips('','Copied|已拷贝',x);
+	var s = o.text();
+	var done = function(){setTips('','Copied|已拷贝',x);};
+	if(navigator.clipboard && navigator.clipboard.writeText){
+		navigator.clipboard.writeText(s).then(done, function(){legacyCopy(s,done);});
+	}else legacyCopy(s,done);
+}
+function legacyCopy(s,cbk){
+	var t = dc("textarea");
+	t.value = s;
+	t.setAttribute("readonly","");
+	t.style.cssText = "position:fixed;top:-1000px;left:-1000px;opacity:0";
+	document.body.appendChild(t);
+	t.select();
+	try{document.execCommand("copy")}catch(e){}
+	document.body.removeChild(t);
+	if(cbk)cbk();
 }
 function CreateMsgDiv (n, s,t,sFnm,nSize) {
 	var szId = `TmpId${nCnt}`
@@ -497,7 +526,7 @@ function CreateMsgDiv (n, s,t,sFnm,nSize) {
 	var x01 = getNowStr()
 	// var szCp = 0 == t && n != szSelfK ? "<img title='click copy text|点击拷贝' src=/cp1.svg>": "";
 	var szCp = 0 == t && n != szSelfK ? `<svg height="16" viewBox="0 0 16 16" version="1.1" width="16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path></svg>`: "";
-	o1.html(`[<t title='${x01}' class=t2>${n}</t>] <d></d>${szCp}<x></x><a href=#${szId} name=${szId}/>`)
+	o1.html(`[<t title='${x01}' class=t2>${n}</t>] <d></d>${szCp}<x></x><time class="msg-time" title="${x01}">${x01.substring(11,16)}</time><a href=#${szId} name=${szId}/>`)
 	o1.find("t.t2").text(n)
 	o1.attr("tm",new Date().getTime());
 	var szTag = "d";
@@ -784,14 +813,18 @@ function fnGetId () { return ("X" + (Math.random() + (++nId))).replace(/\./gmi, 
 
 // create 
 function fnCreateVid (bLocal = false,id = "") {
-	var szId = id||fnGetId(),i2 = "Pmt"+szId, szCol = "col-4", szCss = bLocal ? '<canvas class="szCol shadow-lg bg-white rounded output_canvas"></canvas>' : '';
-	// https://github.com/bbc/VideoContext/issues/66
-	// autoplay=true :[Error] Unhandled Promise Rejection: AbortError: The operation was aborted. (x2)
-	//  playsinline=true 设置了 playsinline 属性的视频在播放时不会自动全屏 style='margin: 0 5px;'  controls
-	$("#myCtn").append("<div class='" + szCol + " shadow-lg bg-white rounded' controls id='" + i2 + "'>" + szCss + "<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") + " playsinline=true muted webkit-playsinline='true' x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape width=640 height=480></video></div>");
-	// ,{autoplay:true,volume:1}
-	if (!bLocal) new Plyr('#' + szId);
+	var szId = id||fnGetId(),i2 = "Pmt"+szId, szCss = bLocal ? '<canvas class="output_canvas"></canvas>' : '';
+	// 所有视频（含本地）进 #myCtn 网格，自适应均分铺满
+	$("#myCtn").append(
+		"<div class='vcell' id='" + i2 + "'>" +
+		szCss +
+		"<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") +
+		" playsinline muted webkit-playsinline x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape></video>" +
+		"</div>"
+	);
+	if (!bLocal) new Plyr('#' + szId, { controls: [ 'play-large', 'mute', 'volume', 'pip', 'airplay'] });
 	ovdio = $("#" + szId);
+	RegAsync(fn009,50);
 	return ovdio[0];
 }
 
@@ -878,40 +911,20 @@ initQrcode =function(){
 };
 var nOldJ=0;
 
-// 只有自己的视频才会调整大小,居中，撑满，在ai 检测的时候会影响检测结果图层的位置不对齐
+// 视频区域由 CSS Grid 自适应；这里只同步 AI 画布尺寸与状态
 function setWhOne(){
-	RegAsync(function(){
-		let vds = $("video"),n = vds.length,nV = 0;
-		// 计算每行应有的div数量
-		const j = Math.ceil(Math.sqrt(n))||1;
-		let x2 = dg("myCtn"),x5 = document.body.clientHeight - 60;
-		x2.style.height = x5 + "px";
-		nOldJ=x5;
-		nV=((n%j!=0?1:0)+parseInt(n/j)) || 1;
-		x2.style.gridTemplateColumns = `repeat(${j}, 1fr)`;
-		$(x2).find(">div").width(100/j+"%").height(98/nV+"%");
-		
-		bStopRsize = n > 1;
-		if(typeof window.webcam == "undefined"){window.webcam = dg('webcam');}
-		if(window.webcam && !bStopRsize){
-			var bd = $("body");
-			if(!bd.length || !bd[0])return;
-			bd = bd[0];
-			var bw = bd.clientWidth,bh = bd.clientHeight - 80,blF = webcam.videoHeight/webcam.videoWidth,
-			w = bw,h = bw * blF;
-			if(h > bh){h = bh;w = bh/blF;}
-			// $("#Pmtwebcam").css({width:w,height:h,margin:"0 auto 0 auto"});
-
-			var t4 = window.ov8canvas;
-			if(t4 && oMyCtn){
-				t4.style.top = `${oMyCtn[0].offsetTop}px`;
-				t4.style.left = `${oMyCtn[0].offsetLeft}px`;
-				t4.style.width = `${oMyCtn.width()}px`;
-				t4.style.height = `${oMyCtn.height()}px`;
-				t4.style.display = bEaV8?"block":"none";
-			}
-		}
-	});
+	var vds = $("video"),n = vds.length;
+	bStopRsize = n > 1;
+	if(typeof window.webcam == "undefined")window.webcam = dg('webcam');
+	var t4 = window.ov8canvas;
+	if(t4 && oMyCtn && oMyCtn.length){
+		var r = oMyCtn[0].getBoundingClientRect();
+		t4.style.top = r.top + "px";
+		t4.style.left = r.left + "px";
+		t4.style.width = r.width + "px";
+		t4.style.height = r.height + "px";
+		t4.style.display = bEaV8?"block":"none";
+	}
 }
 
 function StartVideo () {
@@ -931,20 +944,21 @@ function StartVideo () {
 function AddStream2Canvas(e,s){
 	try{
 		let sid = e.id,o = $("#Pmt"+sid),o1 = $(e);
+		let bStop = false;
+		e._drawFrameStop = function(){ bStop = true; };
 		let drawFrame=function(){
+			if(bStop)return;
 			let o2 = $("#Pmt"+sid);
-			if(isEnded(s)||0 == o2.length||o2[0] != o[0])return log(sid + " stream ended");
-			// requestAnimationFrame(drawFrame);// requestAnimationFrame的调用很频繁
+			if(isEnded(s)||0 == o2.length||o2[0] != o[0]){ bStop = true; return; }
 			let p=o.position(),x = p.left,y = p.top,w = o1.width(),h= o1.height();
 			const canvasCtx = oCAllVideo.getContext('2d');
 			if(lstRct[sid]&&lstRct[sid].length)canvasCtx.clearRect.apply(canvasCtx,lstRct[sid]);
 			canvasCtx.drawImage(e, x,y, w,h);
 			lstRct[sid]=[x,y, w,h];
-			// RegAsyncNoCtx(drawFrame);// 这个太快、太卡
-			RegAsync(drawFrame,1000/25)
+			requestAnimationFrame(drawFrame);
 		};
 		e.onplay = drawFrame;
-	}catch(e){alert(e)}
+	}catch(e){log("AddStream2Canvas",e)}
 }
 function attachMediaStream(e, s) {
 	// fnMyLogs2('DEPRECATED, attachMediaStream will soon be removed.');
@@ -984,9 +998,10 @@ function gotDevices (dif1) {
 	vlst = [];
 	for (var i = 0; i < dif1.length; i++) {
 		const df1 = dif1[i];
-		if (!df1.label || !df1.deviceId) {continue; }
+		// 未授权时 label 为空、deviceId 也可能为空，仍需列出条目（对应系统默认设备）
+		if (!df1 || !df1.kind) {continue; }
 		const opt5 = dc('option');
-		opt5.value = df1.deviceId;
+		opt5.value = df1.deviceId || "";
 		if (df1.kind === 'audioinput') {
 			opt5.text = df1.label || `microphone ${ais1.length + 1}`;
 			ais1.appendChild(opt5);
@@ -997,8 +1012,6 @@ function gotDevices (dif1) {
 			opt5.text = df1.label || `camera ${vs07.length + 1}`;
 			vs07.appendChild(opt5);
 			vlst.push({label:opt5.text,deviceId:opt5.value,kind:'videoinput'});
-		} else {
-			console.log('Some other kind of source/device: ', df1);
 		}
 	}
 	if(0 < vlst.length)setNickInfo();
@@ -1010,6 +1023,15 @@ function gotDevices (dif1) {
 			select.value = values[selectorIndex];
 		}
 	});
+}
+
+// 主动刷新设备列表：页面加载、打开工具栏、插拔设备时调用
+function refreshDevices(){
+	try{
+		if(!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices))return;
+		if(!selectors || !selectors.length || !selectors[0])return;
+		navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(function(e){log("refreshDevices",e)});
+	}catch(e){log("refreshDevices",e)}
 }
 
 function isEnded(e){
@@ -1703,19 +1725,33 @@ function ChangeSound (s) {
 
 function StopStream () {
 	try{
-		if (lMs && typeof lMs.getTracks == "function") lMs.getTracks().forEach(function (track) {
-			if (track && track.readyState == 'live') {
-				track.stop();
-			}
+		// 先杀掉所有 drawFrame / render 循环，避免继续占 CPU
+		$("video").each(function(){ try{ if(this._drawFrameStop)this._drawFrameStop(); }catch(e){} });
+		// 销毁所有 Plyr 实例（否则事件监听和内部状态累积）
+		try{
+			if(window.Plyr && typeof window.Plyr.destroyAll == "function")window.Plyr.destroyAll();
+		}catch(e){}
+		// 逐个检查 data-plyr-id 并尝试 destroy（兼容旧 Plyr 版本）
+		$("video").each(function(){ try{ var id = $(this).attr("data-plyr-id"); if(id && window[id]){ try{ window[id].destroy && window[id].destroy(); }catch(e){} } }catch(e){} });
+		// 停掉所有本地/远端 track
+		var all = $("video").map(function(){return this.srcObject}).get();
+		if(lMs)all.push(lMs);
+		all.forEach(function(stream){
+			try{ if(stream && stream.getTracks)stream.getTracks().forEach(function(t){ try{t.stop()}catch(e){} }); }catch(e){}
 		});
-		var ot = $("#Pmtwebcam");
-		ot.find("*").remove();
-		ot.remove();
-		if(lM)$(lM).remove(),lM = null;
+		// 清空 canvas 位置缓存
+		lstRct = {};
+		// 清空视频容器里的所有条目（远端 + 本地）
+		try{ $("#myCtn").html(""); }catch(e){}
+		// 停掉当前本地
+		if (lMs && typeof lMs.getTracks == "function") lMs.getTracks().forEach(function (track) {
+			try{ if (track && track.readyState == 'live') track.stop(); }catch(e){}
+		});
+		if(lM){ try{ $(lM).remove(); }catch(e){} lM = null; }
 		window.webcam = null;
 		window.stream = null;
-		lMs = null
-	}catch(e){alert(e)}
+		lMs = null;
+	}catch(e){log("StopStream",e)}
 }
 window.onbeforeunload =StopStream;
 const b64toBlob = function(b64Data, contentType='', sliceSize=512){
@@ -2323,8 +2359,12 @@ const qrS =function(I){
 
 function ldai(){
 	if(g_bTxtChat)return;
-	// ");// Is('/v8.js');// 依赖 /js/9.js tfjs
-	if(bEaV8 && !window.v8Load)window.v8Load = true,Is('/v8.js');//<script src=/js/face-api.min.js></script>"),initFc();
+	// 按需加载 tfjs（仅 AI 检测需要，避免首页加载 1.4MB）
+	if(bEaV8 && !window.v8Load){
+		window.v8Load = true;
+		if(typeof window.tf == "undefined")Is('/js/9.js',function(){Is('/v8.js');});
+		else Is('/v8.js');
+	}
 	// if(bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
 }
@@ -2560,6 +2600,7 @@ function boxslct(o){
 window.nWscore=0.6;
 function showWnSt(){
 	var ws = $("#wnset"),o = window.labels, a = [],sD = "人,手机,刀,枪,狗";
+	if(!bEaV8){ ws.hide(); return; }
 	if(o){
 		for(var i in o){
 			var szCkdt = "";
@@ -2572,8 +2613,18 @@ function showWnSt(){
 		RegAsyncNoCtx(showWnSt);
 		return;
 	}
-	ws.html(a.join("")).show();
-} 
+	ws.html(a.join(""));
+	if(!document.getElementById("wnsetClose")){
+		var oX = document.createElement("b");
+		oX.id = "wnsetClose";
+		oX.className = "wnset-x";
+		oX.title = "Close";
+		oX.textContent = "×";
+		oX.onclick = function(){ ws.hide(); };
+		document.getElementById("wnset").appendChild(oX);
+	}
+	ws.show();
+}
   
 // 要下载的资源URL数组，每个元素包含magnetURI和url属性
 // const resourceURLs = [
@@ -2609,18 +2660,36 @@ const html2img=function(html) {
 	// const s1 = rq1.renderAsImage();
 	// alert(s1)
 };
+// 语言代码规范化：兼容 zh_cn / ZH-CN / en-US 等写法
+function normLang(s){
+	if(!s)return "en";
+	s = String(s).replace(/_/g,"-").toLowerCase();
+	var oMap = {"zh-cn":"zh-CN","zh-sg":"zh-CN","zh-hans":"zh-CN","zh-tw":"zh-TW","zh-hk":"zh-TW","zh-hant":"zh-TW","en-us":"en","en-gb":"en","pt-br":"pt","pt-pt":"pt","nb":"no","nn":"no"};
+	if(oMap[s])return oMap[s];
+	if(typeof aLang == "object" && aLang){
+		if(aLang[s])return s;
+		var s2 = s.split("-")[0];
+		if(aLang[s2])return s2;
+		for(var k in aLang){
+			if(String(k).toLowerCase() == s)return k;
+		}
+	}
+	return "en";
+}
 function GetLg(){
 	if(location.search){
-		var o = location.search.split("lang=");
-		if(1 < o.length)return o[1].split("&")[0];
+		var m = /lang=([^&]+)/.exec(location.search);
+		if(m)return decodeURIComponent(m[1]);
 	}
-	// 获取当前语言
-	var lang = navigator.language || navigator.userLanguage;
-	if(lang){
-		lang = lang.toLowerCase();
-		if(-1 < lang.indexOf("zh"))lang= "cn";
-	}
-	return lang||"en";
+	try{
+		var c = document.cookie.match(/(?:^|; )lang=([^;]+)/);
+		if(c)return decodeURIComponent(c[1]);
+	}catch(e){}
+	try{
+		var s = localStorage.getItem("lang");
+		if(s)return s;
+	}catch(e){}
+	return normLang(navigator.language || navigator.userLanguage || "en");
 }
 // 创建一个Intersection Observer,懒加载图片，可见再加载
 let observer = new IntersectionObserver((entries, observer) => {
@@ -2633,76 +2702,112 @@ let observer = new IntersectionObserver((entries, observer) => {
 });
 function initLang(){
 	Is("/js/lang.js"+(location.search||""),function(){
-		var oMs = $("#slctMtl"),bS1 = true,ostL= $("#stL"),lcg = GetLg().toLowerCase(),nDl3 = 64;
-		if(aLang[lcg]&&aLang[lcg]["contry"])lcg=aLang[lcg]["contry"];// 从语言得到国家
+		var oMs = $("#slctMtl"),ostL= $("#stL"),lcg = normLang(GetLg()),bBuilt = false;
+		var szFlag = (aLang && aLang[lcg] && aLang[lcg]["contry"]) || lcg.split("-")[0];
 		// https://cdn.simplelocalize.io/public/v1/flags/es.svg
-		ostL.html("<img src=/flags/"+lcg+".svg>").click(async function(){
-			if(!oMs||!oMs.length)oMs=$("#slctMtl");
-			if(bS1){
+		ostL.html("<img src=/flags/"+szFlag+".svg alt=''>");
+		var fnFilter = function(){
+			var q = String($("#langSearch").val()||"").replace(/^\s*|\s*$/g,"").toLowerCase();
+			oMs.children("a").each(function(){
+				var s = this.title + " " + this.innerText;
+				this.style.display = (!!q && -1 == s.toLowerCase().indexOf(q)) ? "none" : "";
+			});
+		};
+		$("#langSearch").on("input",fnFilter).on("click",function(e){e.stopPropagation()});
+		$("#langClose").click(function(){oMs.removeClass("open")});
+		ostL.click(function(){
+			if(!bBuilt){
+				bBuilt = true;
 				if(!!aLang){
-					let fragment = document.createDocumentFragment(),_s = "_self",sH = "/?lang=";
-					for(var k in aLang){
-						if(String(k).length>8||!aLang[k]["contry"]) continue;
-						// 创建一个新的 DOM 节点
-						let d1 = document.createElement('div');
-						d1.className = 'w';
-		
-						let a = document.createElement('a');
-						a.href = sH + k;
-						a.target = _s;
-						a.title = aLang[k]["desCn"];
-						a.appendChild(d1);
-				
-						let img = document.createElement('img');
-						img.dataset.src = '/flags/' + (aLang[k]["contry"]||"us").toLowerCase() + ".svg";
-						d1.appendChild(img);
-				
-						let text = document.createTextNode(aLang[k]["des"]);
-						d1.appendChild(text);
-						// 将新的 DOM 节点添加到 DocumentFragment 中
-						fragment.appendChild(a);
+					var oPanel = document.getElementById("slctMtl");
+					var oFrag = document.createDocumentFragment();
+					var sH = "/?lang=";
+					var aKeys = [],k0;
+					for(k0 in aLang){
+						if(String(k0).length>8||!aLang[k0]["contry"]) continue;
+						aKeys.push(k0);
 					}
-					oMs[0].appendChild(fragment);
-					oMs.find("img").each(function(){
-						observer.observe(this);
+					aKeys.sort(function(a,b){return String(aLang[a]["des"]).localeCompare(String(aLang[b]["des"]));});
+					for(var i2=0;i2<aKeys.length;i2++){
+						var k = aKeys[i2];
+						var oDiv = document.createElement("div");
+						oDiv.className = "w";
+						var oA = document.createElement("a");
+						oA.href = sH + k;
+						oA.target = "_self";
+						oA.title = aLang[k]["desCn"] + " / " + aLang[k]["des"];
+						oA.dataset.lang = k;
+						oA.addEventListener("click",function(){
+							try{
+								document.cookie = "lang=" + this.dataset.lang + ";path=/;max-age=31536000;SameSite=Lax";
+								localStorage.setItem("lang",this.dataset.lang);
+							}catch(e){}
+						});
+						var oImg = document.createElement("img");
+						oImg.dataset.src = "/flags/" + (aLang[k]["contry"]||"us").toLowerCase() + ".svg";
+						oImg.loading = "lazy";
+						oImg.alt = "";
+						oDiv.appendChild(oImg);
+						var oTxt = document.createElement("span");
+						oTxt.className = "lang-name";
+						oTxt.textContent = aLang[k]["des"];
+						oDiv.appendChild(oTxt);
+						oA.appendChild(oDiv);
+						oFrag.appendChild(oA);
+					}
+					if(oPanel)oPanel.appendChild(oFrag);
+					Array.prototype.forEach.call(oPanel ? oPanel.querySelectorAll("img") : [],function(img){
+						observer.observe(img);
 					});
-					aLang=0;
 				}
-				oMs.show(),bS1=false;
-			}else oMs.hide(),bS1=true
+			}
+			$("#langSearch").val("");
+			fnFilter();
+			oMs.addClass("open");
+			setTimeout(function(){$("#langSearch").focus()},50);
+			return false;
 		});
-		oMs.click(async function(){
-			oMs.hide();
+		oMs.click(function(e){
+			if($(e.target).closest(".lang-head").length || $(e.target).closest("a").length)return;
+			oMs.removeClass("open");
 		});
 		
-		if(!!language&&"en-us" != lcg){
-			let k = 0;
-			let fnSlg = async function(){
-				if(k < language.length){
+		// 批量应用翻译（原先每条 64ms，语言切换需要数秒）
+		if(!!language && "en" != lcg){
+			RegAsync(function(){
+				for(var i=0;i<language.length;i++){
 					try{
-						let oT1 = language[k];
-						let o1 = oT1["obj"];
-						if(!oT1["des"] || !o1 || !o1.length)return;
-						
-						for(let x = 0;x < o1.length;x++){
-							let o7 = o1[x];
-							let  o2;
+						var oT1 = language[i],o1 = oT1["obj"];
+						if(!oT1["des"] || !o1 || !o1.length)continue;
+						for(var x=0;x<o1.length;x++){
+							var o7 = o1[x];
 							if(o7["tag"] && "title" == o7["tag"]){
 								document.title = oT1["des"];
 								continue;
 							}
-							o2 = dg(o7["id"]);
+							var o2 = dg(o7["id"]);
 							if(o2 && o7["id"] && o7["attr"]){
-								if(o7["attr"] == "text")o2.innerText=oT1["des"];
-								else o2[o7["attr"]]=oT1["des"];
+								if(o7["attr"] == "text")o2.innerText = oT1["des"];
+								else if(o7["attr"] == "title"){
+									// tipso 初始化时会移除 title 并缓存内容，需同步更新其缓存
+									var $o2 = $(o2);
+									if($o2.data("plugin_tipso"))$o2.attr("data-tipso-title",oT1["des"]).tipso("update","content",oT1["des"]).removeAttr("title");
+									else o2.title = oT1["des"];
+								}
+								else{
+									o2[o7["attr"]] = oT1["des"];
+									if(o7["attr"] == "placeholder"){
+										// 输入框的 tooltip 取自 placeholder，同步刷新 tipso 缓存
+										var $o3 = $(o2);
+										if($o3.data("plugin_tipso"))$o3.attr("data-tipso-title",oT1["des"]).tipso("update","content",oT1["des"]);
+									}
+								}
 							}
 						}
 					}catch(e){}
-					k++;
-					RegAsync(fnSlg,nDl3);
 				}
-			};
-			RegAsync(fnSlg,nDl3);
+				document.documentElement.lang = lcg;
+			},0);
 		}
 	});
 }
@@ -2735,14 +2840,11 @@ $(document).ready(async function(){
 	// 	Q: 较高的容错水平，可以纠正 25 个错误。
 	// 	H: 最高的容错水平，可以纠正 30 个错误。`);
 	clientJs = new ClientJS();
-	let ua = navigator.userAgent;
-	if(ua.indexOf("Firefox")){
-		vWcStr = "video/webm;codecs=vp9";// firefox 仅这个格式
-	}else if(ua.indexOf("Chrome")){
-		vWcStr = "video/webm;codecs=vp9"; // 在高分辨率下更高的压缩效率
-	}else if(ua.indexOf("Safari")){
-		vWcStr = "video/mp4"; // 在高分辨率下更高的压缩效率
-	}
+	if(typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported){
+		["video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm","video/mp4"].some(function(t1){
+			if(MediaRecorder.isTypeSupported(t1)){vWcStr = t1;return true;}
+		});
+	}else vWcStr = "video/webm";
 
 	bIsMobile = clientJs.isMobile();
 	szCltFg = clientJs.getFingerprint();
@@ -2756,6 +2858,11 @@ $(document).ready(async function(){
 		g_bSetup = false;
 		StartVideo();
 	});
+	// 首屏及设备插拔时刷新摄像头/麦克风/扬声器列表
+	refreshDevices();
+	try{
+		if(navigator.mediaDevices && navigator.mediaDevices.addEventListener)navigator.mediaDevices.addEventListener("devicechange",refreshDevices);
+	}catch(e){log("devicechange",e)}
 	$('#uIps').on("change", function () {
 		bEaIpfs = this.checked;	
 	});
@@ -2805,9 +2912,10 @@ $(document).ready(async function(){
 
 	var doKstart = false;
 	const dspNa=function(){
-		var oT0 = $("#cah,#nkid"),o7 = $("#qmI");
-		if(bIsMobile && "true" !=$("div.rtool").attr("show"))oT0.hide(),o7.addClass("r1lft");
-		else oT0.show(),o7.removeClass("r1lft")};
+		// 新布局下频道/昵称始终可见，不再按设备隐藏
+		$("#cah,#nkid").show();
+		$("#qmI").removeClass("r1lft");
+	};
 	// navigator.mediaDevices.enumerateDevices().then(function(a){console.log(a[0])})
 	var szHs = document.location.hash,
 		oCnId = $("#cnId"),
@@ -2826,8 +2934,10 @@ $(document).ready(async function(){
 		b_clickJoin = doKstart = g_bTxtChat = true;
 		oTxtChat.css("display", "inline-block");
 		oStChat.hide();
+		oStartChat.show();
 		oMyCtn.hide();
 		ovChat.hide();
+		document.body.classList.remove("vchat");
 		dspNa();
 		
 		oMyCtn.html("");
@@ -2836,23 +2946,14 @@ $(document).ready(async function(){
 		g_bSetup = !g_bTxtChat;
 		JoinRoom();
 		$("#eLpos").click();
-		SetRow1();
 		setMF();
 	});
 	// video chat
 	oStartChat.click(async function(e){
-		SetRow1();
-		/*
-		https://webkit.org/blog/7734/auto-play-policy-changes-for-macos/
-		https://www.crifan.com/safari_js_code_unhandled_promise_rejection_notallowederror_the_request_is_not_allowed_by_the_user_agent_or_the_platform_in_the_current_context/
-		https://www.coder.work/article/794000
-		https://webkit.org/blog/6784/new-video-policies-for-ios/
-		https://stackoverflow.com/questions/52298195/safari-ios-audio-refusing-to-play-with-error
-		*/
 		playSd(1);
-		var pdv = $("#cnId");if("" == pdv.val())pdv.val('51pwn'),pdv.change();
-		b_clickJoin=true;
-		g_bTxtChat = false
+		var pdv = $("#cnId"); if("" == pdv.val()) pdv.val('51pwn'),pdv.change();
+		b_clickJoin = true;
+		g_bTxtChat = false;
 		doKstart = true;
 		oStChat.show();
 		oStartChat.hide();
@@ -2860,10 +2961,11 @@ $(document).ready(async function(){
 		oMyCtn.show()
 		$("#msgList").show();
 		ovChat.show();
+		document.body.classList.add("vchat");
 		dspNa();
+		// 和文字聊天一样：先入房（即使摄像头权限尚未拿到，也可以先加入频道接收消息）
+		JoinRoom();
 		StartVideo();
-		// CreateUrlVd("/vt/output.m3u8",180);
-		// CreateUrlVd("rtsp://admin:MJAmg%40028@192.168.0.124/live/main",180);
 		ldai()
 	});
 	var bELpos,bposInit = false;
@@ -2897,7 +2999,13 @@ $(document).ready(async function(){
 	oNick.change(function () {
 		if (bIoIsOk) setNickInfo($(this).val());
 	});
-	
+	// 频道/昵称输入框回车：先触发 change，再按当前可见的开始按钮进入对应聊天模式
+	oNick.add(oCnId).keydown(function(e){
+		if(13 != e.keyCode)return;
+		this.blur();
+		if(!doKstart)(oStChat.is(":visible")?oStChat:oStartChat).click();
+	});
+
 	oCnId.change(function () {
 		if(doKstart)JoinRoom();// 这里非常神奇和变态，若干没有点按钮开始聊，就先执行，则导致join失败
 	});
@@ -2905,6 +3013,12 @@ $(document).ready(async function(){
 	osdMsg.keydown(function (e) {
 		if (e.keyCode == 13) SendMsg(osdMsg.val()),osdMsg.val("")
 	})
+	$("#sendBtn").click(function(){
+		var s = osdMsg.val();
+		if(!s)return osdMsg.focus();
+		SendMsg(s);
+		osdMsg.val("").focus();
+	});
 	/* 发送文件
 	const blob = new Blob(["This is a 10MB file."], {type: "text/plain"});
 	const chunks = [];// 2MB
@@ -2993,21 +3107,44 @@ $(document).ready(async function(){
 	});
 	$("#its").click(function(){
 		var o10 = $("body > div.rtool");
-		if(o10.attr("show"))o10.hide(),o10.removeAttr("show");
-		else o10.show(),o10.attr("show",true);
-		o10.css({"left":"calc(100vw -"+o10.width()+"px)"});
+		var bOpen = !o10.hasClass("open");
+		o10.toggleClass("open",bOpen);
+		$(this).attr("aria-expanded",bOpen?"true":"false");
+		if(bOpen)refreshDevices();
 		return false;
+	});
+	$("#rtoolClose").click(function(){
+		$("body > div.rtool").removeClass("open");
+		$("#its").attr("aria-expanded","false");
+	});
+	// 点击抽屉外部关闭
+	$(document).on("click",function(e){
+		var o10 = $("body > div.rtool");
+		if(!o10.hasClass("open"))return;
+		if($(e.target).closest(".rtool,#its,#intro").length)return;
+		o10.removeClass("open");
+		$("#its").attr("aria-expanded","false");
+	});
+	// Esc 关闭浮层
+	$(document).keydown(function(e){
+		if(e.key != "Escape" && e.keyCode != 27)return;
+		$("body > div.rtool").removeClass("open");
+		$("#its").attr("aria-expanded","false");
+		$("#slctMtl").removeClass("open");
+		var oIntro = $("#intro");
+		if(oIntro.is(":visible"))oIntro.hide(),$("#sInvite").prop(ckd,false);
 	});
 	if (szHs) {
 		oCnId.val(szHs.substring(1));
 		StartVideo()
 	}
-	$("#roomurl").bind("mouseover", MkQrcd);
+	$("#roomurl").bind("mouseover", MkQrcd).bind("click", MkQrcd);
 	var t2 = $("#intro"),fnShT1 = function(x){x?t2.show():t2.hide();};
-	fnShT1($("#sInvite").change(function(){
+	fnShT1($("#sInvite").prop(ckd));
+	$("#sInvite").change(function(){
 		MkQrcd();
 		fnShT1(this.checked);
-	}).prop(ckd));
+	});
 	$("div.rtool input[type=checkbox]").addClass("btn btn-secondary");
 	if(bIsMobile)
 	{
@@ -3019,9 +3156,8 @@ $(document).ready(async function(){
 			}else{
 				v8cTop = 42;
 			}
+			setTimeout(fn009,200);
 		});
-	}else {
-		// Function.prototype.toString = function(){return undefined};
 	}
 	initBox();
 	if(g_bEableP2pFs){
@@ -3029,12 +3165,15 @@ $(document).ready(async function(){
 		// 	seedFiles(x);
 		// }
 	}
-	$('*[title]').tipso({
-		size: 'tiny',
-		background: 'tomato',
-		tooltipHover: true,
-		useTitle: true
-	});	  
+	// 只在工具栏/头部启用 tipso，避免给整页上千个元素绑定事件
+	if(!bIsMobile){
+		$('.app-header [title], .rtool [title], .composer [title]').tipso({
+			size: 'tiny',
+			background: 'tomato',
+			tooltipHover: true,
+			useTitle: true
+		});
+	}
 	// $("script").remove();
 	try{
 		db=new Dexie("_p2pchat_");
@@ -3043,11 +3182,20 @@ $(document).ready(async function(){
 		});
 		cntVideo(rmHisVideo);
 	}catch(e){}
-	var e = document.querySelectorAll('[id],[class]');
-	for (var i = 0; i < e.length; i++) {
-		e[i].style.transition = 'box-shadow 0.5s ease-in-out';
-	}
 	$("#sI55").click(dlAllVideo);
 	$("#sI56").click(rmAllVd);
-	RegAsync(initLang,666)
+	// 布局事件：窗口尺寸、可视视口、屏幕旋转
+	window.addEventListener("resize", fn009);
+	window.addEventListener("orientationchange", function(){setTimeout(fn009,250)});
+	window.addEventListener("screenfit", fn009);
+	if(typeof ResizeObserver !== "undefined" && oMyCtn && oMyCtn.length){
+		new ResizeObserver(fn009).observe(oMyCtn[0]);
+	}
+	// AI 模式下才低频刷新画布覆盖层
+	setInterval(function(){
+		if(document.hidden || !bEaV8)return;
+		if(typeof getImgFromStream == "function")getImgFromStream();
+		layoutNow();
+	},2000);
+	RegAsync(initLang,0)
 });

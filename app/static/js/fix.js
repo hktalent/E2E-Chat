@@ -1,1 +1,28 @@
-!function(){"use strict";function e(){h&&h.body&&(h.body.style.height=a.height+"px",d(0,0),s&&o(d,300,0,0),n(new t("screenfit",{detail:a})))}var t=(r=window).CustomEvent,i=r.addEventListener,n=r.dispatchEvent,h=r.document,d=r.scrollTo,o=r.setTimeout,r=r.visualViewport,s=/Windows Phone/.test(navigator.userAgent),a=r||{addEventListener:i.bind(self),get width(){return self.innerWidth},get height(){return self.innerHeight}};h.head.appendChild(h.createElement("style")).textContent="html,body{padding:0;margin:0;overflow:hidden;box-sizing:border-box;height:100%;height:100vh;height:-moz-available;height:-webkit-fill-available}",h.addEventListener("DOMContentLoaded",e,{once:!0}),a.addEventListener("resize",e)}();var _vh=.01*window.innerHeight;function setMF(){$("footer").css({top:100*_vh-40}),$("main").height(100*_vh-56-$("header").height())}addEventListener("screenfit",function(e){_vh=.01*e.detail.height,document.documentElement.style.setProperty("--vh",_vh+"px"),$("body,html").height(e.detail.height),setMF()});
+/* Viewport helper: keeps --app-vh in sync with the visual viewport so the
+   composer stays visible when the on-screen keyboard opens (iOS/Android). */
+(function () {
+	"use strict";
+	var doc = document, vv = window.visualViewport, rafId = 0, nLast = 0;
+	function applyHeight() {
+		var h = (vv && vv.height) || window.innerHeight;
+		if (h === nLast) return;
+		nLast = h;
+		doc.documentElement.style.setProperty("--app-vh", h + "px");
+		try {
+			window.dispatchEvent(new CustomEvent("screenfit", { detail: { height: h, width: (vv && vv.width) || window.innerWidth } }));
+		} catch (e) {}
+	}
+	function schedule() {
+		if (rafId) return;
+		rafId = requestAnimationFrame(function () { rafId = 0; applyHeight(); });
+	}
+	window.setMF = function () { applyHeight(); };
+	window.addEventListener("resize", schedule, { passive: true });
+	window.addEventListener("orientationchange", function () { setTimeout(schedule, 200); });
+	if (vv) {
+		vv.addEventListener("resize", schedule, { passive: true });
+		vv.addEventListener("scroll", schedule, { passive: true });
+	}
+	if (doc.readyState === "loading") doc.addEventListener("DOMContentLoaded", schedule, { once: true });
+	else schedule();
+})();

@@ -129,9 +129,9 @@ fix.js`).split("\n")
     app.set('etag', true); 
     // gzip压缩数据
     app.use(compression({
-        brotli: { quality: 11 },
-        "level":9,
-        "memLevel":9,
+        brotli: { quality: 5 },
+        "level":6,
+        "memLevel":8,
         // "strategy":// 
         "filter":function(req,res)
         {
@@ -266,17 +266,23 @@ fix.js`).split("\n")
         if(lg.length>8){
             return res.end("alert('error');");
         }
-
-        lg = webStaticPath+"lang/"+lg+".js"
-        if(!fs.existsSync(lg)){
-            if(-1<lg.indexOf("-")){
-                lg = webStaticPath+"lang/"+lg.split("-")[0]+".js"
+        // 兼容 zh-cn / ZH-CN / zh_CN / cn 等历史写法，按文件名大小写不敏感匹配
+        var szBase = webStaticPath+"lang/";
+        var aLangFiles = fs.readdirSync(szBase);
+        function findLangFile(sCode){
+            var sWant = String(sCode).replace(/_/g,"-").toLowerCase()+".js";
+            var aAlias = {"cn":"zh-cn","tw":"zh-tw","hk":"zh-tw"};
+            sWant = (aAlias[sWant.slice(0,-3)] || sWant.slice(0,-3))+".js";
+            for(var i=0;i<aLangFiles.length;i++){
+                if(aLangFiles[i].toLowerCase() === sWant)return szBase+aLangFiles[i];
             }
-            if(!fs.existsSync(lg))lg = webStaticPath+"lang/en.js"
+            return "";
         }
-        // console.log([req.cookies.lang,req.headers["accept-language"],lg])
-        
-        var s = fs.readFileSync(lg).toString("utf-8");
+        var szLangFile = findLangFile(lg);
+        if(!szLangFile && -1 < lg.indexOf("-"))szLangFile = findLangFile(lg.split("-")[0]);
+        if(!szLangFile)szLangFile = findLangFile("en") || szBase+"en.js";
+
+        var s = fs.readFileSync(szLangFile).toString("utf-8");
         res.end(s);
     });
     app.get("/tfjs-backend-wasm-simd.wasm",function(req,res,next){
