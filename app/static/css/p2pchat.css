@@ -219,24 +219,33 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* ---------- Video stage ---------- */
 .stage {
   flex: 0 0 0;
-  min-height: 0;
   padding: 0;
   overflow: hidden;
   background: #0b1220;
   display: flex;
   flex-direction: column;
 }
-/* 视频聊天时：stage 吃满剩余空间，消息区只保留内容高度 */
-body.vchat .stage {
-  flex: 1 1 0;
-  padding: 6px 8px;
-  overflow: hidden;
+/* 视频聊天：header 变成纵向弹性容器，stage 吃掉顶栏与输入区之间的全部空间，
+   不再用 calc 猜高度，因此任何屏幕尺寸都不会溢出或产生滚动条 */
+body.vchat .app-header {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
-body.vchat main#msgList,
-body.vchat .msgbox {
+body.vchat .topbar {
   flex: 0 0 auto;
-  max-height: 28%;
-  min-height: 60px;
+}
+body.vchat .stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  padding: 6px 8px;
+}
+/* 视频模式隐藏消息区，让视频独占主区域 */
+body.vchat main#msgList {
+  display: none !important;
 }
 #myCtn {
   display: grid;
@@ -279,8 +288,7 @@ body.vchat .msgbox {
   object-fit: contain;
   pointer-events: none;
 }
-/* 本地 webcam 与其他视频同样参与网格均分，AI 画布叠加在上方 */
-#myCtn #Pmtwebcam video { display: none; }
+/* 本地 webcam 与其他视频同样参与网格均分，AI 画布叠加在视频上方 */
 #myCtn #Pmtwebcam .output_canvas { position: absolute; inset: 0; }
 .plyr, .plyr__video-wrapper { width: 100% !important; height: 100% !important; }
 .video { background: transparent; border-radius: var(--radius); }

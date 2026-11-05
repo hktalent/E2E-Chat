@@ -149,7 +149,9 @@ var bLayQueued = false;
 // 根据视频数量设置自适应网格：1 铺满、2/3 一行平分、4 2x2、5-6 3x2、7-9 3x3...
 function layoutGrid(){
 	if(!oMyCtn || !oMyCtn.length)return;
-	var n = oMyCtn.children(":visible").length;
+	// 数所有 vcell（不用 jQuery :visible 以避免时机问题）
+	var cells = oMyCtn[0].querySelectorAll(".vcell");
+	var n = cells.length;
 	if(n < 1)return;
 	var cols = 1, rows = 1;
 	if(n === 1){ cols = 1; rows = 1; }
@@ -818,7 +820,7 @@ function fnCreateVid (bLocal = false,id = "") {
 	$("#myCtn").append(
 		"<div class='vcell' id='" + i2 + "'>" +
 		szCss +
-		"<video id='" + szId + "' class='video' " + (bLocal ? "style=display:none" : "") +
+		"<video id='" + szId + "' class='video' " +
 		" playsinline muted webkit-playsinline x-webkit-airplay=allow x5-video-player-type=h5 x5-video-orientation=landscape></video>" +
 		"</div>"
 	);
@@ -967,7 +969,8 @@ function attachMediaStream(e, s) {
 	// https://github.com/addyosmani/getUserMedia.js/issues/64#issuecomment-270668091
 	// try{
 	
-	RegAsyncNoCtx(AddStream2Canvas,e,s);
+	// 只有开启 AI 时才需要把视频帧画到离屏画布上，避免无谓的每帧重绘
+	if(bEaV8)RegAsyncNoCtx(AddStream2Canvas,e,s);
 	if(!e.src && e.src !=s){
 		if (e.srcObject !== undefined) {
 			e.srcObject = s;
@@ -1413,7 +1416,6 @@ function init () {
 			rmv.controls = false;
 			rmv.title = config.userdata.nick+" -- "+label;
 			oCurmdm=peer_media_elements[peer_id] = $("#Pmt" + rmv.id);
-			$("#Pmtwebcam").css({width:"33%",height:"100%",margin:"0"});
 			if(isSvLc()||dg("saveMeVD").checked||oESvl.checked){
 				fnStartRct(stream,1,config.userdata.nick,rmv);
 			}
@@ -1627,8 +1629,9 @@ function MkQrcd () {
 		if(this.type == "checkbox"){this.checked && aP.push(this.id + "=true")}
 		else if(this.id != "nick" && this.value) aP.push(this.id + "=" + encodeURIComponent(this.value));
 	});
-	if($("#stChat").css("display")!="none")aP.push("startChat=1");
-	else if($("#startChat").css("display")!="none")aP.push("stChat=1");
+	// 根据当前实际模式决定要带哪个模式标记，比看按钮 display 更确定
+	if (document.body.classList.contains("vchat")) aP.push("startChat=1");
+	else aP.push("stChat=1");
 
 	var szCurUrl = document.location.href.split("#")[0].split("?")[0] + "?" + aP.join("&");
 	if(szLstQrcode == szCurUrl)return;
@@ -1953,7 +1956,8 @@ function setupLm (callback, errorback) {
 			window.stream = stream;
 			lMs = stream;
 			
-			lM = fnCreateVid(bNbg,szVideoId);
+			// 本地预览不需要 Plyr 控件，直接显示 video（画布作为 AI 叠加层保留）
+			lM = fnCreateVid(true,szVideoId);
 			window.webcam = lM;
 			const initFaceCbk = function(){// https://justadudewhohacks.github.io/face-api.js/docs/index.html
 				// scoreThreshold 筛选检测到的人脸的置信度阈值
@@ -2928,7 +2932,8 @@ $(document).ready(async function(){
 		
 	$("#shRow1").click(SetRow1);
 	// text chat
-	oStChat.click(async function () {
+	oStChat.click(async function (e) {
+		e.preventDefault && e.preventDefault();
 		playSd(1);
 		var pdv = oCnId;if("" == pdv.val())pdv.val('51pwn'),pdv.change();
 		b_clickJoin = doKstart = g_bTxtChat = true;
@@ -2950,6 +2955,7 @@ $(document).ready(async function(){
 	});
 	// video chat
 	oStartChat.click(async function(e){
+		e.preventDefault && e.preventDefault();
 		playSd(1);
 		var pdv = $("#cnId"); if("" == pdv.val()) pdv.val('51pwn'),pdv.change();
 		b_clickJoin = true;
@@ -2958,14 +2964,17 @@ $(document).ready(async function(){
 		oStChat.show();
 		oStartChat.hide();
 		oTxtChat.hide();
-		oMyCtn.show()
-		$("#msgList").show();
+		// 必须显式设回 grid：jQuery show() 在容器为空时会把内联样式写成 display:block，
+		// 覆盖 #myCtn 的 display:grid，导致 .vcell 高度塌陷为 0（视频看不见）
+		oMyCtn.css("display", "grid");
 		ovChat.show();
 		document.body.classList.add("vchat");
 		dspNa();
 		// 和文字聊天一样：先入房（即使摄像头权限尚未拿到，也可以先加入频道接收消息）
 		JoinRoom();
 		StartVideo();
+		// 进入视频模式后立即重算一次网格，保证首帧铺满
+		fn009();
 		ldai()
 	});
 	var bELpos,bposInit = false;
@@ -3134,9 +3143,17 @@ $(document).ready(async function(){
 		var oIntro = $("#intro");
 		if(oIntro.is(":visible"))oIntro.hide(),$("#sInvite").prop(ckd,false);
 	});
+	// hash 入口（#房间名）：
+	// 如果 URL 同时带 startChat/stChat query 参数，initBox 已经处理了模式切换，
+	// 这里只需把 hash 里的房间名填入（hash 比 query 优先级高）；
+	// 纯 hash 邀请没有 query 参数，必须走 startChat.click() 完整链路，
+	// 否则只会起摄像头不会切到视频 UI（缺 vchat 类、网格 display、布局重算）
 	if (szHs) {
 		oCnId.val(szHs.substring(1));
-		StartVideo()
+		var bHasModeParam = /[?&](startChat|stChat)=/.test(location.search);
+		if (!bHasModeParam) {
+			oStartChat.click();
+		}
 	}
 	$("#roomurl").bind("mouseover", MkQrcd).bind("click", MkQrcd);
 	var t2 = $("#intro"),fnShT1 = function(x){x?t2.show():t2.hide();};
