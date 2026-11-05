@@ -931,6 +931,30 @@ function setWhOne(){
 
 function StartVideo () {
 	var bCbkDo = false;
+	// 失败回调需能重试 — 存成命名函数，供 Retry 按钮和用户后续点击共用
+	function onVidError(err) {
+		// 摄像头/麦克风不可用 — 在视频区给出明确可见的错误条，而不是静默失败
+		b_clickJoin = true; // 即使拿不到摄像头也要能加入频道收发文字
+		try { JoinRoom(); } catch(e){}
+		var reason = err && err.name ? err.name + ": " + (err.message||"") : "camera unavailable";
+		oMyCtn.html(
+			"<div class='vcell vcell-error' style='width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#0b1220;color:#e6edf7;text-align:center;gap:12px;padding:24px;'>" +
+				"<div style='font-size:48px'>📷</div>" +
+				"<div style='font-size:16px;font-weight:600'>Camera / Microphone unavailable</div>" +
+				"<div style='font-size:13px;color:#9aa8bd'>" + reason + "</div>" +
+				"<div style='font-size:12px;color:#667085'>Click lock icon in address bar → Allow → Reload page</div>" +
+				"<button type='button' class='vcell-retry' style='margin-top:4px;padding:8px 20px;background:#2563eb;color:#fff;border:0;border-radius:8px;cursor:pointer;font-size:14px'>Retry</button>" +
+			"</div>"
+		);
+		oMyCtn.find(".vcell-retry").on("click", function(){
+			if(!document.body.classList.contains("vchat")){
+				document.body.classList.add("vchat");
+				oMyCtn.css("display","grid");
+			}
+			StartVideo(); // 完整重试：会 StopStream → setupLm → initVideoChat
+		});
+		fn009();
+	}
 	setupLm(function () {
 		if(bCbkDo)return;
 		if (lMs) {
@@ -940,7 +964,7 @@ function StartVideo () {
 			initVideoChat();
 			b_clickJoin = bO;
 		}
-	})
+	}, onVidError);
 }
 
 function AddStream2Canvas(e,s){
@@ -1754,6 +1778,7 @@ function StopStream () {
 		window.webcam = null;
 		window.stream = null;
 		lMs = null;
+		g_bSetup = false;
 	}catch(e){log("StopStream",e)}
 }
 window.onbeforeunload =StopStream;
@@ -1926,7 +1951,8 @@ window['fnStartRct'] = fnStartRct;
 // 初始化本地视频
 // 本地启恩还的时候要解绑定 attachMediaStream 否则会导臃无法再次启动
 function setupLm (callback, errorback) {
-	if (g_bSetup) return;
+	// g_bSetup 已经是 true 时，允许重试（上次失败或 StopStream 之后）
+	if (g_bSetup && !errorback) return;
 	StopStream();
 	g_bSetup = true;
 	try {
@@ -2009,7 +2035,8 @@ function setupLm (callback, errorback) {
 			window[k0].apply(navigator.mediaDevices,[g_Constraints]).then(fnThen).then(gotDevices).catch(function(e){
 				fnMyLogs(e);
 				fnMyLogs2("This site will not work without camera/microphone access.");
-				if (errorback) errorback();
+				g_bSetup = false; // 让重试时能重新进入 setupLm
+				if (errorback) errorback(e);
 			});
 		}
 	} catch (e) { fnMyLogs(e) }
