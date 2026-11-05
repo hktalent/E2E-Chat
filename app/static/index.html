@@ -1,79 +1,159 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
-<meta name="viewport" id="visualViewport" content="height=device-height,width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+<meta name="viewport" id="visualViewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#0f172a">
+<meta name="color-scheme" content="light dark">
+<meta name="format-detection" content="telephone=no,email=no,address=no">
 <meta name="keywords" content="free,online,web,chat,P2P,E2E,WebRTC,html5,RTSP(Real Time Streaming Protocol),PSIA(Physical Security Interoperability Alliance),RTP(Real-time Transport Protocol),UPnP(Universal Plug and Play),ONVIF(Open Network Video Interface Forum),ffmpeg,html3,TLS1.3,stun,video,Video Surveillance" />
-<meta name="description" id="dscc" content="free installation,Simple private and encrypted messenger,web HTML5 online E2E/P2P Secure,  covert, No signups. No downloads, unregulated text, video chat system, AI(artificial intelligence) video monitoring and alarm system. 免费的、免安装的web HTML5 在线 E2E/P2P 安全、私密、隐蔽、不受监管的文本、视频聊天系统、AI(人工智能)视频监控报警系统。"><meta name=apple-mobile-web-app-capable content=yes><meta content="always" name="referrer"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"/><meta name=mobile-web-app-capable content=yes>
+<meta name="description" id="dscc" content="free installation,Simple private and encrypted messenger,web HTML5 online E2E/P2P Secure,  covert, No signups. No downloads, unregulated text, video chat system, AI(artificial intelligence) video monitoring and alarm system. 免费的、免安装的web HTML5 在线 E2E/P2P 安全、私密、隐蔽、不受监管的文本、视频聊天系统、AI(人工智能)视频监控报警系统。">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta content="always" name="referrer">
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>No review, P2P/E2E secure chat system | 无审查、P2P/E2E 安全聊天系统</title>
-<link href="/css/,.css" rel="stylesheet async" />
-<script src="/js/i.js"></script>
-<script src="/socket.io/socket.io.js"></script>
-<script src="/js/0.js"></script>
-<script src="/js/1.js"></script>
-<script src="/js/2.js"></script>
-<script src="/js/3.js"></script>
-<script src="/js/5.js"></script>
-<script src="/js/7.js"></script>
-<script src="/js/8.js"></script>
-<script src="/js/9.js"></script>
-<script src="/js/15.js"></script>
-<script src="/js/index.js"></script>
-<!-- <script src="/js/jsmpeg.min.js"></script> -->
-</head><body><header><div class="row1">
-<div class="cel1 i" id="cah"><input type="text" placeholder="Channel | room name | 频道 | 暗号 | 聊天室名字" id="cnId" results=10 autocomplete="off"></div>
-<div class="cel1 i" id="nkid"><input type="text" placeholder="nick | 昵称" id="nick" results=10 autocomplete="off"></div>
-<div class="cel2"></div>
-</div>
-<div class="r1rt">
-	<a class="i" href=# id="shRow1" title="show/hiden Channel/nick">&lt;</a>
-	<span id="sI1" class="txtChat i" title="Set the countdown minutes for automatic destruction after message reading"><input id="clsTm" type="number" min="1" max="180" value="1" class="input" size="2">Min</span>
-	<span id="sI2" class="txtChat i" title="Automatic reading and destruction/Destroy">♻️<input type="checkbox" id="atRd" checked></span>
-	<a class="i" href=# id="clsId" title="Clean Up">🧹</a>
-	<a class="i" href=# id="stChat" title="Text Chat">💬</a>
-	<a class="i" href=# id="startChat"  title="Video Chat">🎦</a>
-	<a class="i" href=# id="its" title="show or hidden tools">⚙️</a>
-	<a class="i" href=# id="stL" title="语言"></a>
-</div>
+<link href="/css/,.css?v=20261105k" rel="stylesheet">
+<script src="/js/i.js?v=20261105k" defer></script>
+<script src="/socket.io/socket.io.js" defer></script>
+<script src="/js/0.js?v=20261105k" defer></script>
+<script src="/js/1.js?v=20261105k" defer></script>
+<script src="/js/2.js?v=20261105k" defer></script>
+<script src="/js/3.js?v=20261105k" defer></script>
+<script src="/js/5.js?v=20261105k" defer></script>
+<script src="/js/7.js?v=20261105k" defer></script>
+<script src="/js/8.js?v=20261105k" defer></script>
+<script src="/js/15.js?v=20261105k" defer></script>
+<script src="/js/index.js?v=20261105k" defer></script>
+</head>
+<body>
+<header class="app-header">
+  <div class="topbar">
+    <a class="brand i" href="/" id="brand" title="P2P / E2E secure chat" aria-label="Home">
+      <span class="brand-mark" aria-hidden="true">🛡️</span>
+      <span class="brand-name">E2E&nbsp;Chat</span>
+    </a>
 
-<div class="row" id="myCtn"></div>
-<div class="row txtChat" id="qmI">👥: <w id="otherP"></w></div>
+    <div class="row1" id="row1">
+      <div class="cel1 i" id="cah">
+        <label class="sr-only" for="cnId">Channel / room name</label>
+        <input type="text" placeholder="Channel · room · 频道 · 暗号" id="cnId" results=10 autocomplete="off" spellcheck="false">
+      </div>
+      <div class="cel1 i" id="nkid">
+        <label class="sr-only" for="nick">Nick name</label>
+        <input type="text" placeholder="Nick · 昵称" id="nick" results=10 autocomplete="off" spellcheck="false">
+      </div>
+      <div class="cel2" aria-hidden="true"></div>
+    </div>
+
+    <nav class="r1rt" aria-label="Chat actions">
+      <a class="i icon-btn secondary" href="#" id="shRow1" title="show/hiden Channel/nick" aria-label="Toggle channel and nickname">&lt;</a>
+      <span id="sI1" class="txtChat i chip" title="Set the countdown minutes for automatic destruction after message reading">
+        <input id="clsTm" type="number" min="1" max="180" value="1" class="input" inputmode="numeric" aria-label="Auto destroy minutes">min
+      </span>
+      <span id="sI2" class="txtChat i chip" title="Automatic reading and destruction/Destroy">
+        <span class="chip-ico" aria-hidden="true">♻️</span><input type="checkbox" id="atRd" checked aria-label="Auto destroy after reading">
+      </span>
+      <a class="i icon-btn" href="#" id="clsId" title="Clean Up" aria-label="Clear messages">🧹</a>
+      <a class="i icon-btn" href="#" id="stChat" title="Text Chat" aria-label="Switch to text chat">💬</a>
+      <a class="i icon-btn" href="#" id="startChat" title="Video Chat" aria-label="Switch to video chat">🎦</a>
+      <a class="i icon-btn" href="#" id="its" title="show or hidden tools" aria-label="Open tools" aria-expanded="false">⚙️</a>
+      <a class="i icon-btn lang-btn" href="#" id="stL" title="语言 / Language" aria-label="Change language"></a>
+    </nav>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="row" id="myCtn"></div>
+  </div>
+
+  <div class="row txtChat presence" id="qmI">
+    <span class="presence-dot" aria-hidden="true"></span>👥 <w id="otherP"></w>
+  </div>
 </header>
-<main class="msgbox txtChat" id="msgList"></main>
-<footer><form action="#"><input id="upFile" type="file"><input id="sdMsg" type="text"  enterkeyhint="send" placeholder="send message or search key"><span placeholder="Select the file to send" id="mId">+</span></form></footer>
 
-<div class="rtool">
-<i><select id="videoSelect"></select></i>
-<i><select id="audioInputSelect"></select></i>
-<i><select id="audioOutputSelect"></select></i>
-<i title="Show Me Video" id="sI3"><input type="checkbox" id="showme"><span id="sI4">Show Me</i>
-<i title="Show Invite" id="sI5"><input type="checkbox" id="sInvite"><span id="sI6">Show Invite</i>
-<i title="Record screen" id="sI7"><input type="checkbox" id="rScreen"><span id="sI8">Record screen</i>
-<i title="save jpg to server" id="sI9"><input type="checkbox" id="saveMe"><span id="sI10">Save JPG</span></i>
-<i title="save Me video to server" id="sI11"><input type="checkbox" id="saveMeVD"><span id="sI12">Save Video</span></i>
-<i title="本地保存视频，默认不发送到服务器" id="sI13"><input type="checkbox" id="eSvl"><span id="svHs"></span><span id="sI14">Save Video Locally</span></i>
-<i title="max video file,浏览器内存视频保留文件数"><input type="input" id="iVdnm" value="100"></i>
-<i title="enable OCR"><input type="checkbox" id="eOcr"><span>OCR</span></i>
-<i title="enable Detect Face" id="sI15"><input type="checkbox" id="eFace"><span id="sI16">Detect Face</span></i>
-<!-- <i title="More precise model, but slower initialization"><input type="checkbox" id="ux8"><span>Use X Model</span></i>
-<i title="enable OCR"><input type="checkbox" id="eOcr"><span>OCR</span></i>
-<i><input type="checkbox" id="uIps" class="btn btn-warning"><span>use IPFS</span></i> -->
-<i title="enable AI" id="sI17"><input type="checkbox" id="eAi"><span id="sI18">Detect Object</i>
-<i title="静音" id="sI19"><input type="checkbox" id="eMute"><span id="sI20">Mute</i>
+<main class="msgbox txtChat" id="msgList" aria-live="polite" aria-label="Messages"></main>
 
-<i title="use front camera" id="sI21"><input type="checkbox" id="evdUser"><span id="sI22">Use front camera</i>
-<i title="Sports information: longitude, altitude" id="sI23"><input type="checkbox" id="eLpos"><span id="sI24">Motion info</span></i>
-<i title="rtsp list"><textarea placeholder="rtsp url list" id="iRtsp"></textarea></i>
+<footer class="composer">
+  <form action="#" autocomplete="off">
+    <input id="upFile" type="file" multiple aria-hidden="true" tabindex="-1">
+    <button type="button" id="mId" title="Select the file to send" aria-label="Attach file">＋</button>
+    <input id="sdMsg" type="text" enterkeyhint="send" placeholder="send message or search key" autocomplete="off" aria-label="Message">
+    <button type="button" id="sendBtn" class="send-btn" title="Send" aria-label="Send message">➤</button>
+  </form>
+</footer>
 
-<br>
-<i><k id="sI25">state</k>: <span id="gInfo"></span></i>
-<i><k id="sI55" title="下载所有视频">⤓ All Video&nbsp;&nbsp;</k><k title="remove all local video,删除所有本地视频" id="sI56">X</k></i>
-<i id="ocrRst"></i>
+<div class="rtool" id="rtool" role="dialog" aria-label="Tools and settings" aria-modal="false">
+  <div class="rtool-head">
+    <strong>Tools / 工具</strong>
+    <button type="button" class="panel-close" id="rtoolClose" aria-label="Close tools">✕</button>
+  </div>
+  <div class="rtool-body">
+    <section class="tool-group">
+      <h3>Devices / 设备</h3>
+      <i class="tool-item" title="Camera"><span>🎥</span><select id="videoSelect" aria-label="Camera"></select></i>
+      <i class="tool-item" title="Microphone"><span>🎙️</span><select id="audioInputSelect" aria-label="Microphone"></select></i>
+      <i class="tool-item" title="Speaker"><span>🔊</span><select id="audioOutputSelect" aria-label="Speaker"></select></i>
+      <i title="use front camera" id="sI21"><input type="checkbox" id="evdUser"><span id="sI22">Use front camera</span></i>
+      <i title="静音" id="sI19"><input type="checkbox" id="eMute"><span id="sI20">Mute</span></i>
+    </section>
+
+    <section class="tool-group">
+      <h3>Video / 视频</h3>
+      <i title="Show Me Video" id="sI3"><input type="checkbox" id="showme"><span id="sI4">Show Me</span></i>
+      <i title="Show Invite" id="sI5"><input type="checkbox" id="sInvite"><span id="sI6">Show Invite</span></i>
+      <i title="Record screen" id="sI7"><input type="checkbox" id="rScreen"><span id="sI8">Record screen</span></i>
+      <i title="save jpg to server" id="sI9"><input type="checkbox" id="saveMe"><span id="sI10">Save JPG</span></i>
+      <i title="save Me video to server" id="sI11"><input type="checkbox" id="saveMeVD"><span id="sI12">Save Video</span></i>
+      <i title="本地保存视频，默认不发送到服务器" id="sI13"><input type="checkbox" id="eSvl"><span id="svHs"></span><span id="sI14">Save Video Locally</span></i>
+      <i class="tool-item" title="max video file,浏览器内存视频保留文件数"><span>#️⃣</span><input id="iVdnm" type="number" min="1" max="999" value="100" aria-label="Max local video files"></i>
+      <i title="rtsp list"><textarea placeholder="rtsp url list" id="iRtsp" rows="2" aria-label="RTSP URL list"></textarea></i>
+    </section>
+
+    <section class="tool-group">
+      <h3>AI / 智能</h3>
+      <i title="enable OCR"><input type="checkbox" id="eOcr"><span>OCR</span></i>
+      <i title="enable Detect Face" id="sI15"><input type="checkbox" id="eFace"><span id="sI16">Detect Face</span></i>
+      <i title="enable AI" id="sI17"><input type="checkbox" id="eAi"><span id="sI18">Detect Object</span></i>
+      <i title="Sports information: longitude, altitude" id="sI23"><input type="checkbox" id="eLpos"><span id="sI24">Motion info</span></i>
+    </section>
+
+    <section class="tool-group status-group">
+      <h3>Status / 状态</h3>
+      <i class="tool-status"><k id="sI25">state</k>: <span id="gInfo"></span></i>
+      <i class="tool-status actions">
+        <k id="sI55" title="下载所有视频">⤓ All Video</k>
+        <k title="remove all local video,删除所有本地视频" id="sI56">✕</k>
+      </i>
+      <i id="ocrRst" class="tool-status"></i>
+    </section>
+  </div>
 </div>
-<div id="intro" class="message overflow-x-hide overflow-y-hide shadow"><a href="#" id="closebtn">&times;</a><k id="sI26">Invite Friends</k><i id="roomurl" data-toggle="tooltip" title="click copy"></i><i id="myQrcode"></i><div id="tooManyParticipants" class="message">Too many people may affect performance</div></div>
-<img id="ocrImg"><div id="load"></div><div id="wnset"></div>
-<script src="/js/,.js"></script>
-<div id="slctMtl"></div>
+
+<div id="intro" class="message modal-card" role="dialog" aria-label="Invite friends">
+  <a href="#" id="closebtn" aria-label="Close">&times;</a>
+  <k id="sI26">Invite Friends</k>
+  <i id="roomurl" data-toggle="tooltip" title="click copy"></i>
+  <i id="myQrcode"></i>
+  <div id="tooManyParticipants" class="message">Too many people may affect performance</div>
+</div>
+
+<div id="slctMtl" class="lang-panel" role="dialog" aria-label="Select language">
+  <div class="lang-head">
+    <input id="langSearch" type="search" placeholder="Search language / 搜索语言" autocomplete="off" aria-label="Search language">
+    <button type="button" class="panel-close" id="langClose" aria-label="Close language list">✕</button>
+  </div>
+</div>
+
+<img id="ocrImg" alt="">
+<div id="load"></div>
+<div id="wnset"></div>
+<script src="/js/,.js?v=20261105k" defer></script>
 <div id="st2"></div>
 <pre id="logs"></pre>
-
 <div id="rects" class="rects"></div>
-</body></html>
+
+<noscript><div class="noscript">This chat requires JavaScript. 本应用需要启用 JavaScript。</div></noscript>
+</body>
+</html>

@@ -233,8 +233,11 @@ function TrueIp(req){
 async function fnDoMg (req, res, next, reRes) {
     TrueIp(req)
     reRes = reRes || /\/(js|css)\/([^.]+)$/;
-    var a = reRes.exec(req.url), t = a[1], tp = "js" == t ? "javascript" : "css";
-    if (!(/[,;\|]/g.test(req.url))) return next();
+    var szPathQ = req.path || req.url;
+    var a = reRes.exec(szPathQ);
+    if (!a) return next();
+    if (!(/[,;\|]/g.test(szPathQ))) return next();
+    var t = a[1], tp = "js" == t ? "javascript" : "css";
     s1 = String(req.connection.remoteAddress)
     // var bDebug = false //-1 < s1.indexOf('::ffff:127.0.0.1') || -1 < s1.indexOf('::ffff:192.168.')
     res.setHeader('content-type', 'text/' + tp);
