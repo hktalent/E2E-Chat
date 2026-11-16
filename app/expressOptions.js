@@ -16,7 +16,7 @@ function setLongTermCache(res,stat) {
     return;
   }
   // res.setHeader("Expires", sz1);
-  res.setHeader("Cache-Control", "public, max-age=31536000");
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
   res.setHeader("Date", sz1);
   // res.setHeader("Accept-Ranges", "none");
   var szL = sz1;

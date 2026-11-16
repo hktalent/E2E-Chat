@@ -36,6 +36,27 @@ function getNowStr() {
 	var timeFormat = year + "-" + p(month) + "-" + p(date) + " " + p(hour) + ":" + p(minute) + ":" + p(second);
 	return timeFormat;
 }
+// 静态文本缓存（按 mtime 失效），避免每次请求同步读盘
+var g_oFileCache = {}, g_oLangDir = { list: [], ts: 0 };
+function doFileCache(szFl) {
+    var nMt = 0;
+    try { nMt = fs.statSync(szFl).mtimeMs } catch (e) { }
+    var oC = g_oFileCache[szFl];
+    if (!oC || oC.mtime !== nMt) {
+        oC = { mtime: nMt, data: fs.readFileSync(szFl).toString("utf-8") };
+        g_oFileCache[szFl] = oC;
+    }
+    return oC;
+}
+// 语言目录列表缓存，避免每次请求 readdirSync
+function doLangList(szBase) {
+    var nNow = Date.now();
+    if (!g_oLangDir.list.length || 60000 < nNow - g_oLangDir.ts) {
+        g_oLangDir.list = fs.readdirSync(szBase);
+        g_oLangDir.ts = nNow;
+    }
+    return g_oLangDir.list;
+}
 function myapp(option)
 {
     Object.setPrototypeOf(this, EventEmitter.prototype)
@@ -68,6 +89,8 @@ function myapp(option)
     
     mergeRes.fnSetPath(webStaticPath);
     mergeRes.fnWc();
+    // 预热合并后的 js/css，避免首个访问者等待数秒的压缩/混淆
+    mergeRes.fnPrewarm();
     mOpt = {
         preserveLineBreaks:true,
         collapseInlineTagWhitespace:true,
@@ -218,7 +241,7 @@ fix.js`).split("\n")
     
 
     expressOptions.maxAge = (7*24*60*60) + 's';//'31536000s';//'3600s';
-    var reRes = /(?:\/(js|css|model)\/(.*)$)|(\/tagmgmt\/bs\.js$)|(\.mp3$)/,g_oPmap;
+    var reRes = /(?:\/(js|css|model)\/(.*)$)|(\/tagmgmt\/bs\.js$)|(\.mp3$)/,g_oPmap,nPmapTs = 0;
     
     app.use(cookieParser()); 
     app.use(function(req,res,next){
@@ -242,12 +265,17 @@ fix.js`).split("\n")
                 res.end("error");
                 return;
             }
-            let ss2;
-            let stream1 = request(url).on('response', async function(response) {// 将流媒体的头信息一起输出到客户端
-                res.set(response.headers);
-                ss2=response.pipe(res);
+            let stream1 = request(url);
+            stream1.on('error', function(e) {// 上游不可用时不要把连接拖死
+                console.log("stream error", e.message);
+                if(!res.headersSent)res.status(502);
+                res.end("error");
             });
-            req.on('close', async function() {// 当客户端关闭连接时，结束流
+            stream1.on('response', function(response) {// 将流媒体的头信息一起输出到客户端
+                res.set(response.headers);
+                response.pipe(res);
+            });
+            req.on('close', function() {// 当客户端关闭连接时，结束流
                 stream1.destroy();
                 console.log("stream close");
             });
@@ -255,8 +283,10 @@ fix.js`).split("\n")
     });
     app.get("/lang/index.js",function(req,res,next){
         res.setHeader("Content-Type","application/javascript");
-        var s = fs.readFileSync(webStaticPath+req.path).toString("utf-8");
-        res.end(s);
+        var szLf = webStaticPath+req.path, oC = doFileCache(szLf);
+        res.setHeader("Cache-Control","public, max-age=600, must-revalidate");
+        res.setHeader("Last-Modified", new Date(oC.mtime).toUTCString());
+        res.end(oC.data);
     });
     app.get("/js/lang.js",function(req,res,next){
         res.setHeader("Content-Type","application/javascript");
@@ -268,7 +298,7 @@ fix.js`).split("\n")
         }
         // 兼容 zh-cn / ZH-CN / zh_CN / cn 等历史写法，按文件名大小写不敏感匹配
         var szBase = webStaticPath+"lang/";
-        var aLangFiles = fs.readdirSync(szBase);
+        var aLangFiles = doLangList(szBase);
         function findLangFile(sCode){
             var sWant = String(sCode).replace(/_/g,"-").toLowerCase()+".js";
             var aAlias = {"cn":"zh-cn","tw":"zh-tw","hk":"zh-tw"};
@@ -282,8 +312,14 @@ fix.js`).split("\n")
         if(!szLangFile && -1 < lg.indexOf("-"))szLangFile = findLangFile(lg.split("-")[0]);
         if(!szLangFile)szLangFile = findLangFile("en") || szBase+"en.js";
 
-        var s = fs.readFileSync(szLangFile).toString("utf-8");
-        res.end(s);
+        var oC = doFileCache(szLangFile);
+        res.setHeader("Cache-Control","public, max-age=600, must-revalidate");
+        res.setHeader("Last-Modified", new Date(oC.mtime).toUTCString());
+        res.end(oC.data);
+    });
+    // 兼容旧版客户端：/v8.js 改由 /js/v8.js 按需合并，避免容器启动清理后 404
+    app.get("/v8.js",function(req,res,next){
+        res.redirect(302,"/js/v8.js");
     });
     app.get("/tfjs-backend-wasm-simd.wasm",function(req,res,next){
         res.setHeader("Content-Type","application/wasm");
@@ -356,10 +392,19 @@ fix.js`).split("\n")
             return
         }
         if(req.path.match(/i\.js/)){
+            if(doBrGzip("/js/i.js",req,res))return;
+            expressOptions.setLongTermCache(res,fs.statSync(szSSP + "js/i.js"));
             doZipSFl(szSSP + "js/i.js",res);
             return
         }
     
+        // 目标检测/报警使用的 v8.js：直接下发（混淆 257KB 需要 20s+，会阻塞事件循环）
+        if("/js/v8.js" == req.path){
+            if(doBrGzip("/js/v8.js",req,res))return;
+            expressOptions.setLongTermCache(res, fs.statSync(szSSP + "js/v8.js"));
+            doZipSFl(szSSP + "js/v8.js",res);
+            return
+        }
         // console.log(req.url, "xx",getNowStr())
         mergeRes.fnDoMg(req,res,next,reRes);
         // next();
@@ -428,12 +473,17 @@ fix.js`).split("\n")
             if(-1 == req.url.indexOf("?")){
                 // mergeRes.setJm();
                 g_oPmap[szUrl]=1;
-                fs.writeFileSync(szPm,JSON.stringify(g_oPmap));
-                // req.connection.destroy();
+                // 节流写盘，避免每个本地请求都同步写整个映射文件
+                var nNow = Date.now();
+                if(5000 < nNow - nPmapTs){
+                    nPmapTs = nNow;
+                    fs.writeFile(szPm,JSON.stringify(g_oPmap),function(){});
+                }
             }
-        }else if(!g_oPmap[szUrl] && !fs.existsSync(webStaticPath+szUrl)){
-            console.log("终止",req.url)
-            req.connection.destroy();
+        }else if(!g_oPmap[szUrl] && !/^\/(js|css|model|lang|vt)\/|^\/v8\.js$|^\/socket\.io\//.test(szUrl) && !fs.existsSync(webStaticPath+szUrl)){
+            console.log("404",req.url)
+            // 返回标准 404，而不是直接断开 TLS 连接（会导致 robots.txt 等请求异常）
+            res.status(404).set("Content-Type","text/plain; charset=utf-8").end("Not Found");
             return;
         }
         next();

@@ -189,28 +189,31 @@ function queryIp(ip){
     var oRst = null;
     return new Promise(function(resolve, reject) {
         dbIp.get(ip).then(function (value) {
-            oRst = JSON.parse(value);
+            try{oRst = JSON.parse(value);}catch(e){oRst = null;}
+            resolve(oRst);
         }, function (err) {
-            if (err.notFound) {
-                https.get('https://qifu-api.baidubce.com/ip/geo/v1/district?ip=' + ip, function (res) {
-                    if (res.statusCode == 200) {
-                        var body = [];
-                        res.on('data', function (chunk) {
-                            body.push(chunk);
-                        });
-                        res.on('end', function () {
-                            body = Buffer.concat(body).toString("utf-8");
-                            var szRst = String(body);
-                            oRst = JSON.parse(szRst).data;
-                            dbIp.put(ip, JSON.stringify(oRst));
-                            resolve(oRst);
-                        });
-                        res.on('error', function (e) {
-                            reject(e);
-                        });
-                    }
+            if (!err.notFound) { resolve(null); return; }
+            https.get('https://qifu-api.baidubce.com/ip/geo/v1/district?ip=' + ip, function (res) {
+                if (res.statusCode != 200) { res.resume(); resolve(null); return; }
+                var body = [];
+                res.on('data', function (chunk) {
+                    body.push(chunk);
                 });
-            }
+                res.on('end', function () {
+                    try{
+                        body = Buffer.concat(body).toString("utf-8");
+                        var szRst = String(body);
+                        oRst = JSON.parse(szRst).data;
+                        dbIp.put(ip, JSON.stringify(oRst)).catch(function(){});
+                        resolve(oRst);
+                    }catch(e){resolve(null);}
+                });
+                res.on('error', function (e) {
+                    reject(e);
+                });
+            }).on('error', function (e) {
+                reject(e);
+            });
         });
     });
 }
@@ -253,22 +256,26 @@ const httpClt = (u)=>{
         oH['rejectUnauthorized']=!!0;
         oH['cache'] = false;
         https.get(oH, function (res) {
-            if (res.statusCode == 200) {
-                var body = [];
-                res.on('data', function (chunk) {
-                    body.push(chunk);
-                });
-                res.on('end', function () {
+            if (res.statusCode != 200) { res.resume(); resolve(null); return; }
+            var body = [];
+            res.on('data', function (chunk) {
+                body.push(chunk);
+            });
+            res.on('end', function () {
+                try{
                     body = Buffer.concat(body).toString("utf-8");
                     var szRst = String(body);
                     oRst = JSON.parse(szRst);
                     resolve(oRst);
-                });
-                res.on('error', function (e) {
-                    console.log(e);
-                    reject(e);
-                });
-            }
+                }catch(e){resolve(null);}
+            });
+            res.on('error', function (e) {
+                console.log(e);
+                reject(e);
+            });
+        }).on('error', function (e) {
+            console.log(e);
+            reject(e);
         });
     });
 };
@@ -295,7 +302,8 @@ async function readIps(szfg){
     //     // 遍历完成时的回调
     //     console.log('Stream closed') 
     // });
-    for await (const [key, data] of db.iterator({ gt: prefix })) {
+    // 只取当前指纹前缀下的记录，避免把其他指纹的 IP 一起带出
+    for await (const [key, data] of db.iterator({ gt: prefix, lt: prefix + '\uffff' })) {
         try{
             var o = JSON.parse(data);
             aR.push(o.ip||data);
@@ -436,7 +444,7 @@ function fnInit(io){
                 }).catch(function(e){})
             }else{
                 // console.log("getNick: ",s2)
-                db.put(s,String(s2))
+                db.put(s,String(s2)).catch(function(e){console.log(e)})
             }
         }
     })
@@ -463,12 +471,8 @@ function fnInit(io){
     });
     
     socket.on('leave', (config) => {
-        const channel = config.channel;
-        if (!(channel in socket.channels)) {return;}
-        for (id in channels[channel]) {
-            channels[channel][id].emit('removePeer', {'peer_id': socket.id});
-            socket.emit('removePeer', {'peer_id': id});
-        }
+        // 走统一的 part 逻辑，避免退出后仍残留在频道成员表中
+        part(config.channel);
     })
     var oSelfXx = {'826548212':1, '492752905':1, '1117383528':1}
     var g_ggM = {},g_sMsg = `<w class=smsg>欢迎使用安全、私密（高强度加密）、无监管、零注册的聊天系统,管理员提醒您:<br>
@@ -495,7 +499,7 @@ function fnInit(io){
         let oC = channels[channel];
         
         var o1 = {'peer_id': socket.id, 'should_create_offer': false,'userdata':userdata,"nOnline":nOnline},nCnt01 = 0,nCnt02 = 0;
-        for (id in oC) {
+        for (var id in oC) {
             oC[id].emit('addPeer', o1);// 向其他人发送自己的信息
             socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true,'userdata':{'nick':oC[id].nick},"nOnline":nOnline});// 向自己发送其他人的信息
         }
@@ -508,7 +512,7 @@ function fnInit(io){
         if(oSelfXx[userdata.nick]){
             try{
                 nCnt01 = Object.keys(channels).length;
-                for(x in channels){
+                for(var x in channels){
                     nCnt02+=Object.keys(channels[x]).length;
                 }
                 socket.emit('msg4One',{"msg": "当前 " + nCnt01 + " 频道 " + nCnt02 + " 人在线",t:3,"nick":"系统公告"});
@@ -528,10 +532,12 @@ function fnInit(io){
         delete socket.channels[channel];
         delete channels[channel][socket.id];
 
-        for (id in channels[channel]) {
+        for (var id in channels[channel]) {
             channels[channel][id].emit('removePeer', {'peer_id': socket.id});
             socket.emit('removePeer', {'peer_id': id});
         }
+        // 频道空了自己回收，避免 channels 无限增长
+        if (!Object.keys(channels[channel]).length) delete channels[channel];
     }
     socket.on('part', part);
     // 保存客户端的信息：fingerprint、ip
@@ -545,19 +551,20 @@ function fnInit(io){
             }
             if(!!aMacIps)o["macIps"] = aMacIps;
             if(szCltFg)o["fingerprint"] = szCltFg;// 客户端 指纹信息
-            for(var i = 0; i < o.ip.length; i++){
+            // 使用 let 保证回调里拿到的是当前下标，而不是循环结束后的值
+            for(let i = 0; i < o.ip.length; i++){
                 if(!CheckIsPrivateIp(o.ip[i])){
                     queryIp(o.ip[i]).then(function(o1){
                         if(o1){
                             o.ip[i] = o1;
                             socket.emit('onIpInfo', {"t":0,'ip': o.ip[i],"isp":o1.isp,"prov":o1.prov,"city":o1.city});
                         }
-                    })
+                    }).catch(function(){})
                 }
             }
             // 可以考虑 查了 ip 的归宿信息一起保存
             console.log(o);
-            db.put(szCltFg + "_" + new Date().getTime(),o);
+            db.put(szCltFg + "_" + new Date().getTime(),o).catch(function(e){console.log(e)});
             // 发公告，每个人每天只发1次
             if(!g_ggM[szCltFg]){
                 g_ggM[szCltFg] = 1;
