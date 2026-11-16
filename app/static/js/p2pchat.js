@@ -353,6 +353,27 @@ function cntVideo(cbk){// https://dexie.org/docs/Collection/Collection.count()
 }
 
 // 加载人脸特征
+function faceDbAll(){try{return JSON.parse(localStorage.getItem("e2e_face_db")||"[]")}catch(e){return []}}
+function faceDbSave(a){localStorage.setItem("e2e_face_db",JSON.stringify(a)),LoadFaceDb(a)}
+function faceDbLoad(){var a=faceDbAll();if(a.length)LoadFaceDb(a);return a.length}
+function faceDbAdd(szName,oDes){var a=faceDbAll(),o=a.filter(function(i){return i.label===szName})[0];o?o.descriptors.push(oDes):a.push({label:szName,descriptors:[oDes]});faceDbSave(a);return a.length}
+function faceSetStatus(sz){var o=document.getElementById("faceStatus");if(o)o.textContent=sz?("识别："+sz):""}
+window.faceDbLoad=faceDbLoad;window.faceSetStatus=faceSetStatus;
+window.faceClear=function(){if(!confirm("确定清空本地人脸库？"))return;localStorage.removeItem("e2e_face_db");faceMatcher=void 0;faceSetStatus("");alert("已清空")};
+window.faceRegister=async function(){
+	if(typeof faceapi=="undefined")return alert("请先勾选 Detect Face，等待模型加载完成");
+	if(!window.webcam||!window.webcam.videoWidth)return alert("请先开启视频");
+	var szName=prompt("请输入要登记的姓名");
+	if(!szName)return;
+	try{
+		await ensureFaceNets(["faceLandmark68TinyNet","faceRecognitionNet"]);
+		var res=await faceapi.detectSingleFace(window.webcam,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:.5})).withFaceLandmarks(true).withFaceDescriptor();
+		if(!res)return alert("未检测到人脸，请正对摄像头后重试");
+		var n=faceDbAdd(szName,Array.from(res.descriptor));
+		alert("登记成功："+szName+"（人脸库共 "+n+" 人）");
+		if(window.startFaceMonitor)window.startFaceMonitor();
+	}catch(e){alert("登记失败："+((e&&e.message)||e))}
+};
 function LoadFaceDb(a){
 	var a1 = [];
 	for(var i = 0; i < a.length; i++){
@@ -361,14 +382,30 @@ function LoadFaceDb(a){
 	}
 	faceMatcher=new faceapi.FaceMatcher(a1, 0.6);
 }
-var bInitFace = !!0;
+var bInitFace = !!0, bFaceReady = false, aFaceCb = [];
+function flushFaceCb(){
+	var a = aFaceCb; aFaceCb = [];
+	for(var i = 0; i < a.length; i++){ try{ a[i](); }catch(e){ log(e); } }
+}
+// 按需加载人脸模型，已加载的不会重复下载
+async function ensureFaceNets(aNames){
+	var mdP = '/model/face/';
+	await faceapi.tf.ready();
+	await Promise.all(aNames.map(function(s){
+		var net = faceapi.nets[s];
+		return (net && !net.isLoaded) ? net.loadFromUri(mdP) : null;
+	}));
+}
 // 人脸识别；初始化 加载模型
 function initFace(cbk){
+	if(cbk)aFaceCb.push(cbk);
+	if(bFaceReady){ flushFaceCb(); return; }
 	RegAsync(async function(){
 		if(bInitFace)return;
 		let c1 =async function(){
 			bInitFace = true;
-			cbk=cbk||function(){};
+			bFaceReady = true;
+			flushFaceCb();
 			// console.log(faceapi.tf.getBackend());
 			// 使用 WebGL 后端时，模型会在浏览器中利用 GPU 进行计算；如果用户的设备支持 WebGL，这通常是性能最佳的选项之一
 			// await faceapi.tf.setBackend("“wasm”");//  “wasm” 或 “cpu” 
@@ -377,16 +414,13 @@ function initFace(cbk){
 			await faceapi.tf.ready();
 			const mdP = '/model/face/';
 
-			Promise.all([
-				faceapi.nets.ssdMobilenetv1.loadFromUri(mdP),
-				faceapi.nets.mtcnn.loadFromUri(mdP),
-				faceapi.nets.faceExpressionNet.loadFromUri(mdP),
-				faceapi.nets.ageGenderNet.loadFromUri(mdP),
-				faceapi.nets.tinyFaceDetector.loadFromUri(mdP),
-				faceapi.nets.faceLandmark68Net.loadFromUri(mdP),
-				faceapi.nets.faceLandmark68TinyNet.loadFromUri(mdP),
-				faceapi.nets.faceRecognitionNet.loadFromUri(mdP)
-			]).then(cbk);
+			// 实时监控只需要“检测 + 关键点 + 识别”，SSD/年龄性别/表情等模型
+			// 留到导入人脸时再按需加载，避免首次开启人脸功能就下载约 15MB
+			var aNet = [faceapi.nets.tinyFaceDetector, faceapi.nets.faceLandmark68TinyNet];
+			if (faceMatcher) aNet.push(faceapi.nets.faceRecognitionNet);
+			Promise.all(aNet.map(function(net){
+				return net.isLoaded ? null : net.loadFromUri(mdP);
+			})).then(c1).catch(function(e){ log(e); bInitFace = false; });
 		};
 		Is("/js/14.js",c1);
 	});
@@ -981,9 +1015,14 @@ function AddStream2Canvas(e,s){
 			if(lstRct[sid]&&lstRct[sid].length)canvasCtx.clearRect.apply(canvasCtx,lstRct[sid]);
 			canvasCtx.drawImage(e, x,y, w,h);
 			lstRct[sid]=[x,y, w,h];
+			// 供 v8 检测使用：视频画面在离屏画布里的真实矩形（去掉两侧黑边），
+			// 否则模型会拿黑边当画面，框会画到黑边上、且尺寸失真。
+			window.__v8Rect=[x,y, w,h], window.__v8Base=[oCAllVideo.width,oCAllVideo.height];
 			requestAnimationFrame(drawFrame);
 		};
 		e.onplay = drawFrame;
+		// 检测输入直接用原始视频帧（不经离屏画布的拉伸），框的落点按视频真实显示矩形换算
+		window.__v8Video = e;
 	}catch(e){log("AddStream2Canvas",e)}
 }
 function attachMediaStream(e, s) {
@@ -1752,6 +1791,8 @@ function ChangeSound (s) {
 
 function StopStream () {
 	try{
+		// 停止人脸识别循环，释放摄像头与 GPU/CPU 资源
+		if(window.stopFaceMonitor)window.stopFaceMonitor();
 		// 先杀掉所有 drawFrame / render 循环，避免继续占 CPU
 		$("video").each(function(){ try{ if(this._drawFrameStop)this._drawFrameStop(); }catch(e){} });
 		// 销毁所有 Plyr 实例（否则事件监听和内部状态累积）
@@ -1991,25 +2032,60 @@ function setupLm (callback, errorback) {
 				// inputScale：输入图像的缩放比例。默认值为128。
 				// minFaceSize：最小人脸尺寸。默认值为20
 				// https://vladmandic.github.io/face-api/TUTORIAL.html
-				const faceOpt = new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.6,minConfidence:0.6,maxResults:100});
-				lM.addEventListener('play', function(){
-					// 人脸识别
-					const n42 = setInterval(async function (){
-						try{
-							// withFaceLandmarks 是必须的，否则会报错
-							const detections = await faceapi.detectAllFaces(window.webcam, faceOpt).withFaceLandmarks().withFaceDescriptors();
-							if(detections&&detections.length>0)
-							detections.forEach(function(fd){
-								if(faceMatcher){
-									const bestMatch = faceMatcher.findBestMatch(fd.descriptor);
-									if (typeof bestMatch === 'object') console.log(`识别结果：${bestMatch.label}`);
-								}
-							});
-						}catch(e){clearInterval(n42)}
-					}, 1000/20);
-				});	
+				// 5fps 足够用于人脸识别/报警，inputSize 320 降低计算量
+				const faceOpt = new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.5,minConfidence:0.5,maxResults:100,inputSize:320});
+				var nFaceTimer = 0, bFaceBusy = false, szLastFace = "";
+				window.stopFaceMonitor = function(){
+					if(nFaceTimer){ clearInterval(nFaceTimer); nFaceTimer = 0; }
+				};
+				var fnFaceTick = async function(){
+					if(bFaceBusy || !nFaceTimer || document.hidden)return;
+					if(!window.webcam || !window.webcam.videoWidth)return;
+					bFaceBusy = true;
+					try{
+						if(faceMatcher && !faceapi.nets.faceRecognitionNet.isLoaded)await faceapi.nets.faceRecognitionNet.loadFromUri('/model/face/');
+						const detections = await (faceMatcher?faceapi.detectAllFaces(window.webcam, faceOpt).withFaceLandmarks(true).withFaceDescriptors():faceapi.detectAllFaces(window.webcam, faceOpt).withFaceLandmarks(true));
+						var aHit = [], nUnknown = 0;
+						(detections || []).forEach(function(fd){
+							if(!faceMatcher){aHit.push("人脸(未登记)");nUnknown++;return;}const bestMatch = faceMatcher.findBestMatch(fd.descriptor);
+							if(bestMatch && bestMatch.label && bestMatch.label !== "unknown")aHit.push(bestMatch.label);else{aHit.push("陌生人");nUnknown++;}
+						});
+						// 只在结果变化时输出，避免逐帧刷日志
+						var szNow = aHit.join(",");
+						// 只记录/展示识别结果，不占用报警通道（报警只应由“识别对象”触发）
+						if(szNow !== szLastFace){
+							console.log("识别结果："+(szNow||"无"));window.faceSetStatus&&window.faceSetStatus(szNow);
+						}
+						szLastFace = szNow;
+					}catch(e){
+						// 模型加载失败时停止循环，避免重复报错
+						console.warn("face:",(e&&e.message)||e);
+					}finally{
+						bFaceBusy = false;
+					}
+				};
+				window.startFaceMonitor = function(){
+					if(nFaceTimer)return;console.log("人脸监控已启动");
+					nFaceTimer = setInterval(fnFaceTick, 200);
+				};
+				if(!lM._bFacePlay){
+					lM._bFacePlay = true;
+					lM.addEventListener('play', function(){
+						if($("#eFace")[0] && $("#eFace")[0].checked)window.startFaceMonitor();
+					});
+				}
 			};
-			if($("#eFace")[0].checked)initFace(initFaceCbk);
+			if($("#eFace")[0].checked)initFace(function(){ window.faceDbLoad&&window.faceDbLoad(),initFaceCbk(),window.startFaceMonitor(); });
+			$("#eFace").off("change.face").on("change.face", function(){
+				if(this.checked)initFace(function(){ window.faceDbLoad&&window.faceDbLoad(),initFaceCbk(),window.startFaceMonitor(); });
+				else if(window.stopFaceMonitor)window.stopFaceMonitor();
+			});
+			if(!document.getElementById("faceTools")){
+				var oFaceBox = $("#eFace").closest("i");
+				oFaceBox.after("<i id='faceTools'><span id='faceStatus' style='color:#0a0;margin:0 6px'></span><button type='button' id='faceReg'>登记人脸</button><button type='button' id='faceClr'>清空</button></i>");
+				$("#faceReg").click(function(){ window.faceRegister && window.faceRegister(); });
+				$("#faceClr").click(function(){ window.faceClear && window.faceClear(); });
+			}
 			
 			fnAddTmGps();
 			// hidden me、self
@@ -2270,16 +2346,8 @@ async function initFc(){
 	// faceapi.tf.ENV['DEBUG'] = false;
 	await faceapi.tf.ready()
 
-    const mdP = '/model/face/';
-    await faceapi.nets.faceLandmark68Net.loadFromUri(mdP);
-    await faceapi.nets.faceLandmark68Net.loadFromUri(mdP);
-    await faceapi.nets.ssdMobilenetv1.loadFromUri(mdP);
-    await faceapi.nets.faceRecognitionNet.loadFromUri(mdP);
-    await faceapi.nets.faceExpressionNet.loadFromUri(mdP);
-    await faceapi.nets.ageGenderNet.loadFromUri(mdP);
-    await faceapi.nets.tinyFaceDetector.loadFromUri(mdP);
-    await faceapi.nets.mtcnn.loadFromUri(mdP);
-    await faceapi.nets.faceLandmark68TinyNet.loadFromUri(mdP);
+    // 导入人脸需要更高的检测精度与属性，按需加载（已加载的不会重复下载）
+    await ensureFaceNets(['faceLandmark68Net','ssdMobilenetv1','faceRecognitionNet','faceExpressionNet','ageGenderNet']);
 
 	// // model 参数，识别阀值和最多识别结果数量
 	// const minConfidence = 0.01;
@@ -2302,8 +2370,8 @@ async function fnFaceDtc(){
 		// 	result.detection.box.bottomLeft
 		// 	).draw(out)
 		// })
-		document.title = faces.length;
-		alert(faces.length)
+		document.title = results.length;
+		log("faces:" + results.length);
 	}catch(e){log(e)}
 }
 
@@ -2393,8 +2461,8 @@ function ldai(){
 	// 按需加载 tfjs（仅 AI 检测需要，避免首页加载 1.4MB）
 	if(bEaV8 && !window.v8Load){
 		window.v8Load = true;
-		if(typeof window.tf == "undefined")Is('/js/9.js',function(){Is('/v8.js');});
-		else Is('/v8.js');
+		if(typeof window.tf == "undefined")Is('/js/9.js',function(){Is('/js/v8.js?v=20261116zd');});
+		else Is('/js/v8.js?v=20261116zd');
 	}
 	// if(bRunAi && !window.aiLoad)window.aiLoad = true,$("body").append("<script src=/js/bundle.js></scr"+"ipt>");
 	if(bEabOcr && !window.ocrLoad)window.ocrLoad=true,fnTmp89(),$("body").append("<script src=/js/ocr.js></scr"+"ipt>");
@@ -2617,9 +2685,10 @@ window.addEventListener("beforeunload",function(){
 });
 
 function plWarn(bMsg){
+	// 冷却期内忽略重复报警，但冷却时间不被续期（否则目标持续在画面里时永远等不到下一次报警）
+	if(g_bWarn)return;
 	playSd(3);
 	if(!bMsg)SendMsg("->jg");
-	clearTimeout(nWarn);
 	g_bWarn = true;
 	nWarn = setTimeout(function(){g_bWarn = !!0}, 25000);
 }
@@ -3020,11 +3089,38 @@ $(document).ready(async function(){
 		window["x8md"] = "yolov8" + (this.checked ? "x": "n") + "-seg";
 	});
 	oEAi.change(async function(){
-		bEaV8 = this.checked;
+		bEaV8 = this.checked,this.checked||function(){var o=window.ov8canvas,c=o&&o.getContext("2d");c&&c.clearRect(0,0,o.width,o.height)}();
+		// 若已经在视频模式里，视频流是“勾选之前”挂上的，此时没有任何帧被画进离屏画布，
+		// v8 拿到的全是空帧 -> 表现为“勾选了识别对象却什么都检测不到”。这里补挂一次。
+		if(bEaV8){
+			try{
+				$("video").each(function(){
+					let s = this.srcObject;
+					if(!s || !this.parentNode)return;
+					if(this._drawFrameStop)this._drawFrameStop();
+					AddStream2Canvas(this, s);
+					try{ if(this.onplay)this.onplay(); }catch(e){}
+				});
+			}catch(e){log("hijackVideo2Canvas",e)}
+		}
 		if(bEaV8 && window.v8Load && typeof window["detectImgV8"] == "function")window["detectImgV8"]()//,imgOldCbk.push(fnFaceDtc);
 		// else rmFnImg(fnFaceDtc);
 		ldai();
+		// v8 的标签表是异步到位（window.labels）的，早于它调用 showWnSt() 会让
+		// window.g_oWarObj 永远是空对象 -> 检测到目标也不触发 plWarn()。这里轮询补齐。
+		if(bEaV8){
+			var nT3 = 0;
+			var nPoll = setInterval(function(){
+				nT3++;
+				if(window.labels){ clearInterval(nPoll); showWnSt(); }
+				else if(nT3 > 120)clearInterval(nPoll);
+			}, 500);
+		}
 		showWnSt()
+	});
+	// 检测循环在页面隐藏时会暂停，回到前台后重新启动
+	document.addEventListener("visibilitychange", function(){
+		if(!document.hidden && bEaV8 && typeof window["detectImgV8"] == "function")window["detectImgV8"]();
 	});
 	$("#eOcr").change(async function(){
 		bEabOcr = this.checked;

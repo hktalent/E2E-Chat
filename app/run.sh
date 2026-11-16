@@ -9,7 +9,9 @@ echo "最近 1 天修改过文件 end"
 # npm prune --production=true
 # npm prune --omit=dev
 rm -rf tmp
-rm -rf static/js.js static/v8.js static/css.css static/js/,.js static/vt/*
+rm -rf static/js.js static/v8.js static/vt/*
+# 合并产物按源文件 mtime 复用，重启时不再重复压缩/混淆
+# rm -f static/js/,.js static/css.css
 # DEBUG=true 
 # NODE_DEBUG=true 
 # node --inspect --trace-deprecation server.js

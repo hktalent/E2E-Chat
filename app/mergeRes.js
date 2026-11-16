@@ -27,6 +27,7 @@ function fnWc () {
 }
 const UglifyJS = require('uglify-js');
 var g_cache = {},
+    g_pending = {},
     { minify } = require("terser"),
     minifyOptions = {
     compress: {
@@ -125,6 +126,13 @@ if(bIsMacOsSelf){
 async function MakeN(){
     setTimeout(async ()=>{
         x11 = "p2pchat.js"
+        // 源文件未变化时复用已生成的混淆文件，避免每次启动都阻塞事件循环
+        try{
+            if(fs.existsSync(x11 + "_1") && fs.statSync(x11 + "_1").mtimeMs >= fs.statSync(x11).mtimeMs){
+                console.log("复用已加密js:" + x11 + "_1")
+                return;
+            }
+        }catch(e){}
         console.log("开始初始化加密js:"+x11)
         s111 = fs.readFileSync(x11).toString("utf-8");
         s111 = (await minify(s111, minifyOptions)).code;
@@ -153,6 +161,18 @@ async function HxJs(s){
 async function HxJs1(s){
     return UglifyJS.minify((await minify(s, minifyOptions)).code).code;
 }
+function mtimeMs(szP){
+    try{return fs.statSync(szP).mtimeMs}catch(e){return 0}
+}
+// 合并产物是否比所有源文件新，避免每次重启都重新压缩/混淆
+function bFresh(szXf,aSrc){
+    var nT = mtimeMs(szXf);
+    if(!nT)return false;
+    for(var i = 0; i < aSrc.length; i++){
+        if(mtimeMs(aSrc[i]) > nT)return false;
+    }
+    return true;
+}
 async function fnMerg(s, t) {
     var szXf = "static/"+t + "." + t;
     
@@ -167,61 +187,64 @@ async function fnMerg(s, t) {
         }
     }
     else s = "plyr,tipso.min,p2pchat";
+
+    var szPathT = (t && "css" == t) ? szPathC : szPath,
+        szHz = "css" == t ? ".css" : ".js",
+        a = s.split(/[,;\| ]/),
+        aSrc = a.map(function(x){return szPathT + x + szHz;});
+
     if(useCc){
-        if(g_cache[s]){
+        if(g_cache[s])return g_cache[s];
+        // 并发请求复用同一次构建，避免重复混淆（单次约数秒）
+        if(g_pending[s])return g_pending[s];
+        if(bFresh(szXf,aSrc)){
+            g_cache[s] = fs.readFileSync(szXf).toString("utf-8");
+            console.log("cache ",s,t)
             return g_cache[s];
         }
-        
-        if(fs.existsSync(szXf)){
-            var s1 = fs.readFileSync(szXf).toString("utf-8");
-            if(!g_cache[s]){
-                console.log("cache ",s,t)
-                g_cache[s] = s1;
+    }
+    g_pending[s] = (async function(){
+        console.log("开始初始化 " + szXf)
+        var i = 0, b = [], sF;
+        for (; i < a.length; i++) {
+            if (fs.existsSync(sF = szPathT + a[i] + szHz)) {
+                var szT = String(aFCache[sF] || fs.readFileSync(sF)).toString("utf-8");
+                if("bundle" == a[i]){
+                    szT = szT.replace(/https:\/\/paddlejs\.[^\/]*/gm, "");
+                }
+                
+                aFCache[sF] = szT;
+                b.push(szT);
             }
-            return s1;
         }
-    }
-    console.log("开始初始化 " + szXf)
-    var a = s.split(/[,;\| ]/), i = 0, b = [], sF, szPathT = (t && "css" == t) ? szPathC : szPath, szHz;
-    if (t == "css") szHz = ".css";
-    else szHz = ".js";
-
-    for (; i < a.length; i++) {
-        if (fs.existsSync(sF = szPathT + a[i] + szHz)) {
-            var szT = String(aFCache[sF] || fs.readFileSync(sF)).toString("utf-8");
-            if("bundle" == a[i]){
-                szT = szT.replace(/https:\/\/paddlejs\.[^\/]*/gm, "");
-            }
-            
-            aFCache[sF] = szT;
-            b.push(szT);
+        var sX = b.join("\n");
+        if (useCc && bJmi && t == "js") {
+            console.log("cache js ",s,t)
+            sX = await HxJs(sX);
         }
+        if ("css" == t) {
+            sX = new CleanCSS({}).minify(sX).styles
+            console.log("cache css ",s,t)
+        }
+        if(useCc){
+            fs.writeFileSync(szXf,sX);
+            if("js" == t)console.log("加密js已经初始化完毕 " + szXf)
+        }
+        return sX;
+    })();
+    try{
+        var sR = await g_pending[s];
+        if(useCc)g_cache[s] = sR;
+        return sR;
+    }finally{
+        delete g_pending[s];
     }
-    g_cache[s] = b.join("\n");
-    console.log("cache ",s,t)
-    if (useCc && bJmi && t == "js") {
-        console.log("cache js ",s,t)
-        g_cache[s] = await HxJs(g_cache[s]);
-    }
-    if ("css" == t) {
-        oM = new CleanCSS({})
-        o1 = oM.minify(g_cache[s])
-        console.log("cache css ",s,t)
-        g_cache[s] = o1.styles
-    }
-    if(useCc){
-        fs.writeFileSync(szXf,g_cache[s]);
-        if("js" == t)console.log("加密js已经初始化完毕 " + szXf)
-    }
-    const k1 = g_cache[s];
-    if(!useCc)g_cache[s] = null;
-    return k1;
 }
 
-if(bIsMacOsSelf){// 启动时预处理，提高速度
-    setTimeout(async ()=>{fnMerg(",.js", "js")},1);
-    setTimeout(async ()=>{fnMerg("v8.js", "js")},1);
-    setTimeout(async ()=>{fnMerg(",.css", "css")},1);
+// 启动时预热合并产物，让首个访问者直接命中缓存
+function fnPrewarm(){
+    fnMerg(",.js","js").catch(function(e){console.log("prewarm js",e.message)});
+    fnMerg(",.css","css").catch(function(e){console.log("prewarm css",e.message)});
 }
 
 function TrueIp(req){
@@ -251,4 +274,4 @@ function fnSetPath (s) {
         szPathC = s + "css/";
 }
 
-module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc,setJm:setJm,HxJs:HxJs,HxJs1:HxJs1,fnMerg:fnMerg };
+module.exports = { fnDoMg: fnDoMg, fnSetPath: fnSetPath, fnWc: fnWc,setJm:setJm,HxJs:HxJs,HxJs1:HxJs1,fnMerg:fnMerg,fnPrewarm:fnPrewarm };
