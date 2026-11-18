@@ -376,7 +376,7 @@ open ~/Library/Application\ Support/Google/Chrome/Crashpad/completed/
 /**
 https://webtorrent.io/intro
 
-在 /Users/51pwn/MyWork/E2E_chat/app/node_modules/engine.io/build/transports/polling.js 文件中，将 OutgoingMessage.prototype._headers 替换为 OutgoingMessage.headers。
+在 node_modules/engine.io/build/transports/polling.js 文件中，将 OutgoingMessage.prototype._headers 替换为 OutgoingMessage.headers。
  */
 # 优化js
 在线生成脚本的 integrity
@@ -402,7 +402,7 @@ xxf=static/js/sw.js;uglifyjs $xxf -c -m -o $xxf
 png 转 svg 体积大幅减小
  https://convertio.co/download/0fdcfc32fe46d0833316de0767842e7f0ec93c/
 
-convert /Users/51pwn/Documents/M_T_X/99-密/me/me2.PNG EXAMPLE.svg
+convert ./me.png EXAMPLE.svg
 ```
 # /usr/local/etc/turnserver.conf
 

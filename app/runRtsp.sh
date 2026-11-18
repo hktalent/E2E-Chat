@@ -7,5 +7,5 @@ cd static/vt/$2
 #  -crf 30 
 # -vf "scale=-2:480"
 # ffmpeg -i "$1" -c:v libx264 -vf "scale=-2:480" -crf 30 -flags low_delay -preset ultrafast -hls_time 2 -hls_list_size 10 -hls_wrap 10 -start_number 1 $2.m3u8
-# /Users/51pwn/anaconda3/bin/ffmpeg
-/Users/51pwn/anaconda3/bin/ffmpeg -i $1 -c:v libx264 -vf "scale=-2:480" -crf 30 -flags low_delay -preset ultrafast -f hls -hls_time 2 -hls_list_size 10 -hls_wrap 10 -start_number 1 "$2.m3u8"
+FFMPEG_BIN="${FFMPEG_BIN:-ffmpeg}"
+"$FFMPEG_BIN" -i $1 -c:v libx264 -vf "scale=-2:480" -crf 30 -flags low_delay -preset ultrafast -f hls -hls_time 2 -hls_list_size 10 -hls_wrap 10 -start_number 1 "$2.m3u8"
