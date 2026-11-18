@@ -45,3 +45,12 @@ cp/
 行业分析数据.json
 智能视频监控平台.pdf
 .DbCache/
+
+## 运行时生成的混淆/合并产物（不入库）
+app/static/js/,*
+app/*_1
+app/xxxxx.js
+app/static/js.js
+app/static/v8.js
+app/static/css,.css
+app/static/css/,.css
