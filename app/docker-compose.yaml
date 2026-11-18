@@ -9,6 +9,6 @@ services:
     ports:
       - "2083:2083"  # 映射容器端口到主机端口
     volumes:
-      - /Users/51pwn/MyWork/E2E_chat/app:/app
-      - /Users/51pwn/MyWork/E2E_chat/ca:/ca
+      - .:/app
+      - ../ca:/ca   # 可选：本地 https 证书（自行签发，仓库不提供）
     command: /app/run.sh

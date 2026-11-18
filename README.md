@@ -1,3 +1,6 @@
+> **E2E Chat** —— 无服务器 E2E 点对点聊天：WebRTC DataChannel + 邀请码/回应码直连，同一套客户端代码既跑在 chat.51pwn.com，也可打包为 Windows / macOS / Linux 桌面应用。
+> 桌面端见 [desktop/README.md](desktop/README.md)，安全与隐私说明见 [SECURITY.md](SECURITY.md)。
+
 # Docker + cloudflared 部署指南
 
 ## 快速启动
