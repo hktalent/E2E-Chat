@@ -17,7 +17,7 @@ const core = require('./server-core');
 
 const IS_PACKED = app.isPackaged;
 const APP_DIR = IS_PACKED ? path.join(process.resourcesPath, 'app') : path.join(__dirname, '..', 'app');
-const CA_DIR = IS_PACKED ? path.join(process.resourcesPath, 'app-ca') : path.join(__dirname, 'ca');
+const CA_DIR = path.join(app.getPath('userData'), 'ca');
 const DATA_DIR = path.join(app.getPath('userData'), 'data');
 const LOG_FILE = path.join(app.getPath('userData'), 'desktop.log');
 

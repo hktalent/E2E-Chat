@@ -26,3 +26,22 @@ desktop/node_modules/
 desktop/release/
 desktop/.runtime/
 desktop/out/
+
+## 隐私与本地密钥（禁止提交）
+ca/
+desktop/ca/
+*.pem
+*.key
+*.p12
+*.pfx
+app/static/*.zip
+app/static/*.zip.bak*
+app/static/model/
+app/static/models/
+app/static/**/*.map
+tools/
+ai/
+cp/
+行业分析数据.json
+智能视频监控平台.pdf
+.DbCache/

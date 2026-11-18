@@ -10,8 +10,46 @@ const path = require('path');
 const fs = require('fs');
 const net = require('net');
 
+const os = require('os');
+
 const APP_DIR = path.join(__dirname, '..', 'app');
 const CA_DIR = path.join(__dirname, 'ca');
+
+
+/**
+ * 生成 / 复用 127.0.0.1 的自签证书（纯 JS，无需 openssl）。
+ * 私钥只落在本机用户数据目录，不进仓库、不进安装包。
+ */
+async function ensureCert(caDir, onLog) {
+	const keyPath = path.join(caDir, 'local.key');
+	const certPath = path.join(caDir, 'local.cert');
+	if (fs.existsSync(keyPath) && fs.existsSync(certPath)) return { keyPath: keyPath, certPath: certPath };
+	fs.mkdirSync(caDir, { recursive: true });
+	let selfsigned;
+	try {
+		selfsigned = require('selfsigned');
+	} catch (e) {
+		throw new Error('缺少本地自签证书且无法加载 selfsigned（请执行 npm install）');
+	}
+	const attrs = [{ name: 'commonName', value: '127.0.0.1' }, { name: 'organizationName', value: 'E2E Chat Desktop' }];
+	const pems = await selfsigned.generate(attrs, {
+		days: 3650,
+		keySize: 2048,
+		algorithm: 'sha256',
+		extensions: [{
+			name: 'subjectAltName',
+			altNames: [
+				{ type: 7, ip: '127.0.0.1' },
+				{ type: 7, ip: '::1' },
+				{ type: 2, value: 'localhost' }
+			]
+		}]
+	});
+	fs.writeFileSync(keyPath, pems.private, { mode: 0o600 });
+	fs.writeFileSync(certPath, pems.cert, { mode: 0o644 });
+	if (onLog) onLog('[ca] generated self-signed cert at ' + caDir);
+	return { keyPath: keyPath, certPath: certPath };
+}
 
 /**
  * 找一个真正可用的端口。
@@ -59,12 +97,11 @@ async function start(opts) {
 	if (dataDir) prepareDataDir(appDir, dataDir, onLog);
 	if (!port) port = await findFreePort(opts.basePort || 20831);
 
-	const caDir = opts.caDir || CA_DIR;
-	const keyPath = path.join(caDir, 'local.key');
-	const certPath = path.join(caDir, 'local.cert');
-	if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
-		throw new Error('缺少本地自签证书：' + caDir + '（请保留 desktop/ca/local.key, local.cert）');
-	}
+	// 本地自签证书：仓库里不再保存私钥，首次运行时自动生成并写入用户数据目录
+	const caDir = opts.caDir || path.join((dataDir || path.join(os.homedir(), '.e2e-chat')), 'ca');
+	const cert = await ensureCert(caDir, onLog);
+	const keyPath = cert.keyPath;
+	const certPath = cert.certPath;
 
 	const myapp = require(path.join(appDir, 'myapp_51pwn.js'));
 	const p2pchat = require(path.join(appDir, 'p2pchat.js'));

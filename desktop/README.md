@@ -53,6 +53,8 @@ node dev-server.js   # 不启 Electron，仅用浏览器验证内嵌服务（默
 
 运行时数据（`dbChat`、`resImg`、合并缓存 `static/js/,.js`）写在系统 userData 目录，安装包内资源只读。
 
+自签 https 证书也不再随仓库分发：首次运行时由 `server-core.js` 用纯 JS（`selfsigned`）在用户数据目录 `ca/` 下自动生成 `local.key` / `local.cert`（SAN: 127.0.0.1 / ::1 / localhost），私钥只留在本机。
+
 ## 打包
 
 ```bash

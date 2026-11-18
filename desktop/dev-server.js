@@ -13,13 +13,14 @@
  */
 
 const path = require('path');
+const os = require('os');
 const core = require('./server-core');
 
 const DATA_DIR = path.join(__dirname, '.runtime');
 
 core.start({
 	appDir: path.join(__dirname, '..', 'app'),
-	caDir: path.join(__dirname, 'ca'),
+	caDir: path.join(os.homedir(), '.e2e-chat', 'ca'),
 	dataDir: DATA_DIR,
 	port: process.env.PORT ? parseInt(process.env.PORT, 10) : 0,
 	basePort: 20831,

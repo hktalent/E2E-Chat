@@ -62,10 +62,6 @@
           "!node_modules/**/examples/**",
           "!**/*.log"
         ]
-      },
-      {
-        "from": "ca",
-        "to": "app-ca"
       }
     ],
     "mac": {
@@ -125,5 +121,8 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     }
+  },
+  "dependencies": {
+    "selfsigned": "^5.5.0"
   }
 }

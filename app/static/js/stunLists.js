@@ -1,7 +1,10 @@
 // https://gist.github.com/mondain/b0ec1cf5f60ae726202e
+// 注意：TURN 凭据请勿硬编码；如需私用中继，请在部署时注入，不要提交到代码仓库。
+// 以下 STUN 列表为公开收集，部分 TURN 为公共测试节点。
 var ICE_SERVERS = [
 {"urls":"stun:stun.l.google.com:19302"},
-{"urls":"turn:turn.example.com:3478?transport=udp","credential":"REDACTED_TURN_CREDENTIAL","username":"REDACTED_TURN_USER"},
+// 自有 TURN 请自行填写（勿把真实凭据提交到仓库）：
+// {"urls":"turn:YOUR-TURN.DOMAIN:3478?transport=udp","credential":"YOUR_CREDENTIAL","username":"YOUR_USERNAME"},
 {"urls":"stun:120.132.47.26:3478"},
 {"urls":"turn:192.158.29.39:3478?transport=udp","credential": "REDACTED_TURN_CREDENTIAL=","username":   "REDACTED_TURN_USER"},
 {"urls":"stun:120.132.47.24:3478"},
