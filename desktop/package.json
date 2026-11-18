@@ -5,7 +5,10 @@
   "description": "Serverless P2P/E2E chat desktop client (Win/macOS/Linux), sharing the same client code as chat.51pwn.com",
   "private": true,
   "main": "main.js",
-  "author": "hktalent",
+  "author": {
+    "name": "hktalent",
+    "email": "18223385+hktalent@users.noreply.github.com"
+  },
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -111,11 +114,13 @@
       ]
     },
     "linux": {
-      "category": "Network",
       "target": [
         "AppImage",
         "deb"
-      ]
+      ],
+      "category": "Network",
+      "maintainer": "hktalent <18223385+hktalent@users.noreply.github.com>",
+      "synopsis": "E2E Chat — 端到端 P2P 聊天桌面版"
     },
     "nsis": {
       "oneClick": false,
@@ -124,5 +129,6 @@
   },
   "dependencies": {
     "selfsigned": "^5.5.0"
-  }
+  },
+  "homepage": "https://github.com/hktalent/E2E-Chat"
 }
