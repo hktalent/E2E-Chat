@@ -1,0 +1,129 @@
+{
+  "name": "e2e-chat-desktop",
+  "productName": "E2E Chat",
+  "version": "1.0.0",
+  "description": "Serverless P2P/E2E chat desktop client (Win/macOS/Linux), sharing the same client code as chat.51pwn.com",
+  "private": true,
+  "main": "main.js",
+  "author": "hktalent",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "start:local": "E2E_SIG=local electron .",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux",
+    "postinstall": "node -e \"process.exit(0)\""
+  },
+  "devDependencies": {
+    "electron": "^32.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.hktalent.e2echat",
+    "productName": "E2E Chat",
+    "artifactName": "E2E-Chat-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "server-core.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../app",
+        "to": "app",
+        "filter": [
+          "**/*",
+          "!node_modules/.cache/**",
+          "!node_modules/**/*.map",
+          "!static/model/**",
+          "!static/*.zip",
+          "!static/*.zip.bak*",
+          "!static/**/*.map",
+          "!static/vt/**",
+          "!static/css/,**.gz",
+          "!dbChat/**",
+          "!dbChatIp/**",
+          "!resImg/**",
+          "!tmp/**",
+          "!.mxDev/**",
+          "!.DS_Store",
+          "!node_modules/**/test/**",
+          "!node_modules/**/tests/**",
+          "!node_modules/**/docs/**",
+          "!node_modules/**/*.md",
+          "!node_modules/**/*.ts",
+          "!node_modules/**/example/**",
+          "!node_modules/**/examples/**",
+          "!**/*.log"
+        ]
+      },
+      {
+        "from": "ca",
+        "to": "app-ca"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.social-networking",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "extendInfo": {
+        "NSCameraUsageDescription": "视频聊天需要使用摄像头 / Video chat requires camera access",
+        "NSMicrophoneUsageDescription": "语音视频聊天需要使用麦克风 / Voice chat requires microphone access",
+        "NSLocalNetworkUsageDescription": "局域网内 P2P 直连需要访问本地网络 / LAN P2P needs local network access",
+        "NSBonjourServices": [
+          "_e2echat._tcp"
+        ]
+      },
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "identity": null
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "category": "Network",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

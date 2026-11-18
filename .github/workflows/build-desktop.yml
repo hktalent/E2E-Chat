@@ -1,0 +1,110 @@
+name: Build Desktop (Windows / macOS / Linux)
+
+# 推送 tag（v1.0.0 形式）即自动编译三平台桌面安装包，并生成 GitHub Release。
+# 也支持手动触发，只产出构建物（不建 Release）。
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14          # Apple Silicon，同时产出 x64 / arm64
+            platform: mac
+            args: --mac
+          - os: windows-latest    # x64，nsis + portable
+            platform: win
+            args: --win
+          - os: ubuntu-latest     # x64，AppImage + deb
+            platform: linux
+            args: --linux
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install app runtime deps（桌面端内嵌的服务端依赖）
+        working-directory: app
+        # 仓库未跟踪 package-lock.json，故用 install（会自动生成锁文件）
+        run: npm install --omit=dev --no-audit --no-fund
+
+      - name: Install desktop deps（electron / electron-builder）
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+
+      - name: Sanity check（脚本语法 + 关键文件存在）
+        shell: bash
+        run: |
+          node --check app/static/js/sig-bridge.js
+          node --check app/static/js/p2pchat.js
+          node --check desktop/main.js
+          node --check desktop/server-core.js
+          test -f desktop/ca/local.cert
+          test -f desktop/ca/local.key
+          test -f app/myapp_51pwn.js
+
+      - name: Build installers
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'   # 无签名证书：跳过签名，避免构建失败
+        run: npx electron-builder ${{ matrix.args }} --publish never
+
+      - name: List artifacts
+        shell: bash
+        working-directory: desktop
+        run: ls -lh release || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: E2E-Chat-${{ matrix.platform }}-${{ github.ref_name }}
+          path: |
+            desktop/release/*.dmg
+            desktop/release/*.zip
+            desktop/release/*.exe
+            desktop/release/*.AppImage
+            desktop/release/*.deb
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: publish release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create / update release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ls -lh dist
+          gh release view "$TAG" >/dev/null 2>&1 \
+            && gh release upload "$TAG" dist/* --clobber \
+            || gh release create "$TAG" dist/* --generate-notes --title "$TAG"
+        working-directory: .

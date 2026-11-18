@@ -1208,7 +1208,8 @@ function setNickInfo(v){
 function init () {
 	s1 = appURL()
 	s1 = s1.replace("https://", "wss://")
-	socket = io("/pChat");
+	// 桌面端（无服务器直连模式）可注入信令适配层；未注入时行为与网页版完全一致
+	socket = (typeof window.__E2E_SIG__ == "function" ? (window.__E2E_SIG__() || io("/pChat")) : io("/pChat"));
 	const fnOldEmit = socket.emit;
 	// 重载 socket.emit 方法，如果发送失败，会自动重试，这里是导致chrome崩溃的原因
 	// 这里有可以控制特定事件的频度、以及数据没有变化时不重复发送
@@ -3339,3 +3340,19 @@ $(document).ready(async function(){
 	},2000);
 	RegAsync(initLang,0)
 });
+
+/* ===== 桌面端（Electron / 无服务器直连）复用内部实现的最小暴露接口 =====
+   web 版本只是多挂一个对象，不改变任何既有逻辑；
+   桌面端 sig-bridge.js 用它来在没有服务器的情况下驱动 P2P 建立流程。 */
+try{
+	window.__E2E_INTERNALS__ = {
+		peers: function(){return peers},
+		gaM: function(){return gaM},
+		txtChatOne: function(pc, id){return fnTxtChatOne(pc, id)},
+		revMsg: function(e){return RevMsg(e)},
+		roomName: function(){return getRoomName()},
+		isJoined: function(){return !!b_clickJoin},
+		isTxt: function(){return !!g_bTxtChat},
+		layout: function(){try{fn009()}catch(e){}}
+	};
+}catch(e){}
