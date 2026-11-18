@@ -1509,7 +1509,10 @@ function init () {
 			initOnePeer(pC1, peer_id)
 		}
 		let cof = async function(){//,iceRestart: true // 导致内网无法p2p
-			pC1.createOffer({offerToReceiveAudio:true,offerToReceiveVideo:true}).then(async function(lds){
+			// 桌面端“无服务器手工码”模式：只协商数据通道，SDP 从 ~13KB 降到 ~1KB，便于二维码承载；网页版不受影响
+			var szOpt = {offerToReceiveAudio:true,offerToReceiveVideo:true};
+			if(window.__E2E_TEXTONLY__){szOpt = {};}
+			pC1.createOffer(szOpt).then(async function(lds){
 				// log("Local offer description is: ", local_description);
 				pC1.setLocalDescription(lds).then(async function(){
 					// log(peer_id + " setLocalDescription ok");

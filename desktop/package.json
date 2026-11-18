@@ -1,7 +1,7 @@
 {
   "name": "e2e-chat-desktop",
   "productName": "E2E Chat",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Serverless P2P/E2E chat desktop client (Win/macOS/Linux), sharing the same client code as chat.51pwn.com",
   "private": true,
   "main": "main.js",
