@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-13          # Intel runner，交叉产出 x64 / arm64
+          - os: macos-latest      # macOS 15 runner，交叉产出 x64 / arm64
             platform: mac
             args: --mac --x64 --arm64
           - os: windows-latest    # x64，nsis + portable
