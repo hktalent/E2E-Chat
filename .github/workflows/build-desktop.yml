@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14          # Apple Silicon runner，同时产出 x64 / arm64
+          - os: macos-13          # Intel runner，交叉产出 x64 / arm64
             platform: mac
             args: --mac --x64 --arm64
           - os: windows-latest    # x64，nsis + portable
@@ -58,8 +58,10 @@ jobs:
           node --check app/static/js/p2pchat.js
           node --check desktop/main.js
           node --check desktop/server-core.js
-          test -f desktop/ca/local.cert
-          test -f desktop/ca/local.key
+          # 证书不再入库：改为运行时用 selfsigned 生成，这里校验生成逻辑与依赖存在
+          test -f desktop/server-core.js
+          grep -q "ensureCert" desktop/server-core.js
+          node -e "const d=require('./desktop/package.json'); if(!d.dependencies||!d.dependencies.selfsigned){process.exit(1)}"
           test -f app/myapp_51pwn.js
 
       - name: Build installers
