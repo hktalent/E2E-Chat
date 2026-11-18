@@ -38,7 +38,7 @@
 	var outbox = [];
 	var pollTimer = 0;
 	var TTL = (parseInt(qs.get('ttl'), 10) || 180) * 1000;   // 码有效期（默认 180s，可用 ?ttl=25 调试），超时闪烁提示重新生成
-	var st = { channel: '', nick: '', phase: 'idle', expire: 0 };
+	var st = { channel: '', nick: '', peerNick: '', phase: 'idle', expire: 0 };
 
 	/* ---------------- 编解码（deflate-raw，体积约为明文的 1/5） ---------------- */
 	function b64u(bytes) {
@@ -198,6 +198,36 @@
 	}
 
 	/* ---------------- 通道与状态 ---------------- */
+	// 自己的昵称：优先读客户端的昵称输入框 #nick（与 upListMb 用的是同一个值）
+	function selfNick() {
+		try {
+			var el = document.getElementById('nick');
+			if (el && el.value && el.value.trim()) return el.value.trim();
+		} catch (e) { }
+		try { if (I && I.myNick) return (I.myNick() || ''); } catch (e) { }
+		return '';
+	}
+
+	// 对端昵称：客户端的成员列表 = [自己昵称] + gaM 里每个 peer 的 nick，
+	// 对端昵称若等于自己昵称，上线瞬间就会看到“自己出现两次”。同名时加后缀区分。
+	function applyNickNow() {
+		var g = gaM(), me = selfNick(), n = String(st.peerNick || '').trim() || '对方';
+		if (me && n === me) n = n + '（对方）';
+		g[PEER_ID] = g[PEER_ID] || {};
+		g[PEER_ID].nick = n;
+		var pc = peers()[PEER_ID];
+		if (pc && !g[PEER_ID].pc) g[PEER_ID].pc = pc;
+		console.log('[nick] apply me=' + me + ' n=' + n + ' hasUpList=' + !!(I && I.upList) + ' gaMkey=' + Object.keys(gaM()).join(','));
+		if (I && I.upList) { try { I.upList(); } catch (e) { console.log('[nick] upList err ' + e); } }
+	}
+	function setPeerNick(nick) {
+		st.peerNick = nick || '';
+		applyNickNow();
+		// 客户端的 addPeerCbk 可能在之后才覆盖 gaM[peer]，这里补几次
+		setTimeout(applyNickNow, 250);
+		setTimeout(applyNickNow, 900);
+	}
+
 	function markOpen(pid, ch) {
 		var g = gaM();
 		g[pid] = g[pid] || { nick: 'peer' };
@@ -205,6 +235,7 @@
 		g[pid].pcok = true;
 		g[pid].sendChannel = ch;
 		st.phase = 'connected';
+		try { applyNickNow(); } catch (e) { }
 		uiStatus('✅ P2P 直连已建立（无任何服务器）');
 		flushOutbox();
 		uiSync();
@@ -267,10 +298,11 @@
 	/* ---------------- 用户动作 ---------------- */
 	function genInvite() {
 		ensureJoined(function () {
+			st.nick = st.nick || selfNick();
 			icReset();
 			st.phase = 'busy';
 			uiStatus('正在生成邀请码（收集网络候选，约 3–8 秒）…');
-			var pc = fireAddPeer(true, st.nick);
+			var pc = fireAddPeer(true, '对方');   // 此时还不知道对方昵称，先占位，收到回应码后再回填
 			if (!pc) { uiStatus('创建连接失败，请确认已进入文本/视频聊天'); st.phase = 'idle'; return; }
 			// 先自建一条数据通道，让它随首个 offer 一起协商
 			setTimeout(function () { createOwnChannel(PEER_ID); }, 30);
@@ -285,7 +317,8 @@
 			if (code.ch) setChannelFromCode(code.ch);
 			if (code.sdp.type === 'answer') {
 				// 我是发起方：应用回应码
-				if (!peers()[PEER_ID]) fireAddPeer(true, code.nick);
+				if (!peers()[PEER_ID]) fireAddPeer(true, code.nick || '对方');
+				setPeerNick(code.nick);
 				setTimeout(function () {
 					bridge.fire('sessionDescription', { peer_id: PEER_ID, session_description: code.sdp });
 					(code.ice || []).forEach(function (c) {
@@ -298,8 +331,9 @@
 				// 我是接收方：应用邀请码 → 产出回应码
 				st.phase = 'busy';
 				uiStatus('正在生成回应码…');
-				var pc = fireAddPeer(false, code.nick);
+				var pc = fireAddPeer(false, code.nick || '对方');
 				if (!pc) { uiStatus('创建连接失败'); return; }
+				setPeerNick(code.nick);
 				adoptIncoming(PEER_ID);   // 对方的通道在 offer 里，必须先把 ondatachannel 挂上
 				bridge.fire('sessionDescription', {
 					peer_id: PEER_ID,
@@ -491,7 +525,7 @@
 
 	function showCode(kind, sd, ice) {
 		return pack({
-			v: 2, kind: kind, ch: st.channel, nick: st.nick,
+			v: 2, kind: kind, ch: st.channel, nick: st.nick || selfNick(),
 			sdp: { type: sd.type, sdp: sd.sdp },
 			ice: pruneIce(ice)
 		}).then(function (code) {

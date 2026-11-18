@@ -3356,6 +3356,8 @@ try{
 		roomName: function(){return getRoomName()},
 		isJoined: function(){return !!b_clickJoin},
 		isTxt: function(){return !!g_bTxtChat},
-		layout: function(){try{fn009()}catch(e){}}
+		layout: function(){try{fn009()}catch(e){}},
+		upList: function(){try{upListMb()}catch(e){}},
+		myNick: function(){try{return oNick.val()}catch(e){return ''}}
 	};
 }catch(e){}
