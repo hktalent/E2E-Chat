@@ -23,9 +23,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14          # Apple Silicon，同时产出 x64 / arm64
+          - os: macos-14          # Apple Silicon runner，同时产出 x64 / arm64
             platform: mac
-            args: --mac
+            args: --mac --x64 --arm64
           - os: windows-latest    # x64，nsis + portable
             platform: win
             args: --win
