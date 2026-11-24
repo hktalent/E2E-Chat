@@ -31,6 +31,70 @@ cloudflared 本机隧道进程
 
 ---
 
+## 多协议频道（IRC / Matrix / XMPP）
+
+在原有 WebRTC P2P 能力之外，Web 版与桌面版都可直接浏览/加入传统 IM 网络的公开频道（聊天室），用于「既有生态 + 自有 P2P」并存互通。既有功能（chat.51pwn.com 首页、P2P 直连、邀请码/回应码、sig-bridge）不受影响，全部为新增挂载点。
+
+- 入口页面：`/im.html`（首页导航栏 🌐 图标进入）
+- 页面能力：按 `IRC / Matrix / XMPP` 过滤，列出频道名、说明（topic）、协议标签、**在线人数**；点击「加入」即进入聊天面板，可收发消息、离开。协议由频道地址前缀（`irc://` / `matrix://` / `xmpp://`）自动匹配，调用方无需关心实现。
+- 桌面端（Electron）同样内置该页面与接口，本地即可浏览/加入。
+
+### 接口（前缀 `/api/im`，仅对该前缀启用 JSON body）
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/im/protocols` | 三协议可用状态（`ok` / `connected` / `note`） |
+| GET | `/api/im/channels?protocol=all\|irc\|matrix\|xmpp&q=&limit=400` | 聚合频道列表（人数降序），失败协议在 `errors[]` 里给出明确原因 |
+| POST | `/api/im/join` | `{channel}` → `{sid, protocol, server, name}` |
+| GET | `/api/im/messages?sid=&cursor=` | 增量拉取消息 |
+| POST | `/api/im/send` | `{sid, text}` |
+| POST | `/api/im/leave` | `{sid}` |
+
+错误码：`NEED_CREDENTIALS` → 401（需登录凭据）、`BAD_PROTOCOL` → 400、`NO_SESSION`。
+
+### 环境变量（不配也能跑，未配的协议会显示原因）
+
+```
+IM_IRC_SERVERS_JSON    # 覆盖 IRC 服务器数组，形如 [{"host":"irc.libera.chat","port":6697,"tls":true,"label":"Libera.Chat"}]
+IM_IRC_LOCAL           # 只连自建 ircd，如 127.0.0.1:6667（纯文本）
+IM_IRC_NICK/IM_IRC_PASS# 有值则走 SASL PLAIN（Libera 等要求登录的网络）
+IM_MATRIX_HS           # 默认 https://matrix.org
+IM_MATRIX_TOKEN/USER   # 有 token 才可加入房间（只读列表不需要）
+IM_XMPP_JID/IM_XMPP_PASS# 有账号才可加入 MUC
+IM_XMPP_MUC            # 默认 conference.xmpp.jp
+IM_XMPP_SERVICE        # 默认 xmpp://xmpp.jp:5222
+IM_IRC_DISABLE / IM_MATRIX_DISABLE / IM_XMPP_DISABLE  # 关掉某协议
+```
+
+### 网络前提（实测结论）
+
+- 本机/本网络出口**只能**连通 `irc.libera.chat:6697`（且要求 SASL），其余公网 IRC（oftc / rizon / efnet / undernet / gamesurge / hackint / snooneet / libera:6667）与 `matrix.org` 均 TCP 超时（被墙）。因此线上默认会显示"不可用原因"，这是网络事实，不是代码缺陷。
+- 想立刻看到真实频道，可自建 ircd 并把 `IM_IRC_LOCAL` 指过去：仓库内置联调用的真实 IRCd harness
+
+```sh
+node app/im/ircd-test.js                                  # 真实 ircd 起在 6667（#test / #random / #help，人数按真实连接统计）
+PORT=2085 IM_IRC_LOCAL=127.0.0.1:6667 node app/server.js  # 本机实例
+# 或容器内：docker run 时加 -e IM_IRC_LOCAL=host.docker.internal:6667
+```
+
+配置生效后：频道列表出现真实人数，网页端发消息可被频道内其它真实 IRC 客户端收到，反之亦然（已端到端验证）。
+
+### 实现位置
+
+```
+app/im/config.js            三协议配置（全部走环境变量）
+app/im/irc-client.js        纯 net/tls IRC 客户端（SASL PLAIN / 限速 / LIST 回落）
+app/im/adapters/{irc,matrix,xmpp}.js   协议适配（列表 + 加入 + 收发）
+app/im/hub.js               统一会话中心（sid、消息缓冲、空闲回收）
+app/im/index.js             /api/im 路由
+app/static/im.html          频道页
+app/static/js/im-client.js  页面逻辑（同源 fetch，零依赖）
+desktop/server-core.js      桌面端同样挂载 /api/im
+app/im/README.md            详细接口 / 变量 / 联调说明
+```
+
+---
+
 ## 一、Docker 容器
 
 ### 镜像选型（坑）

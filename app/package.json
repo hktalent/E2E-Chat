@@ -12,9 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "javascript-obfuscator": "^4.1.0",
+    "@xmpp/client": "^0.14.0",
     "clean-css": "^5.3.2",
-    "uglify-js": "^3.17.4",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
     "express": "^4.19.2",
@@ -22,10 +21,15 @@
     "helmet": "^7.0.0",
     "html-minifier": "^4.0.0",
     "html-webpack-plugin": "^5.6.0",
+    "javascript-obfuscator": "^4.1.0",
     "level": "^8.0.0",
     "mime": "^4.0.1",
     "request": "^2.88.2",
     "socket.io": "4.7.5",
-    "terser": "^5.19.1"
+    "terser": "^5.19.1",
+    "uglify-js": "^3.17.4"
+  },
+  "devDependencies": {
+    "ircdkit": "^2.0.0"
   }
 }

@@ -53,6 +53,8 @@ var oMyapp = new myapp({
     },
     cbkApp:function(app)
     {
+        try{ require(serverRootPath + '/im')(app); }
+        catch(e){ console.log('[im] mount failed: ' + (e && e.stack || e)); }
     },
     cbk4ServerAppIo:function(server,app,io)
     {

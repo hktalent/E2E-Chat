@@ -125,7 +125,11 @@ async function start(opts) {
 					port: p,
 					onError: function (e) { onLog('server error: ' + String((e && e.stack) || e)); },
 					onLog: function (s) { onLog('[srv] ' + s); },
-					cbkApp: function () { },
+					cbkApp: function (expressApp) {
+						// 多协议频道（IRC/Matrix/XMPP）桥接；失败不影响桌面端主功能
+						try { require(path.join(appDir, 'im'))(expressApp); }
+						catch (e) { onLog('[im] 未启用: ' + (e && e.message)); }
+					},
 					cbk4ServerAppIo: function (server, expressApp, io) {
 						p2pchat.fnInit(io.of('/pChat'));
 						server.once('listening', done);

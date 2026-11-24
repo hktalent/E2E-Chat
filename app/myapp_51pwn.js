@@ -480,7 +480,7 @@ fix.js`).split("\n")
                     fs.writeFile(szPm,JSON.stringify(g_oPmap),function(){});
                 }
             }
-        }else if(!g_oPmap[szUrl] && !/^\/(js|css|model|lang|vt)\/|^\/v8\.js$|^\/socket\.io\//.test(szUrl) && !fs.existsSync(webStaticPath+szUrl)){
+        }else if(!g_oPmap[szUrl] && !/^\/(js|css|model|lang|vt)\/|^\/v8\.js$|^\/socket\.io\/|^\/api\//.test(szUrl) && !fs.existsSync(webStaticPath+szUrl)){
             console.log("404",req.url)
             // 返回标准 404，而不是直接断开 TLS 连接（会导致 robots.txt 等请求异常）
             res.status(404).set("Content-Type","text/plain; charset=utf-8").end("Not Found");
