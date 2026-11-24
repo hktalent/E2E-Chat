@@ -29,7 +29,8 @@ module.exports = function mount(app) {
 
   // 协议能力与状态
   app.get('/api/im/protocols', wrap(async () => {
-    await matrix.probe().catch(() => {});
+    // 不等待探测：首帧立即返回缓存状态，探测在后台跑，避免页面被 6s 超时拖住
+    matrix.probe().catch(() => {});
     return { ok: true, protocols: hub.protocols() };
   }));
 

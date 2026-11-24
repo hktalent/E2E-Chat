@@ -42,7 +42,7 @@ async function probe() {
   if (statusCache.value && Date.now() - statusCache.ts < 60 * 1000) return statusCache.value;
   let value;
   try {
-    await api('/_matrix/client/versions', { timeout: 6000 });
+    await api("/_matrix/client/versions", { timeout: 3000 });
     value = { reachable: true, error: null };
   } catch (e) {
     value = { reachable: false, error: e.message };
