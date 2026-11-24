@@ -38,13 +38,45 @@ async function connect(server) {
   const ent = connFor(server);
   if (ent.client.ready) return ent;
   try {
-    await ent.client.connect(14000);
+    await ent.client.connect(8000);
   } catch (e) {
     pool.delete(server.host);
     throw e;
   }
   return ent;
 }
+
+let warming = false;
+async function warmup() {
+  if (warming) return;
+  warming = true;
+  try {
+    for (const server of cfg.irc.servers || []) {
+      const cached = lastList.get(server.host);
+      if (cached && Date.now() - cached.ts < cfg.listCacheMs) continue;
+      try {
+        const ent = await connect(server);
+        const items = await Promise.race([
+          ent.client.list(),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('LIST 超时')), 9000))
+        ]);
+        const mapped = items.filter((it) => it && it.name && it.name[0] === '#').map((it) => ({
+          id: `irc://${server.host}/` + encodeURIComponent(it.name),
+          protocol: 'irc',
+          protocolLabel: server.label || server.host,
+          server: server.host,
+          name: it.name,
+          members: it.members,
+          topic: (it.topic || '').slice(0, 140)
+        }));
+        lastList.set(server.host, { ts: Date.now(), items: mapped });
+      } catch (e) { /* 预热失败不影响请求 */ }
+    }
+  } finally { warming = false; }
+}
+// 模块加载 3 秒后开始预热，之后每 5 分钟兜底刷新一次
+setTimeout(() => { warmup().catch(() => {}); }, 3000).unref?.();
+setInterval(() => { warmup().catch(() => {}); }, 5 * 60 * 1000).unref?.();
 
 async function listChannels({ q = '', limit = 300 } = {}) {
   const servers = cfg.irc.servers || [];
@@ -57,7 +89,7 @@ async function listChannels({ q = '', limit = 300 } = {}) {
       const ent = await connect(server);
       const items = await Promise.race([
         ent.client.list(),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('LIST 超时')), 20000))
+        new Promise((_, rej) => setTimeout(() => rej(new Error('LIST 超时')), 9000))
       ]);
       const mapped = items
         .filter((it) => it && it.name && it.name[0] === '#')

@@ -70,3 +70,11 @@ cd app && PORT=2085 IM_IRC_LOCAL=127.0.0.1:6667 node server.js
 curl -sk "https://127.0.0.1:2085/api/im/channels?protocol=irc"
 open   https://127.0.0.1:2085/im.html
 ```
+
+## 出网代理（netproxy.js）与故障隔离
+
+- `netproxy.js`：零依赖 SOCKS5 / SOCKS5h / HTTP CONNECT 隧道；`requestJson()` 无代理时用全局 fetch，有代理时用 `https.request` + 自建 agent（隧道 + TLS）。
+- 环境变量：`IM_SOCKS_PROXY` / `IM_HTTP_PROXY` / `IM_PROXY_FALLBACK=1`（回落 `ALL_PROXY`、`HTTPS_PROXY`）。
+- 容器访问宿主代理：`node im/proxy-relay.js`（默认 `0.0.0.0:10811 -> 127.0.0.1:1081`），然后 `IM_SOCKS_PROXY=socks5://host.docker.internal:10811` 重建容器。
+- 隔离约定：每个协议、每台 IRC 服务器独立 try/catch + 超时；单协议列表硬上限 15s；`irc-client` 的 error 事件无人监听时只写日志，不会走未捕获路径（进程不会因某个网络异常退出）。
+- 缓存：IRC 列表 60s 缓存 + 启动 3s 后后台预热 + 每 5 分钟兜底刷新；冷启动 6–13s，命中缓存 12–26ms。

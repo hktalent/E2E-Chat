@@ -4,6 +4,7 @@
  * - 加入房间 / 发消息 / 拉历史需要 access token（环境变量 IM_MATRIX_TOKEN）
  */
 const cfg = require('../config');
+const netproxy = require('../netproxy');
 
 let statusCache = { ts: 0, value: null };
 let roomsCache = { ts: 0, value: null };
@@ -12,30 +13,8 @@ const HS = () => cfg.matrix.homeserver.replace(/\/+$/, '');
 const TOKEN = () => cfg.matrix.accessToken;
 
 async function api(path, { method = 'GET', body, token, timeout = 12000 } = {}) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeout);
-  try {
-    const r = await fetch(HS() + path, {
-      method,
-      headers: Object.assign(
-        { 'Content-Type': 'application/json' },
-        token ? { Authorization: 'Bearer ' + token } : {}
-      ),
-      body: body ? JSON.stringify(body) : undefined,
-      signal: ctrl.signal
-    });
-    const text = await r.text();
-    let json = null;
-    try { json = text ? JSON.parse(text) : null; } catch (_) {}
-    if (!r.ok) {
-      const err = new Error(`Matrix ${r.status}: ${(json && (json.error || json.errcode)) || text.slice(0, 120)}`);
-      err.status = r.status;
-      throw err;
-    }
-    return json;
-  } finally {
-    clearTimeout(t);
-  }
+  // 统一出网层：直连或经系统 SOCKS/HTTP 代理（见 im/netproxy.js）
+  return netproxy.requestJson(HS() + path, { method, body, token, timeout });
 }
 
 async function probe() {

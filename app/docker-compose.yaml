@@ -11,4 +11,16 @@ services:
     volumes:
       - .:/app
       - ../ca:/ca   # 可选：本地 https 证书（自行签发，仓库不提供）
+    environment:
+      # 多协议频道（IRC/Matrix/XMPP）：全部可选，不配即直连（失败仅影响对应协议）
+      IM_SOCKS_PROXY: "${IM_SOCKS_PROXY:-}"
+      IM_HTTP_PROXY: "${IM_HTTP_PROXY:-}"
+      IM_IRC_LOCAL: "${IM_IRC_LOCAL:-}"
+      IM_IRC_SERVERS_JSON: "${IM_IRC_SERVERS_JSON:-}"
+      IM_IRC_NICK: "${IM_IRC_NICK:-}"
+      IM_IRC_PASS: "${IM_IRC_PASS:-}"
+      IM_MATRIX_HS: "${IM_MATRIX_HS:-}"
+      IM_MATRIX_TOKEN: "${IM_MATRIX_TOKEN:-}"
+      IM_XMPP_JID: "${IM_XMPP_JID:-}"
+      IM_XMPP_PASS: "${IM_XMPP_PASS:-}"
     command: /app/run.sh

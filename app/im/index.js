@@ -6,6 +6,7 @@
 const express = require('express');
 const hub = require('./hub');
 const matrix = require('./adapters/matrix');
+const netproxy = require('./netproxy');
 
 function json(res, code, obj) {
   res.status(code).set('Content-Type', 'application/json; charset=utf-8');
@@ -31,7 +32,7 @@ module.exports = function mount(app) {
   app.get('/api/im/protocols', wrap(async () => {
     // 不等待探测：首帧立即返回缓存状态，探测在后台跑，避免页面被 6s 超时拖住
     matrix.probe().catch(() => {});
-    return { ok: true, protocols: hub.protocols() };
+    return { ok: true, protocols: hub.protocols(), network: { proxy: netproxy.describe() } };
   }));
 
   // 频道列表（跨协议聚合，含人数）

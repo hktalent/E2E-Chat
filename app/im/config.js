@@ -32,8 +32,10 @@ module.exports = {
           label: '自建 ircd'
         }];
       }
+      // 默认挂三个真实网络（并行拉取，单网络失败只影响自身，不影响其它协议与其它网络）
       return [
         { host: 'irc.libera.chat', port: 6697, tls: true, label: 'Libera.Chat', sasl },
+        { host: 'irc.oftc.net', port: 6697, tls: true, label: 'OFTC' }
       ].filter(Boolean);
     })(),
     nick: process.env.IM_IRC_NICK || '',

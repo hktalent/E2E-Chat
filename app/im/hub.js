@@ -14,7 +14,9 @@ const adapters = {
 const sessions = new Map(); // sid -> {id, protocol, channel, name, send, leave, msgs:[], at}
 
 function protocols() {
-  return Object.values(adapters).map((a) => a.status());
+  return Object.values(adapters).map((a) => {
+    try { return a.status(); } catch (e) { return { id: a.id || 'unknown', ok: false, note: '状态不可用: ' + e.message }; }
+  });
 }
 
 /**
@@ -29,8 +31,12 @@ async function listChannels(opt = {}) {
     : Object.values(adapters);
 
   const results = await Promise.all(targets.map(async (a) => {
+    // 每个协议独立兜底 + 独立超时：任何协议卡死/报错都只污染自己的 errors[]，不影响其它协议
     try {
-      const r = await a.listChannels({ q, limit });
+      const r = await Promise.race([
+        a.listChannels({ q, limit }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('该协议列表超时（不影响其它协议）')), 15000))
+      ]);
       return { id: a.id, channels: r.channels || [], errors: r.errors || [], total: r.total || 0 };
     } catch (e) {
       return { id: a.id, channels: [], errors: [{ server: '', error: e.message }], total: 0 };

@@ -66,18 +66,56 @@ IM_XMPP_SERVICE        # 默认 xmpp://xmpp.jp:5222
 IM_IRC_DISABLE / IM_MATRIX_DISABLE / IM_XMPP_DISABLE  # 关掉某协议
 ```
 
-### 网络前提（实测结论）
+### 出网与代理（关键）
 
-- 本机/本网络出口**只能**连通 `irc.libera.chat:6697`（且要求 SASL），其余公网 IRC（oftc / rizon / efnet / undernet / gamesurge / hackint / snooneet / libera:6667）与 `matrix.org` 均 TCP 超时（被墙）。因此线上默认会显示"不可用原因"，这是网络事实，不是代码缺陷。
-- 想立刻看到真实频道，可自建 ircd 并把 `IM_IRC_LOCAL` 指过去：仓库内置联调用的真实 IRCd harness
+公网 IRC / Matrix 在多数网络被直连阻断，Node 的 `fetch` **不会**自动走系统代理。因此桥接层自带零依赖出网层 `app/im/netproxy.js`，支持 SOCKS5 / SOCKS5h / HTTP CONNECT（含用户名密码），并可由环境变量控制：
 
-```sh
-node app/im/ircd-test.js                                  # 真实 ircd 起在 6667（#test / #random / #help，人数按真实连接统计）
-PORT=2085 IM_IRC_LOCAL=127.0.0.1:6667 node app/server.js  # 本机实例
-# 或容器内：docker run 时加 -e IM_IRC_LOCAL=host.docker.internal:6667
+```
+IM_SOCKS_PROXY=socks5://127.0.0.1:1081     # 推荐：本机系统代理（如 mihomo/clash 的 mixed 端口）
+IM_HTTP_PROXY=http://127.0.0.1:8080        # 或者 HTTP 代理
+IM_PROXY_FALLBACK=1                        # 允许回落 ALL_PROXY / HTTPS_PROXY
 ```
 
-配置生效后：频道列表出现真实人数，网页端发消息可被频道内其它真实 IRC 客户端收到，反之亦然（已端到端验证）。
+实测（本机 SOCKS 1081）：`matrix.org` 200、`irc.oftc.net` LIST 2861 个频道、`open.ircnet.net` 5059 个频道。未配置代理时三协议仍可运行，只是各自的 `errors[]` 会给出"不可达/超时"原因。
+
+### 容器如何用上宿主代理
+
+宿主代理通常只监听 `127.0.0.1`，容器访问不到。用内置的零依赖端口转发把它的入口开到 `0.0.0.0:10811`：
+
+```sh
+node app/im/proxy-relay.js                                 # 0.0.0.0:10811 -> 127.0.0.1:1081
+IM_SOCKS_PROXY=socks5://host.docker.internal:10811 \
+  docker compose -f app/docker-compose.yaml up -d           # 重建容器并注入代理
+```
+
+`docker-compose.yaml` 已把所有 IM 相关变量做成 `${VAR:-}` 透传，不设置即退回直连，不影响既有功能。想让中继开机常驻（launchd）：
+
+```sh
+cat > ~/Library/LaunchAgents/com.e2echat.imrelay.plist <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.e2echat.imrelay</string>
+  <key>ProgramArguments</key><array>
+    <string>/usr/local/bin/node</string>
+    <string>/Users/51pwn/MyWork/E2E_chat/app/im/proxy-relay.js</string>
+  </array>
+  <key>RunAtLoad</key><true/><key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/imrelay.log</string>
+  <key>StandardErrorPath</key><string>/tmp/imrelay.err</string>
+</dict></plist>
+PLIST
+launchctl load ~/Library/LaunchAgents/com.e2echat.imrelay.plist
+```
+
+### 故障隔离（刻意设计）
+
+- 每个协议、每台 IRC 服务器独立 `try/catch` + 独立超时，某一路失败只写进自己的 `errors[]`，不影响其它协议；
+- `/api/im/channels` 单协议硬上限 15s，`LIST` 9s，注册最多等 10s 即放行；
+- IRC 列表有 60s 缓存 + 启动后 3s 起后台预热、每 5 分钟兜底刷新，页面请求命中缓存（实测 12–26ms）；
+- `irc-client` 的 error 事件若无人监听只写日志，绝不因未捕获事件让进程退出；
+- `server.js` / `desktop/server-core.js` 挂载 `/api/im` 均包在 `try/catch`，桥接失败不影响主站与 P2P；
+- 实测：把代理指向死端口（`127.0.0.1:9`）后，`/api/im/channels` 43ms 返回 200（`channels: []` + 三协议错误），`/`、`/im.html`、`/js/sig-bridge.js` 全部 200，进程存活。
 
 ### 实现位置
 

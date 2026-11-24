@@ -4,6 +4,7 @@
  * 事件：ready / list / listend / message / join / part / names / nickinuse / error / close
  */
 const net = require('net');
+const netproxy = require('./netproxy');
 const tls = require('tls');
 const { EventEmitter } = require('events');
 
@@ -31,34 +32,55 @@ class IrcClient extends EventEmitter {
     return new Promise((resolve, reject) => {
       if (this.sock && this.ready) return resolve(this);
       let done = false;
-      const onErr = (e) => { if (!done) { done = true; reject(e); } };
-      const opts = { host: this.host, port: this.port };
-      const s = this.tls
-        ? tls.connect({ ...opts, servername: this.host, rejectUnauthorized: false }, onConnect)
-        : net.connect(opts, onConnect);
-      let timer = setTimeout(() => {
-        if (!done) { done = true; try { s.destroy(); } catch (_) {} reject(new Error('IRC connect timeout')); }
-      }, timeout);
-
+      let timer = null;
+      const onErr = (e) => { if (!done) { done = true; clearTimeout(timer); try { this.sock && this.sock.destroy(); } catch (_) {} reject(e); } };
       const self = this;
-      function onConnect() {
+
+      // 注册流程（无论是直连还是隧道，共用同一段逻辑）
+      const onConnect = (sock) => {
         clearTimeout(timer);
-        self.sock = s;
-        s.setEncoding('utf8');
-        s.on('data', (d) => self._onData(d));
-        s.on('error', (e) => { self.emit('error', e); onErr(e); });
-        s.on('close', () => {
+        self.sock = sock;
+        sock.setEncoding('utf8');
+        sock.on('data', (d) => self._onData(d));
+        sock.on('error', (e) => { self._err(e); onErr(e); });
+        sock.on('close', () => {
           self.ready = false;
           self.emit('close');
-          if (!self.ready && !self._gotWelcome) onErr(new Error('IRC 连接被关闭（可能要求 SASL 或拒绝匿名）'));
+          if (!self._gotWelcome) onErr(new Error('IRC 连接被关闭（可能要求 SASL 或拒绝匿名）'));
         });
+        self.emit('connect');
         // 注册：先协商能力，支持时用 SASL 认证
         if (self.sasl) self._raw('CAP LS 302');
         self._raw(`NICK ${self.nick}`);
         self._raw(`USER ${self.nick} 0 * :E2E Chat web bridge`);
+      };
+
+      timer = setTimeout(() => {
+        if (!done) { done = true; resolve(self); }
+      }, Math.min(timeout, 10000));
+
+      if (netproxy.proxyActive()) {
+        (this.tls
+          ? netproxy.connectTls(this.host, this.port, { rejectUnauthorized: false }, timeout)
+          : netproxy.connectRaw(this.host, this.port, timeout)
+        ).then(onConnect).catch((e) => onErr(new Error('经代理连接 IRC 失败: ' + e.message)));
+      } else if (this.tls) {
+        const sock = tls.connect({ host: this.host, port: this.port, servername: this.host, rejectUnauthorized: false }, () => onConnect(sock));
+      } else {
+        net.connect({ host: this.host, port: this.port }, function () { onConnect(this); });
       }
-      this.once('ready', () => { if (!done) { done = true; resolve(this); } });
+
+      this.once('ready', () => { if (!done) { done = true; clearTimeout(timer); resolve(this); } });
     });
+  }
+
+  /** 安全派发 error：没人监听时只记日志，绝不因未捕获事件搞崩进程 */
+  _err(e) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    try {
+      if (this.listenerCount('error') > 0) this.emit('error', err);
+      else console.warn('[im/irc] ' + err.message);
+    } catch (_) {}
   }
 
   _raw(line) {
@@ -87,7 +109,7 @@ class IrcClient extends EventEmitter {
     for (const rawLine of chunk.split(/\r?\n/)) {
       const line = rawLine.replace(/\r/g, '');
       if (!line) continue;
-      try { this._parse(line); } catch (e) { this.emit('error', e); }
+      try { this._parse(line); } catch (e) { this._err(e); }
     }
   }
 
@@ -192,7 +214,7 @@ class IrcClient extends EventEmitter {
     if (cmd === 'PART') { this.emit('part', { channel: args[0], nick }); return; }
     if (cmd === 'QUIT') { this.emit('quit', { nick }); return; }
     if (cmd === 'NICK') { this.emit('nick', { from: nick, to: args[0] }); return; }
-    if (cmd === 'ERROR') { this.emit('error', new Error(args.join(' '))); return; }
+    if (cmd === 'ERROR') { this._err(new Error(args.join(' '))); return; }
     if (/^4|^5/.test(cmd)) { this.emit('noticeError', { cmd, args }); }
   }
 
