@@ -48,6 +48,7 @@ async function connect(server) {
 }
 
 let warming = false;
+const failAt = new Map(); // 负缓存：失败的网络 10 分钟内不再重试，避免每次请求都等超时
 async function warmup() {
   if (warming) return;
   warming = true;
@@ -100,8 +101,10 @@ async function fetchOne(server) {
       }));
     lastList.set(server.host, { ts: Date.now(), items: mapped });
     cache.save('irc_' + server.host, mapped);
+    failAt.delete(server.host);
     return { items: mapped, error: null };
   } catch (e) {
+    failAt.set(server.host, { ts: Date.now(), msg: e.message });
     const snap = cache.load('irc_' + server.host);
     if (snap) {
       return {
@@ -116,6 +119,17 @@ async function fetchOne(server) {
 async function listChannels({ q = '', limit = 300 } = {}) {
   const servers = cfg.irc.servers || [];
   const results = await Promise.all(servers.map(async (server) => {
+    const failed = failAt.get(server.host);
+    if (failed && Date.now() - failed.ts < 10 * 60 * 1000) {
+      const snap0 = cache.load('irc_' + server.host);
+      if (snap0) {
+        return {
+          items: cache.markStale(snap0.items, snap0.ts),
+          error: { server: server.host, soft: true, error: '该网络暂不可用（' + Math.round((Date.now() - failed.ts) / 60000) + ' 分钟前尝试失败，10 分钟内不重试），展示本地缓存（最长 7 天）' }
+        };
+      }
+      return { items: [], error: { server: server.host, error: '该网络暂不可用，10 分钟内不重试：' + failed.msg } };
+    }
     const mem = lastList.get(server.host);
     if (mem && Date.now() - mem.ts < cfg.listCacheMs) return { items: mem.items, error: null };
     // 有 7 天快照就立刻返回（stale 角标），同时在后台静默刷新，页面绝不等网络
