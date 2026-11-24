@@ -18,6 +18,7 @@ function fileFor(key) {
 }
 
 function save(key, items) {
+  if (!Array.isArray(items) || !items.length) return; // 空列表不落盘，避免把「拿不到」当成有效快照
   try {
     fs.mkdirSync(DIR, { recursive: true });
     const f = fileFor(key);
@@ -34,7 +35,7 @@ function load(key) {
     const f = fileFor(key);
     if (!fs.existsSync(f)) return null;
     const obj = JSON.parse(fs.readFileSync(f, 'utf8'));
-    if (!obj || !Array.isArray(obj.items) || !obj.ts) return null;
+    if (!obj || !Array.isArray(obj.items) || !obj.items.length || !obj.ts) return null;
     if (Date.now() - obj.ts > TTL_MS) return null; // 超过 7 天视为失效
     return { ts: obj.ts, items: obj.items, ageMs: Date.now() - obj.ts };
   } catch (e) {
