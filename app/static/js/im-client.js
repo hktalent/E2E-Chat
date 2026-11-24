@@ -50,7 +50,7 @@
     errs.innerHTML = '';
     (data.errors || []).forEach(function (e) {
       var d = document.createElement('div');
-      d.className = 'err';
+      d.className = e.soft ? 'err soft' : 'err';
       d.textContent = '[' + (e.protocol || '') + '] ' + (e.error || '不可用');
       errs.appendChild(d);
     });
@@ -68,7 +68,8 @@
       row.innerHTML =
         '<div style="min-width:0"><div class="nm" title="' + esc(c.name) + '">' + esc(c.name) + '</div>' +
         '<div class="tp" title="' + esc(c.topic || c.server || '') + '">' + esc(c.topic || c.server || '') + '</div></div>' +
-        '<div class="tg">' + esc(c.protocolLabel || c.protocol) + '</div>' +
+        '<div class="tg">' + esc(c.protocolLabel || c.protocol) +
+          (c.stale ? ' <span class="staleTag" title="本地缓存，' + esc(new Date(c.asOf || 0).toLocaleString()) + '">缓存</span>' : '') + '</div>' +
         '<div class="mb">' + (c.members || 0) + ' 人</div>' +
         '<button class="go">加入</button>';
       row.querySelector('.go').addEventListener('click', function (ev) {

@@ -4,6 +4,7 @@
  */
 const IrcClient = require('../irc-client');
 const cfg = require('../config');
+const cache = require('../cache');
 
 /** host -> {client, refs:Map(channel->Set(session)), topics:Map} */
 const pool = new Map();
@@ -78,35 +79,55 @@ async function warmup() {
 setTimeout(() => { warmup().catch(() => {}); }, 3000).unref?.();
 setInterval(() => { warmup().catch(() => {}); }, 5 * 60 * 1000).unref?.();
 
+/** 单台服务器一次真实拉取；成功写内存 + 落盘，失败回退 7 天快照 */
+async function fetchOne(server) {
+  try {
+    const ent = await connect(server);
+    const items = await Promise.race([
+      ent.client.list(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('LIST 超时')), 9000))
+    ]);
+    const mapped = items
+      .filter((it) => it && it.name && it.name[0] === '#')
+      .map((it) => ({
+        id: `irc://${server.host}/` + encodeURIComponent(it.name),
+        protocol: 'irc',
+        protocolLabel: server.label || server.host,
+        server: server.host,
+        name: it.name,
+        members: it.members,
+        topic: (it.topic || '').slice(0, 140)
+      }));
+    lastList.set(server.host, { ts: Date.now(), items: mapped });
+    cache.save('irc_' + server.host, mapped);
+    return { items: mapped, error: null };
+  } catch (e) {
+    const snap = cache.load('irc_' + server.host);
+    if (snap) {
+      return {
+        items: cache.markStale(snap.items, snap.ts),
+        error: { server: server.host, soft: true, error: '网络异常，展示本地缓存（' + Math.round(snap.ageMs / 3600000) + ' 小时前，最长 7 天）：' + e.message }
+      };
+    }
+    return { items: [], error: { server: server.host, error: e.message } };
+  }
+}
+
 async function listChannels({ q = '', limit = 300 } = {}) {
   const servers = cfg.irc.servers || [];
   const results = await Promise.all(servers.map(async (server) => {
-    const cached = lastList.get(server.host);
-    if (cached && Date.now() - cached.ts < cfg.listCacheMs) {
-      return { items: cached.items, error: null };
+    const mem = lastList.get(server.host);
+    if (mem && Date.now() - mem.ts < cfg.listCacheMs) return { items: mem.items, error: null };
+    // 有 7 天快照就立刻返回（stale 角标），同时在后台静默刷新，页面绝不等网络
+    const snap = cache.load('irc_' + server.host);
+    if (snap) {
+      setImmediate(() => { fetchOne(server).catch(() => {}); });
+      return {
+        items: cache.markStale(snap.items, snap.ts),
+        error: { server: server.host, soft: true, error: '后台刷新中，当前为本地缓存（' + Math.round(snap.ageMs / 3600000) + ' 小时前，最长 7 天）' }
+      };
     }
-    try {
-      const ent = await connect(server);
-      const items = await Promise.race([
-        ent.client.list(),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('LIST 超时')), 9000))
-      ]);
-      const mapped = items
-        .filter((it) => it && it.name && it.name[0] === '#')
-        .map((it) => ({
-          id: `irc://${server.host}/` + encodeURIComponent(it.name),
-          protocol: 'irc',
-          protocolLabel: server.label || server.host,
-          server: server.host,
-          name: it.name,
-          members: it.members,
-          topic: (it.topic || '').slice(0, 140)
-        }));
-      lastList.set(server.host, { ts: Date.now(), items: mapped });
-      return { items: mapped, error: null };
-    } catch (e) {
-      return { items: [], error: { server: server.host, error: e.message } };
-    }
+    return fetchOne(server);
   }));
 
   let out = [];

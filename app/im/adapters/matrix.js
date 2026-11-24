@@ -5,6 +5,7 @@
  */
 const cfg = require('../config');
 const netproxy = require('../netproxy');
+const cache = require('../cache');
 
 let statusCache = { ts: 0, value: null };
 let roomsCache = { ts: 0, value: null };
@@ -30,10 +31,7 @@ async function probe() {
   return value;
 }
 
-async function listChannels({ q = '', limit = 200 } = {}) {
-  const p = await probe();
-  if (!p.reachable) return { channels: [], errors: [{ server: cfg.matrix.homeserver, error: p.error }], total: 0 };
-  if (roomsCache.value && Date.now() - roomsCache.ts < cfg.listCacheMs) return filter(roomsCache.value, q, limit);
+async function refreshRooms() {
   const data = await api('/_matrix/client/v3/publicRooms?limit=200');
   const items = (data.chunk || [])
     .filter((r) => r && r.room_id)
@@ -49,7 +47,43 @@ async function listChannels({ q = '', limit = 200 } = {}) {
       joinRule: r.join_rule || ''
     }));
   roomsCache = { ts: Date.now(), value: items };
-  return filter(items, q, limit);
+  cache.save('matrix_' + cfg.matrix.homeserver.replace(/^https?:\/\//, ''), items);
+  return items;
+}
+
+async function listChannels({ q = '', limit = 200 } = {}) {
+  if (roomsCache.value && Date.now() - roomsCache.ts < cfg.listCacheMs) return filter(roomsCache.value, q, limit);
+
+  // 有 7 天快照：先返回缓存（stale），后台静默刷新
+  const snapNow = cache.load('matrix_' + cfg.matrix.homeserver.replace(/^https?:\/\//, ''));
+  if (snapNow) {
+    setImmediate(() => { refreshRooms().then(() => probe().catch(() => {})).catch(() => {}); });
+    const r = filter(cache.markStale(snapNow.items, snapNow.ts), q, limit);
+    r.errors = [{ server: cfg.matrix.homeserver, soft: true, error: '后台刷新中，当前为本地缓存（' + Math.round(snapNow.ageMs / 3600000) + ' 小时前，最长 7 天）' }];
+    return r;
+  }
+
+  const p = await probe();
+  if (!p.reachable) return fallback(q, limit, p.error);
+  try {
+    const items = await refreshRooms();
+    return filter(items, q, limit);
+  } catch (e) {
+    return fallback(q, limit, e.message);
+  }
+}
+
+/** 网络不可达时用 7 天内快照兜底 */
+function fallback(q, limit, errMsg) {
+  const snap = cache.load('matrix_' + cfg.matrix.homeserver.replace(/^https?:\/\//, ''));
+  if (!snap) return { channels: [], errors: [{ server: cfg.matrix.homeserver, error: errMsg }], total: 0 };
+  const r = filter(cache.markStale(snap.items, snap.ts), q, limit);
+  r.errors = [{
+    server: cfg.matrix.homeserver,
+    soft: true,
+    error: '网络异常，展示本地缓存（' + Math.round(snap.ageMs / 3600000) + ' 小时前，最长 7 天）：' + errMsg
+  }];
+  return r;
 }
 
 function filter(items, q, limit) {

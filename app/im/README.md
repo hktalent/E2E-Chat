@@ -78,3 +78,10 @@ open   https://127.0.0.1:2085/im.html
 - 容器访问宿主代理：`node im/proxy-relay.js`（默认 `0.0.0.0:10811 -> 127.0.0.1:1081`），然后 `IM_SOCKS_PROXY=socks5://host.docker.internal:10811` 重建容器。
 - 隔离约定：每个协议、每台 IRC 服务器独立 try/catch + 超时；单协议列表硬上限 15s；`irc-client` 的 error 事件无人监听时只写日志，不会走未捕获路径（进程不会因某个网络异常退出）。
 - 缓存：IRC 列表 60s 缓存 + 启动 3s 后后台预热 + 每 5 分钟兜底刷新；冷启动 6–13s，命中缓存 12–26ms。
+
+## 频道列表 7 天持久缓存
+
+- `cache.js`：`<repo>/app/im/.cache/<key>.json`，原子写（tmp+rename），读取时超过 `IM_CACHE_TTL_DAYS`（默认 7）即作废。
+- 策略是「缓存优先 + 后台刷新」：有快照立即返回（`stale:true` / `asOf`），`setImmediate` 里静默刷新；网络失败回退快照并给 soft 提示；无快照才阻塞拉取。
+- key：`irc_<host>`、`matrix_<homeserver>`、`xmpp_<muc>`。
+- 目录已在根 `.gitignore`（`app/im/.cache/`），不进仓库。

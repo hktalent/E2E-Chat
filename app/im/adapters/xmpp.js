@@ -4,6 +4,7 @@
  * - 加入/发言需要账号（环境变量 IM_XMPP_JID / IM_XMPP_PASS）
  */
 const cfg = require('../config');
+const cache = require('../cache');
 
 let lib = null;
 try { lib = require('@xmpp/client'); } catch (_) { lib = null; }
@@ -97,14 +98,28 @@ async function discoOccupants(roomJid) {
 
 async function listChannels({ q = '', limit = 120 } = {}) {
   if (!haveCred()) {
+    const snap0 = cache.load('xmpp_' + MUC());
+    if (snap0) {
+      let r0 = cache.markStale(snap0.items, snap0.ts);
+      if (q) { const lq = q.toLowerCase(); r0 = r0.filter((c) => (c.name || '').toLowerCase().includes(lq) || (c.title || '').toLowerCase().includes(lq)); }
+      r0.sort((a, b) => b.members - a.members);
+      return { channels: r0.slice(0, limit), errors: [{ server: MUC(), soft: true, error: '未配置账号，展示本地缓存（' + Math.round(snap0.ageMs / 3600000) + ' 小时前，最长 7 天）' }], total: r0.length };
+    }
+  }
+  if (!haveCred()) {
     return { channels: [], errors: [{ server: MUC(), error: 'XMPP 未配置账号（IM_XMPP_JID / IM_XMPP_PASS）' }], total: 0 };
   }
   try {
     await connect();
   } catch (e) {
-    return { channels: [], errors: [{ server: MUC(), error: e.message }], total: 0 };
+    return xmppFallback(q, limit, e.message);
   }
-  const items = await discoItems(MUC());
+  let items;
+  try {
+    items = await discoItems(MUC());
+  } catch (e) {
+    return xmppFallback(q, limit, e.message);
+  }
   const first = items.slice(0, Math.min(items.length, 40));
   const counts = await Promise.all(first.map((it) => discoOccupants(it.jid).catch(() => 0)));
   const all = items.map((it, i) => ({
@@ -123,7 +138,24 @@ async function listChannels({ q = '', limit = 120 } = {}) {
     res = res.filter((c) => c.name.toLowerCase().includes(lq) || (c.title || '').toLowerCase().includes(lq));
   }
   res.sort((a, b) => b.members - a.members);
+  cache.save('xmpp_' + MUC(), all);
   return { channels: res.slice(0, limit), errors: [], total: res.length };
+}
+
+function xmppFallback(q, limit, errMsg) {
+  const snap = cache.load('xmpp_' + MUC());
+  if (!snap) return { channels: [], errors: [{ server: MUC(), error: errMsg }], total: 0 };
+  let res = cache.markStale(snap.items, snap.ts);
+  if (q) {
+    const lq = q.toLowerCase();
+    res = res.filter((c) => (c.name || '').toLowerCase().includes(lq) || (c.title || '').toLowerCase().includes(lq));
+  }
+  res.sort((a, b) => b.members - a.members);
+  return {
+    channels: res.slice(0, limit),
+    errors: [{ server: MUC(), soft: true, error: '网络异常，展示本地缓存（' + Math.round(snap.ageMs / 3600000) + ' 小时前，最长 7 天）：' + errMsg }],
+    total: res.length
+  };
 }
 
 function parseChannelId(channelId) {

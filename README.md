@@ -109,6 +109,17 @@ PLIST
 launchctl load ~/Library/LaunchAgents/com.e2echat.imrelay.plist
 ```
 
+### 频道列表 7 天本地缓存（断网兜底）
+
+公共频道列表（含人数）一旦成功拉取，就落盘到 `app/im/.cache/*.json`（已在 `.gitignore`，不进仓库）：
+
+- **缓存优先**：有快照就**立刻**返回（页面不再等 15 秒），条目带 `stale: true` + `asOf`，前端显示「缓存」角标；同时在后台静默刷新，下次请求即为新数据；
+- **断网兜底**：网络异常/被墙/代理挂掉时，回退最近一次成功快照（最长 7 天，`IM_CACHE_TTL_DAYS` 可调），只记一条 soft 错误（灰色），不覆盖其它协议；
+- **过期不兜底**：超过 7 天视为失效，宁可空列表也不展示过期数据；
+- **落盘时机**：IRC 每台服务器独立存（`irc_<host>.json`），Matrix 存 `matrix_<homeserver>.json`，XMPP 存 `xmpp_<muc>.json`，写入用 `tmp + rename` 原子替换，不会读到半截文件。
+
+实测：断网实例（代理指向 `127.0.0.1:9`）下 `/api/im/channels?protocol=irc&limit=5` **16.7ms** 返回 `#alpine-linux 644 人`、`#asahi 534 人` 等真实缓存数据（全部 STALE）；`protocol=all` 在 24ms 返回 6 条缓存；首页、`/im.html`、`/js/sig-bridge.js` 全 200，进程存活。
+
 ### 故障隔离（刻意设计）
 
 - 每个协议、每台 IRC 服务器独立 `try/catch` + 独立超时，某一路失败只写进自己的 `errors[]`，不影响其它协议；
