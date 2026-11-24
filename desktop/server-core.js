@@ -103,6 +103,9 @@ async function start(opts) {
 	const keyPath = cert.keyPath;
 	const certPath = cert.certPath;
 
+	// 多协议桥接出网：若未显式配置，自动读取 macOS 系统代理（不影响主功能，探测失败即直连）
+	if (!process.env.IM_SOCKS_PROXY && !process.env.IM_HTTP_PROXY) process.env.IM_PROXY_AUTODETECT = '1';
+
 	const myapp = require(path.join(appDir, 'myapp_51pwn.js'));
 	const p2pchat = require(path.join(appDir, 'p2pchat.js'));
 

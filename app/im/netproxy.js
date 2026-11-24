@@ -13,8 +13,31 @@ const tls = require('tls');
 const https = require('https');
 const { URL } = require('url');
 
+/** macOS：读系统代理设置（scutil --proxy），仅当 IM_PROXY_AUTODETECT=1 时启用 */
+function detectSystemProxy() {
+  if (process.env.IM_PROXY_AUTODETECT !== '1' || process.platform !== 'darwin') return '';
+  try {
+    const out = require('child_process').execSync('scutil --proxy', { timeout: 3000 }).toString();
+    if (/SOCKSEnable\s*:\s*1/.test(out)) {
+      const port = (out.match(/SOCKSPort\s*:\s*(\d+)/) || [])[1];
+      const host = (out.match(/SOCKSProxy\s*:\s*([0-9.]+)/) || [])[1] || '127.0.0.1';
+      if (port) return `socks5://${host}:${port}`;
+    }
+    if (/HTTPEnable\s*:\s*1/.test(out)) {
+      const port = (out.match(/HTTPPort\s*:\s*(\d+)/) || [])[1];
+      const host = (out.match(/HTTPProxy\s*:\s*([0-9.]+)/) || [])[1] || '127.0.0.1';
+      if (port) return `http://${host}:${port}`;
+    }
+  } catch (_) {}
+  return '';
+}
+
 function pickProxy() {
   const explicit = process.env.IM_SOCKS_PROXY || process.env.IM_HTTP_PROXY || '';
+  if (!explicit) {
+    const auto = detectSystemProxy();
+    if (auto) return auto;
+  }
   if (explicit) return explicit;
   if (process.env.IM_PROXY_FALLBACK === '1') {
     const fb = process.env.ALL_PROXY || process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.https_proxy || process.env.http_proxy || '';

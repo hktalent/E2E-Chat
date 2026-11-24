@@ -74,6 +74,7 @@ IM_IRC_DISABLE / IM_MATRIX_DISABLE / IM_XMPP_DISABLE  # 关掉某协议
 IM_SOCKS_PROXY=socks5://127.0.0.1:1081     # 推荐：本机系统代理（如 mihomo/clash 的 mixed 端口）
 IM_HTTP_PROXY=http://127.0.0.1:8080        # 或者 HTTP 代理
 IM_PROXY_FALLBACK=1                        # 允许回落 ALL_PROXY / HTTPS_PROXY
+IM_PROXY_AUTODETECT=1                      # macOS 下自动读系统代理（scutil --proxy），桌面版默认开启
 ```
 
 实测（本机 SOCKS 1081）：`matrix.org` 200、`irc.oftc.net` LIST 2861 个频道、`open.ircnet.net` 5059 个频道。未配置代理时三协议仍可运行，只是各自的 `errors[]` 会给出"不可达/超时"原因。
